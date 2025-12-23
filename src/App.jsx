@@ -24,7 +24,7 @@ export default function App() {
       return;
     }
   };
-
+  console.log("APP HOT RELOAD CHECK 777");
   return (
     <div className="app">
       <div className="phone">

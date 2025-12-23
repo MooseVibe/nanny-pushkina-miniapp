@@ -32,7 +32,7 @@
   .headerBg {
     position: absolute;
     inset: 0 0 auto 0;
-    height: 116px;
+    height: 180px;
   
     /* ВАЖНО: правильный путь из папки styles */
     background-image: url("../assets/background.png");

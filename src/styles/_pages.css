@@ -6,6 +6,7 @@
 
   .page h1 {
     margin: 0;
+    padding-top: 4px; /* ← ВОТ ЭТО */
     font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
     font-size: 32px;
     font-weight: 500;
@@ -418,4 +419,53 @@
     line-height: 1;   /* ✅ ВАЖНО */
   
     cursor: pointer;
+  }
+
+  .vyshePage .pageHeaderRow{
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* ← вот это */
+    gap: 12px;
+  }
+  
+  .vyshePage .pageTitle{
+    margin: 0;
+    font-family: -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 500; /* Medium */
+    line-height: 1.2;
+    color: #1B1A18;
+  }
+  
+  .vyshePage .pageSubtitle{
+    margin-top: 4px; /* расстояние от заголовка */
+    font-family: -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400; /* Regular */
+    line-height: 1.3;
+    color: #808080;
+  }
+  
+  .hintBtn{
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    margin: 0;         /* ← вместо margin-top */
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+
+  .hintIcon{
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+  
+  .vysheList{ 
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }

@@ -31,7 +31,7 @@
   .serviceCard__title{
     font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
     font-size: 20px;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.15;
     color: #1B1A18;
   }
@@ -47,7 +47,7 @@
   /* слой для иллюстрации */
   .serviceCard__imageWrap{
     position: absolute;
-    left: 0;
+    right: 0;
     top: 0;
     width: 100%;
     height: 100%;
@@ -58,7 +58,7 @@
   
   .serviceCard__image{
     position: absolute;
-    left: 0;
+    right: 0;
     top: 0;
     object-fit: contain;
   }
@@ -74,7 +74,6 @@
     box-shadow: 0 10px 30px rgba(0,0,0,.06);
   }
   
-  ß
   
   .eventCard__left {
     min-width: 0;
@@ -154,45 +153,51 @@
     color: #1B1A18;
   }
 
-  .lessonCard {
-    width: 100%;
-    border: 0;
-    background: #fff;
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    /* ===== LessonCard FIX (override) ===== */
+.lessonCard{
+  width: 100%;
+  height: 80px;
+  border: 0;
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+
+  text-align: left;
+  cursor: pointer;
+}
+  
+  .lessonCard__left{
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    cursor: pointer;
-    text-align: left;
+    gap: 16px;          /* ровно по макету */
+    flex: 1 1 auto;    /* ← КЛЮЧ */
+    min-width: 0;      /* ← КЛЮЧ */
   }
   
-  .lessonCard__left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-  }
-  
-  .lessonCard__iconBox {
+  .lessonCard__iconBox{
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    background: #E7E7CC;
+    background: #E7E7CC;          /* если у тебя другой беж — скажешь */
     display: flex;
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
   }
   
-  .lessonCard__icon {
-    width: 22px;
-    height: 22px;
+  .lessonCard__icon{
+    width: 24px;                  /* по макету */
+    height: 24px;
     display: block;
     object-fit: contain;
   }
+
   
   .lessonCard__iconWrap {
     width: 40px;
@@ -212,17 +217,12 @@
     align-items: flex-start;
   }
   
-  .lessonCard__title {
-    max-width: 183px;
-    white-space: nowrap;
-    overflow: hidden;
-    position: relative;
-    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
-    font-size: 17px;
-    font-weight: 400;
+  .lessonCard__title{
+    font-family: -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;             /* Regular */
     color: #1B1A18;
     line-height: 1.2;
-    text-align: left;
   }
   
   .lessonCard__title--fade {
@@ -231,27 +231,40 @@
     mask-image: linear-gradient(to right, #000 0%, #000 75%, transparent 100%);
   }
   
-  .lessonCard__price {
-    margin-top: 4px;
-    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
-    font-size: 13px;
-    font-weight: 400;
-    color: #9299A2;
-    text-align: left;
+  .lessonCard__price{
+    margin-top: 4px;              /* расстояние 4px */
+    font-family: -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;             /* Regular */
+    color: #9299A2;               /* если у тебя другой серый — скажешь */
+    line-height: 1.2;
   }
   
-  .lessonCard__badge {
-    flex: 0 0 auto;
-    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+  .lessonCard__badge{
+    flex: 0 0 auto; 
+    width: 57px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto; 
+    font-family: -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
     font-size: 12px;
     font-weight: 400;
-    color: #A6B263;
+    color: #A68263;
+  
     background: rgba(166, 130, 99, 0.05);
-    padding: 6px 10px;
     border-radius: 999px;
+    flex: 0 0 auto;
   }
   
-  .lessonCard__mid {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
+
+
+.lessonCard__mid{
+  margin-left: 16px;   /* ← железные 16px */
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}

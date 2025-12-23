@@ -28,7 +28,7 @@ export default function HomePage({ onOpenVyshe }) {
           imageAlt="Выше"
           imageWidth={182}
           imageHeight={182}
-          imageX={-5}
+          imageX={7}
           imageY={40}
           onClick={onOpenVyshe}
         />
@@ -39,7 +39,7 @@ export default function HomePage({ onOpenVyshe }) {
           imageAlt="Праздники"
           imageWidth={146}
           imageHeight={115}
-          imageX={20}
+          imageX={0}
           imageY={55}
         />
         <ServiceCard
@@ -59,7 +59,7 @@ export default function HomePage({ onOpenVyshe }) {
           imageAlt="Коммуналка"
           imageWidth={124}
           imageHeight={124}
-          imageX={42}
+          imageX={0}
           imageY={52}
         />
       </div>
