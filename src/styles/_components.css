@@ -1,0 +1,257 @@
+/* --- Services (Home) --- */
+.servicesGrid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  
+  /* карточка услуги */
+  .serviceCard{
+    position: relative;
+    width: 100%;
+    height: 165px;
+    border-radius: 20px;
+    padding: 12px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    overflow: hidden; /* клип по радиусу */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .serviceCard__text{
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .serviceCard__title{
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.15;
+    color: #1B1A18;
+  }
+  
+  .serviceCard__subtitle{
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: #808080;
+  }
+  
+  /* слой для иллюстрации */
+  .serviceCard__imageWrap{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible; /* внутри не клипаем */
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .serviceCard__image{
+    position: absolute;
+    left: 0;
+    top: 0;
+    object-fit: contain;
+  }
+
+  .eventCard {
+    background: #fff;
+    border-radius: 24px;
+    padding: 20px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+  }
+  
+  ß
+  
+  .eventCard__left {
+    min-width: 0;
+  }
+  
+  .eventCard__date {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: #9299A2;
+  }
+  
+  .eventCard__title {
+    margin-top: 6px;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 400;
+    color: #1B1A18;
+  }
+  
+  .eventCard__price {
+    margin-top: 6px;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: #9299A2;
+  }
+  
+  .eventCard__badge {
+    flex: 0 0 auto;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #A6B263;
+    background: rgba(166, 130, 99, 0.05);
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    padding: 14px;
+  }
+  
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  
+  .pill {
+    border: 1px solid rgba(0,0,0,0.12);
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .pillActive {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+  }
+
+  .backBtn {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    border-radius: 12px;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    color: #1B1A18;
+  }
+
+  .lessonCard {
+    width: 100%;
+    border: 0;
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    text-align: left;
+  }
+  
+  .lessonCard__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  
+  .lessonCard__iconBox {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #E7E7CC;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  
+  .lessonCard__icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+    object-fit: contain;
+  }
+  
+  .lessonCard__iconWrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #E7E7CC;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+  }
+  
+  .lessonCard__text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .lessonCard__title {
+    max-width: 183px;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 400;
+    color: #1B1A18;
+    line-height: 1.2;
+    text-align: left;
+  }
+  
+  .lessonCard__title--fade {
+    text-overflow: clip;
+    -webkit-mask-image: linear-gradient(to right, #000 0%, #000 75%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 0%, #000 75%, transparent 100%);
+  }
+  
+  .lessonCard__price {
+    margin-top: 4px;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: #9299A2;
+    text-align: left;
+  }
+  
+  .lessonCard__badge {
+    flex: 0 0 auto;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #A6B263;
+    background: rgba(166, 130, 99, 0.05);
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+  
+  .lessonCard__mid {
+    min-width: 0;
+    flex: 1 1 auto;
+  }

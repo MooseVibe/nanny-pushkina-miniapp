@@ -1,0 +1,421 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .page h1 {
+    margin: 0;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: #1B1A18;
+  }
+
+  .pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .pageHeader__left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .pageHeader__titles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .pageTitle {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.15;
+    color: #1B1A18;
+  }
+  
+  .pageSubtitle {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: #808080;
+  }
+
+  .eventsBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sectionTitle {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1B1A18;
+  }
+
+  .helpBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    margin: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .helpBtn__icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .lessonList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: visible;
+  }
+
+  .lessonDetails {
+    position: relative;
+    min-height: 100%;
+  }
+  
+  
+
+  .lessonHero {
+    position: relative;
+    padding-top: 52px;
+  }
+
+  .lessonHero__icon {
+    position: absolute;
+    top: -40px;
+    left: 16px;
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: #E7E7CC;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  }
+  
+  .lessonHero__icon > img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  .lessonHero__text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lessonTitle {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.15;
+    color: #1B1A18;
+  }
+  .lessonSubtitle {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: #9299A2;
+  }
+  
+  .lessonDetails__title{
+    margin: 0;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 32px;
+    color: #1B1A18;
+  }
+  
+  .lessonDetails__desc {
+    margin-top: 10px;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: #9299A2;
+  }
+  
+  .lessonDetails__stats {
+    margin-top: 16px;
+    width: 343px;
+    height: 69px;
+  
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: hidden; /* чтобы скругления работали */
+  }
+  
+  
+  .lessonDetails__stat {
+    display: flex;
+    align-items: center;     /* вертикально по центру секции */
+    justify-content: center; /* секция “как бокс” по центру */
+    padding: 14px 0;         /* ✅ сверху/снизу 14 */
+  }
+  
+
+  .lessonDetails__statInner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* ✅ тексты внутри — по левому */
+    gap: 6px;                /* расстояние между caption и value */
+  }
+
+  .lessonDetails__statLabel {
+    font-size: 12px;
+    font-weight: 400;
+    color: #9299A2;
+    margin-bottom: 2px; /* ← ВОТ ЭТО */
+  }
+
+  .lessonDetails__statValue {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+    color: #1B1A18;
+  }
+  
+  .lessonDetails__teacherCard {
+    width: 100%;
+    height: 84px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+ /* Avatar 56x56, circle */
+ .lessonDetails__teacherAvatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #E7E7CC;
+    overflow: hidden;        /* ← ВАЖНО */
+    flex-shrink: 0;
+  }
+
+  .lessonDetails__teacherAvatarImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;       /* ← чтобы лицо не тянулось */
+    display: block;
+  }
+
+  /* Text stack */
+.lessonDetails__teacherText {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+ /* Caption: "Преподаватель" 12 Regular */
+.lessonDetails__teacherRole {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #9299A2;
+    margin-bottom: 4px; /* расстояние до имени */
+  }
+  
+ /* Name: 16 Regular */
+.lessonDetails__teacherName {
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #1B1A18;
+  }
+  
+  .lessonDetails__sectionTitle{
+    margin: 0;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 500; /* Medium */
+    line-height: 1.2;
+    color: #1B1A18; /* можно оставить так, если у тебя уже везде этот текстовый */
+  }
+  
+  .lessonDetails__schedule{
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+  }
+  
+  .lessonDetails__slot{
+    width: 68px;
+    height: auto;
+    padding: 16px 12px;
+    border-radius: 16px;
+  
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  
+    background: rgba(0, 16, 36, 0.03);
+    gap: 4px;
+  }
+  
+  .lessonDetails__slotDay{
+    margin: 0;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.5); /* #000 @ 50% */
+    text-transform: uppercase; /* если в макете ПН/СР */
+  }
+  
+  .lessonDetails__slotTime{
+    margin-top: 6px; /* ✅ расстояние 6px */
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400; /* Medium */
+    line-height: 1;
+    color: #131415;
+  }
+  
+  .lessonDetails__cta {
+    margin-top: 20px;
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: 18px;
+    background: #A68263;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  
+  .lessonDetails__hero {
+    position: absolute;
+    left: 16px;      /* <-- вот тут фикс 16 */
+    top: -56px;
+    z-index: 5;
+  }
+  
+  .lessonDetails__heroBox {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: #E7E7CC;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  }
+  
+  /* иконка внутри */
+  .lessonDetails__heroIcon {
+    width: 48px;
+    height: 48px;
+    display: block;
+    object-fit: contain;
+  }
+
+  .lessonDetails__content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 44px 16px 0;   /* 20px от иконки + ритм */
+    box-sizing: border-box;
+    padding-bottom: 120px;
+  }
+
+  .lessonDetails__head{
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* title ↔ desc */
+  }
+  
+  .lessonDetails__title,
+  .lessonDetails__desc {
+    margin: 0;
+  }
+  
+  .lessonDetails__scheduleBlock{
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* заголовок ↔ плашки времени (по макету у тебя так и было) */
+  }
+  
+  /* на всякий случай: если раньше стояли margin-top, их можно убрать,
+     потому что теперь всё держится на gap */
+  .lessonDetails__stats,
+  .lessonDetails__teacherCard,
+  .lessonDetails__sectionTitle,
+  .lessonDetails__schedule,
+  .lessonDetails__cta{
+    margin-top: 0;
+  }
+
+  .lessonDetails__stats {
+    width: 100%;
+    margin: 0;              /* <-- убираем любые авто-отступы */
+    align-self: stretch;    /* <-- если вдруг прилипало через align-self */
+    justify-self: auto;
+  }
+
+  .lessonDetails__ctaDock{
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 46px; /* ✅ как в макете */
+    z-index: 3;
+  }
+  
+  .lessonDetails__cta{
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: 18px;
+    background: #A68263;
+    color: #fff;
+  
+    display: flex;              /* ✅ */
+    align-items: center;        /* ✅ вертикальный центр */
+    justify-content: center;    /* ✅ горизонтальный центр */
+  
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400; /* Regular */
+    line-height: 1;   /* ✅ ВАЖНО */
+  
+    cursor: pointer;
+  }
