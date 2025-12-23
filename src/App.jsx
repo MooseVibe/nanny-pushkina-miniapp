@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 
-import HomePage from "./Pages/HomePage.jsx";
+import HomePage from "./pages/HomePage.jsx";
 import VysheListPage from "./pages/VysheListPage.jsx";
 import LessonDetailsPage from "./pages/LessonDetailsPage.jsx";
 
