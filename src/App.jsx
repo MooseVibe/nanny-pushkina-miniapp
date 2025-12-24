@@ -7,12 +7,6 @@ import LessonDetailsPage from "./pages/LessonDetailsPage.jsx";
 import BookingPage from "./pages/BookingPage.jsx";
 import SuccessPage from "./pages/SuccessPage.jsx";
 
-// ✅ doodles для Success (поправь пути под свою структуру)
-import doodleTL from "./assets/illustrations/success-doodle-tl.svg";
-import doodleTR from "./assets/illustrations/success-doodle-tr.svg";
-import doodleML from "./assets/illustrations/success-doodle-ml.svg";
-import doodleMR from "./assets/illustrations/success-doodle-mr.svg";
-
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [selectedLesson, setSelectedLesson] = useState(null);
@@ -100,16 +94,6 @@ export default function App() {
         <div className="appRoot">
           <div className="headerBg" />
 
-          {/* ✅ SUCCESS DOODLES — ВНЕ contentShell (чтобы не резались padding:16) */}
-          {screen === "success" && (
-            <>
-              <img className="successDoodle successDoodle--tl" src={doodleTL} alt="" />
-              <img className="successDoodle successDoodle--tr" src={doodleTR} alt="" />
-              <img className="successDoodle successDoodle--ml" src={doodleML} alt="" />
-              <img className="successDoodle successDoodle--mr" src={doodleMR} alt="" />
-            </>
-          )}
-
           <div className="contentShell">
             {screen === "home" && (
               <HomePage onOpenVyshe={() => setScreen("vyshe")} />
@@ -145,14 +129,13 @@ export default function App() {
               />
             )}
 
-            {screen === "success" && (
-              <SuccessPage
-                title="Вы записались на занятие"
-                subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
-                booking={lastBooking}
-                onHome={() => setScreen("home")}
-              />
-            )}
+{screen === "success" && (
+  <SuccessPage
+    title="Вы записались на занятие"
+    subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
+    onHome={() => setScreen("home")}
+  />
+)}
           </div>
         </div>
       </div>
