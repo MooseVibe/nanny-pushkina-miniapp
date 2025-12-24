@@ -60,11 +60,10 @@
     padding: 16px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   
-    /* ключ: скролл у страницы, не у белого блока */
-    overflow: visible;
+    overflow: visible; /* важно: НЕ делаем внутренний скролл */
   
-    /* чтобы белый блок всегда “дотягивался” до низа экрана */
-    height: calc(100dvh - var(--shellTop));
+    /* было: height: calc(100dvh - var(--shellTop)); */
+    min-height: calc(100dvh - var(--shellTop)); /* важно: растёт, но не меньше экрана */
   }
   
   .contentShell--details {
