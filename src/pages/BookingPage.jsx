@@ -21,6 +21,7 @@ function nextDatesForWeekday(ruDay, count = 4) {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // без времени
 
+  // ближайшая дата нужного дня недели (включая сегодня)
   const diff = (target - start.getDay() + 7) % 7;
   let cur = new Date(start);
   cur.setDate(cur.getDate() + diff);
@@ -76,16 +77,16 @@ export default function BookingPage({ lesson, onSubmit }) {
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(data.groups[0]?.label || "");
 
-  // если поменялось занятие/группы (data) — гарантированно ставим первую группу
+  // если поменялось занятие/группы — гарантированно ставим первую группу
   useEffect(() => {
     setSelectedGroupLabel(data.groups[0]?.label || "");
-  }, [data]);
+  }, [data.groups]);
 
   const selectedGroup = useMemo(() => {
     return data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0];
   }, [data.groups, selectedGroupLabel]);
 
-  // 2) Даты зависят от выбранной группы (дни недели -> ближайшие даты)
+  // 2) Даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(Boolean);
@@ -117,7 +118,7 @@ export default function BookingPage({ lesson, onSubmit }) {
 
   const [selectedTime, setSelectedTime] = useState("");
 
-  // reset дата/время при смене группы ИЛИ при пересборке опций
+  // reset дата/время при пересборке опций
   useEffect(() => {
     setSelectedDateKey(dateOptions[0]?.key || "");
   }, [dateOptions]);
@@ -148,6 +149,7 @@ export default function BookingPage({ lesson, onSubmit }) {
 
   return (
     <div className="page bookingPage">
+      {/* bookingLayout должен быть flex-column и min-height:100% (это в CSS) */}
       <div className="bookingLayout">
         {/* 1) Контент */}
         <div className="bookingContent">
@@ -194,13 +196,10 @@ export default function BookingPage({ lesson, onSubmit }) {
             <div className="formBlock">
               <div className="formLabel">Дата посещения</div>
 
-              {/* ВОТ ЭТО ФИКС: full-bleed скролл (уходит в край экрана, а не в padding 16) */}
               <div className="fullBleed">
                 <div className="chipRow chipRowScroll">
                   {dateOptions.map((d) => {
                     const active = d.key === selectedDateKey;
-
-                    // "ПН, 12.01" -> "12.01"
                     const dateOnly = d.label.replace(`${d.day}, `, "");
 
                     return (
@@ -243,17 +242,19 @@ export default function BookingPage({ lesson, onSubmit }) {
           </div>
         </div>
 
-        {/* 2) Кнопка снизу */}
-        <div className="bookingFooter">
-          <button
-            type="button"
-            className="primaryCta"
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-          >
-            Записаться
-          </button>
-        </div>
+        {/* 2) Кнопка снизу
+            ВАЖНО: позиция по макету (46px) регулируется ТОЛЬКО в CSS у .bookingFooter,
+            не здесь. */}
+        <div className="stickyCta">
+  <button
+    type="button"
+    className="primaryCta"
+    onClick={handleSubmit}
+    disabled={!canSubmit}
+  >
+    Записаться
+  </button>
+</div>
       </div>
     </div>
   );

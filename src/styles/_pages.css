@@ -524,11 +524,6 @@
     flex-direction: column;
   }
 
-  .lessonDetailsPage .stickyCta{
-    margin-top: auto; /* выталкиваем вниз */
-    padding-top: 12px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  }
 
 .lessonHead{
   display: flex;
@@ -698,9 +693,8 @@
 
 /* sticky CTA */
 .stickyCta{
-  position: relative; /* НЕ fixed, НЕ sticky */
-  margin-top: 20px;
-  padding-bottom: calc(46px + env(safe-area-inset-bottom));
+  margin-top: auto;
+  padding: 0 0px 30px; 
   background: transparent;
 }
 
@@ -865,23 +859,24 @@
 }
 
 .bookingLayout{
-  flex: 1 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
+  min-height: 100%;
 }
 
 /* Контент */
 .bookingContent{
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Футер с кнопкой */
 .bookingFooter{
-  margin-top: auto; /* вот теперь это реально “авторасстояние” */
+  margin-top: auto; /* авторасстояние до низа */
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: calc(46px + env(safe-area-inset-bottom)); 
+  /* ВАЖНО: никаких padding-top/height тут не надо */
 }
 
 .page.bookingPage{
