@@ -48,9 +48,8 @@
   }
   
   /* ===== Content shell: НЕ абсолют, НЕ внутренний скролл ===== */
-  .contentShell {
+  .contentShell{
     --shellTop: 116px;
-  
     position: relative;
     z-index: 1;
   
@@ -60,10 +59,11 @@
     padding: 16px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   
-    overflow: visible; /* важно: НЕ делаем внутренний скролл */
+    overflow: visible;
   
-    /* было: height: calc(100dvh - var(--shellTop)); */
-    min-height: calc(100dvh - var(--shellTop)); /* важно: растёт, но не меньше экрана */
+    min-height: calc(100dvh - var(--shellTop));
+    display: flex;
+    flex-direction: column;
   }
   
   .contentShell--details {

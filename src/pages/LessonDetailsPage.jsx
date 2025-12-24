@@ -1,97 +1,121 @@
-export default function LessonDetailsPage({ lesson, onBack }) {
-  const title = lesson?.detailsTitle ?? lesson?.title ?? "Занятие";
-  const description =
-    lesson?.detailsDescription ??
-    "Занятия, направленные на развитие визуального мышления и творческих навыков";
+import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
+export default function LessonDetailsPage({ lesson, onBook }) {
+  // дефолты, чтобы не падало, даже если lesson пока “бедный”
+  const data = {
+    title: lesson?.title || "Занятие",
+    subtitle:
+      lesson?.subtitle ||
+      "Занятия, направленные на развитие навыков и интересов.",
+    age: lesson?.age || "от 6 лет",
+    price: lesson?.price || "700 ₽",
+    duration: lesson?.duration || "1 час",
+    teacher: lesson?.teacher || "Такой-то Такойтович",
+    // schedules:
+    // либо группы по возрастам (label + sessions),
+    // либо один список sessions без label
+    schedule: lesson?.schedule || {
+      groups: [
+        {
+          label: "6–7 лет",
+          sessions: [
+            { day: "ПН", time: "12:00" },
+            { day: "СР", time: "12:00" },
+          ],
+        },
+        {
+          label: "8–9 лет",
+          sessions: [
+            { day: "ПН", time: "13:00" },
+            { day: "СР", time: "13:00" },
+          ],
+        },
+      ],
+      // если групп нет — используй sessions:
+      // sessions: [{ day:"ПН", time:"12:00" }, { day:"СР", time:"12:00" }],
+    },
+  };
 
-  const age = lesson?.age ?? "от 6 лет";
-  const price = lesson?.price ?? "700 ₽";
-  const duration = lesson?.duration ?? "1 час";
-
-  const teacherName = lesson?.teacherName ?? "Такой-то Такойтович";
-  const teacherRole = lesson?.teacherRole ?? "Преподаватель";
-
-  const schedule =
-    lesson?.schedule ?? [
-      { day: "ПН", time: "12:00" },
-      { day: "СР", time: "12:00" },
-    ];
+  const hasGroups =
+    Array.isArray(data.schedule?.groups) && data.schedule.groups.length > 0;
+  const flatSessions = Array.isArray(data.schedule?.sessions)
+    ? data.schedule.sessions
+    : [];
 
   return (
-    <div className="lessonDetails">
-      {/* ЕДИНЫЙ ЭЛЕМЕНТ: бежевый контейнер + иконка внутри */}
-      <div className="lessonDetails__hero">
-        <div className="lessonDetails__heroBox">
-          {lesson?.icon ? (
-            <img className="lessonDetails__heroIcon" src={lesson.icon} alt="" />
-          ) : null}
+    <div className="page lessonDetailsPage">
+      {/* Заголовок + подзаголовок */}
+      <div className="lessonHead">
+        <h1 className="lessonTitle">{data.title}</h1>
+        <div className="lessonSubtitle">{data.subtitle}</div>
+      </div>
+
+      {/* Плашка “Возраст / Цена / Длительность” (КЛАССЫ ПОД НОВЫЕ СТИЛИ) */}
+      <div className="lessonMeta">
+        <div className="lessonMetaItem">
+          <div className="lessonMetaLabel">Возраст</div>
+          <div className="lessonMetaValue">{data.age}</div>
+        </div>
+
+        <div className="lessonMetaItem">
+          <div className="lessonMetaLabel">Цена</div>
+          <div className="lessonMetaValue">{data.price}</div>
+        </div>
+
+        <div className="lessonMetaItem">
+          <div className="lessonMetaLabel">Длительность</div>
+          <div className="lessonMetaValue">{data.duration}</div>
         </div>
       </div>
 
-      {/* ВЕСЬ КОНТЕНТ НИЖЕ ИКОНКИ */}
-      <div className="lessonDetails__content">
-        {/* 1) Заголовок + подзаголовок */}
-        <div className="lessonDetails__head">
-          <h1 className="lessonDetails__title">{title}</h1>
-          <div className="lessonDetails__desc">{description}</div>
-        </div>
-
-        {/* 2) Возраст/Цена/Длительность */}
-        <div className="lessonDetails__stats">
-          <div className="lessonDetails__stat">
-            <div className="lessonDetails__statInner">
-              <div className="lessonDetails__statLabel">Возраст</div>
-              <div className="lessonDetails__statValue">{age}</div>
-            </div>
-          </div>
-
-          <div className="lessonDetails__stat">
-            <div className="lessonDetails__statInner">
-              <div className="lessonDetails__statLabel">Цена</div>
-              <div className="lessonDetails__statValue">{price}</div>
-            </div>
-          </div>
-
-          <div className="lessonDetails__stat">
-            <div className="lessonDetails__statInner">
-              <div className="lessonDetails__statLabel">Длительность</div>
-              <div className="lessonDetails__statValue">{duration}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3) Преподаватель */}
-        <div className="lessonDetails__teacherCard">
-        <div className="lessonDetails__teacherAvatar">
+      {/* Преподаватель */}
+      <div className="teacherCard">
   <img
-    src="/src/assets/avatars/teacher-placeholder.png"
-    alt="Преподаватель"
-    className="lessonDetails__teacherAvatarImg"
+    className="teacherAvatar"
+    src={teacherPlaceholder}
+    alt=""
   />
-</div>
-          <div className="lessonDetails__teacherText">
-            <div className="lessonDetails__teacherRole">{teacherRole}</div>
-            <div className="lessonDetails__teacherName">{teacherName}</div>
-          </div>
-        </div>
 
-        {/* 4) Когда проходят занятия */}
-        <div className="lessonDetails__scheduleBlock">
-          <div className="lessonDetails__sectionTitle">Когда проходят занятия</div>
-          <div className="lessonDetails__schedule">
-            {schedule.map((s, idx) => (
-              <div className="lessonDetails__slot" key={idx}>
-                <div className="lessonDetails__slotDay">{s.day}</div>
-                <div className="lessonDetails__slotTime">{s.time}</div>
+  <div className="teacherText">
+    <div className="teacherLabel">Преподаватель</div>
+    <div className="teacherName">{data.teacher}</div>
+  </div>
+</div>
+
+      {/* Расписание */}
+      <div className="scheduleBlock">
+        <div className="sectionTitleLarge">Когда проходят занятия</div>
+
+        {hasGroups ? (
+          <div className="scheduleGroups">
+            {data.schedule.groups.map((g) => (
+              <div className="scheduleGroup" key={g.label}>
+                <div className="scheduleGroupLabel">{g.label}</div>
+                <div className="scheduleGrid">
+                  {g.sessions.map((s, idx) => (
+                    <div className="scheduleChip" key={`${g.label}-${idx}`}>
+                      <div className="chipDay">{s.day}</div>
+                      <div className="chipTime">{s.time}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        ) : (
+          <div className="scheduleGrid">
+            {flatSessions.map((s, idx) => (
+              <div className="scheduleChip" key={`flat-${idx}`}>
+                <div className="chipDay">{s.day}</div>
+                <div className="chipTime">{s.time}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* CTA (прибита к низу, 46px от низа) */}
-      <div className="lessonDetails__ctaDock">
-        <button type="button" className="lessonDetails__cta">
+      {/* Кнопка снизу (fixed) */}
+      <div className="stickyCta">
+        <button type="button" className="primaryCta" onClick={() => onBook?.(lesson)}>
           Записаться
         </button>
       </div>

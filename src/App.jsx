@@ -81,9 +81,9 @@ export default function App() {
     <div className="app">
       <div className="phone">
         <div className="appRoot">
-          <div className={`headerBg ${isDetails ? "headerBg--details" : ""}`} />
+          <div className="headerBg" />
 
-          <div className={`contentShell ${isDetails ? "contentShell--details" : ""}`}>
+          <div className="contentShell">
             {screen === "home" && (
               <HomePage onOpenVyshe={() => setScreen("vyshe")} />
             )}
