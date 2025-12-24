@@ -218,11 +218,14 @@
   }
   
   .lessonCard__title{
-    font-family: -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-    font-size: 16px;
-    font-weight: 400;             /* Regular */
-    color: #1B1A18;
+    font-family: system-ui, -apple-system, "SF Pro Display", Roboto, Arial, sans-serif;
+    font-size: 16px;          /* ← ВАЖНО */
+    font-weight: 400;         /* Regular */
     line-height: 1.2;
+    color: #1B1A18;
+  
+    white-space: nowrap;
+    overflow: hidden;
   }
   
   .lessonCard__title--fade {
@@ -232,12 +235,11 @@
   }
   
   .lessonCard__price{
-    margin-top: 4px;              /* расстояние 4px */
-    font-family: -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-    font-size: 12px;
-    font-weight: 400;             /* Regular */
-    color: #9299A2;               /* если у тебя другой серый — скажешь */
-    line-height: 1.2;
+    font-family: system-ui, -apple-system, "SF Pro Display", Roboto, Arial, sans-serif;
+    font-size: 12px;          /* ← ВАЖНО */
+    font-weight: 400;
+    color: #9299A2;
+    margin-top: 4px;
   }
   
   .lessonCard__badge{

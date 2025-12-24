@@ -10,7 +10,7 @@ import LessonCard from "../components/LessonCard";
 import iconAny from "../assets/illustrations/vyshe.svg"; // временно, потом заменим на реальные иконки
 
 const lessons = [
-  { title: "ИЗО", price: "700 ₽", age: "от 6 лет", icon: iconIzo },
+  { title: "Изобразительное искусство", price: "700 ₽", age: "от 6 лет", icon: iconIzo },
   { title: "Вокал", price: "700 ₽", age: "от 6 лет", icon: iconVocal },
   { title: "Очумелые ручки", price: "700 ₽", age: "от 6 лет", icon: iconHands },
   { title: "Актерское мастерство", price: "700 ₽", age: "от 6 лет", icon: iconActor },
