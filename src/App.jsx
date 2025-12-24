@@ -4,21 +4,31 @@ import "./App.css";
 import HomePage from "./pages/HomePage.jsx";
 import VysheListPage from "./pages/VysheListPage.jsx";
 import LessonDetailsPage from "./pages/LessonDetailsPage.jsx";
+import BookingPage from "./pages/BookingPage.jsx";
 
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [selectedLesson, setSelectedLesson] = useState(null);
 
   const isDetails =
-    screen === "details" || screen === "lessonDetails" || screen === "lesson_details";
+    screen === "details" ||
+    screen === "lessonDetails" ||
+    screen === "lesson_details";
 
   const isSubpage = screen !== "home";
 
   const goBack = () => {
+    // 1) Из booking назад на details
+    if (screen === "booking") {
+      setScreen("details");
+      return;
+    }
+    // 2) Из details назад на vyshe
     if (isDetails) {
       setScreen("vyshe");
       return;
     }
+    // 3) Из vyshe назад на home
     if (screen === "vyshe") {
       setScreen("home");
       return;
@@ -28,7 +38,6 @@ export default function App() {
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
 
-    // Хэндлеры — объявляем заранее, чтобы корректно отписываться
     const onBack = () => goBack();
     const preventGesture = (e) => e.preventDefault();
     const preventPinch = (e) => {
@@ -44,7 +53,6 @@ export default function App() {
 
       tg.BackButton.onClick(onBack);
 
-      // Поведение miniapp
       try {
         tg.expand();
         tg.disableVerticalSwipes();
@@ -62,20 +70,18 @@ export default function App() {
     } catch (e) {}
 
     return () => {
-      if (tg) {
-        tg.BackButton.offClick(onBack);
-      }
+      if (tg) tg.BackButton.offClick(onBack);
+
       try {
         document.removeEventListener("gesturestart", preventGesture);
         document.removeEventListener("gesturechange", preventGesture);
         document.removeEventListener("gestureend", preventGesture);
+
         document.removeEventListener("touchstart", preventPinch);
         document.removeEventListener("touchmove", preventPinch);
       } catch (e) {}
     };
-  }, [isSubpage, isDetails, screen]); // важно: зависит от screen, чтобы back показывался/прятался
-
-  console.log("APP HOT RELOAD CHECK 777");
+  }, [isSubpage, isDetails, screen]);
 
   return (
     <div className="app">
@@ -99,7 +105,24 @@ export default function App() {
             )}
 
             {isDetails && (
-              <LessonDetailsPage lesson={selectedLesson} onBack={goBack} />
+              <LessonDetailsPage
+                lesson={selectedLesson}
+                onBack={goBack}
+                onBook={() => setScreen("booking")}
+              />
+            )}
+
+            {screen === "booking" && (
+              <BookingPage
+                lesson={selectedLesson}
+                onBack={goBack}
+                onSubmit={(payload) => {
+                  console.log("BOOKING SUBMIT:", payload);
+                  alert(
+                    `Записали: ${payload.name}\n${payload.lessonTitle}\n${payload.group}\n${payload.date} • ${payload.time}`
+                  );
+                }}
+              />
             )}
           </div>
         </div>
