@@ -751,7 +751,6 @@
   height: 56px;
   box-sizing: border-box;
 
-  background: rgba(0,16,36,0.03); /* #001024 @ 3% */
   border: 0;
   border-radius: 16px; /* если у тебя в макете другое — скажешь, поменяем */
   padding: 0 16px;
@@ -759,14 +758,43 @@
   font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 16px;
   font-weight: 400; /* Regular */
-  color: #1B1A18;
+  background: rgba(0,16,36,0.03);
+
 
   outline: none;
 }
 
-.textInput::placeholder{
+input.textInput{
+  color: #001024;
+  caret-color: #001024;
+}
+
+input.textInput::placeholder{
   color: #9299A2;
-  opacity: 1; /* важно, чтобы не бледнил сам */
+  opacity: 1;
+}
+
+.textInputErrorText{
+  margin-top: 0px;
+  margin-left: 12px;
+
+  font-family: "SF Pro Display", system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 400; /* Regular */
+
+  color: #E54848; /* красный */
+}
+
+.textInputError{
+  border: 1px solid #E54848;
+}
+
+.fieldError{
+  font-family: system-ui, -apple-system, "SF Pro Display", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #E14B4B;
+  margin-top: 8px;
 }
 
 .chipDateInner {

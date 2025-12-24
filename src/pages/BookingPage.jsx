@@ -36,7 +36,7 @@ function nextDatesForWeekday(ruDay, count = 4) {
 }
 
 export default function BookingPage({ lesson, onSubmit }) {
-  // 1) Данные занятия + дефолтные группы (3 штуки)
+  // 1) Данные занятия + дефолтные группы (2 штуки)
   const data = useMemo(() => {
     if (lesson?.schedule?.groups?.length) {
       return {
@@ -62,13 +62,6 @@ export default function BookingPage({ lesson, onSubmit }) {
             { day: "ЧТ", time: "13:00" },
           ],
         },
-        {
-          label: "10–11 лет",
-          sessions: [
-            { day: "ПН", time: "14:00" },
-            { day: "СР", time: "14:00" },
-          ],
-        },
       ],
     };
   }, [lesson]);
@@ -76,6 +69,11 @@ export default function BookingPage({ lesson, onSubmit }) {
   // --- form state ---
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(data.groups[0]?.label || "");
+
+  // --- error state (ТОЛЬКО для инпута имени) ---
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const nameOk = name.trim().length >= 2;
+  const showNameError = submitAttempted && !nameOk;
 
   // если поменялось занятие/группы — гарантированно ставим первую группу
   useEffect(() => {
@@ -128,12 +126,14 @@ export default function BookingPage({ lesson, onSubmit }) {
   }, [timeOptions]);
 
   const canSubmit =
-    name.trim().length >= 2 &&
+    nameOk &&
     !!selectedGroupLabel &&
     !!selectedDateKey &&
     !!selectedTime;
 
   const handleSubmit = () => {
+    setSubmitAttempted(true);
+
     if (!canSubmit) return;
 
     const pickedDateObj = dateOptions.find((d) => d.key === selectedDateKey);
@@ -149,7 +149,6 @@ export default function BookingPage({ lesson, onSubmit }) {
 
   return (
     <div className="page bookingPage">
-      {/* bookingLayout должен быть flex-column и min-height:100% (это в CSS) */}
       <div className="bookingLayout">
         {/* 1) Контент */}
         <div className="bookingContent">
@@ -161,15 +160,23 @@ export default function BookingPage({ lesson, onSubmit }) {
             {/* Имя */}
             <div className="formBlock">
               <div className="formLabel">Кого записываем</div>
+
               <input
-                className="textInput"
+                className={`textInput${showNameError ? " textInputError" : ""}`}
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (submitAttempted) setSubmitAttempted(false); // начал ввод — убрали ошибку
+                }}
                 placeholder="Имя и фамилия"
                 inputMode="text"
                 autoComplete="name"
               />
+
+              {showNameError && (
+                <div className="textInputErrorText">Введите имя и фамилию</div>
+              )}
             </div>
 
             {/* Возраст */}
@@ -242,19 +249,16 @@ export default function BookingPage({ lesson, onSubmit }) {
           </div>
         </div>
 
-        {/* 2) Кнопка снизу
-            ВАЖНО: позиция по макету (46px) регулируется ТОЛЬКО в CSS у .bookingFooter,
-            не здесь. */}
+        {/* 2) Кнопка снизу */}
         <div className="stickyCta">
-  <button
-    type="button"
-    className="primaryCta"
-    onClick={handleSubmit}
-    disabled={!canSubmit}
-  >
-    Записаться
-  </button>
-</div>
+        <button
+  type="button"
+  className={`primaryCta${canSubmit ? "" : " primaryCta--disabled"}`}
+  onClick={handleSubmit}
+>
+  Записаться
+</button>
+        </div>
       </div>
     </div>
   );
