@@ -27,36 +27,53 @@ export default function App() {
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
-    if (!tg) return;
 
-    tg.ready();
-    
-    try {
-      tg.expand();
-      tg.disableVerticalSwipes();
-    } catch (e) {}
-
-    // 1) На главной — не показываем back. На внутренних — показываем.
-    if (isSubpage) tg.BackButton.show();
-    else tg.BackButton.hide();
-
-    // 2) Клик по back в шапке Telegram = наш goBack()
+    // Хэндлеры — объявляем заранее, чтобы корректно отписываться
     const onBack = () => goBack();
-    tg.BackButton.onClick(onBack);
+    const preventGesture = (e) => e.preventDefault();
+    const preventPinch = (e) => {
+      if (e.touches && e.touches.length > 1) e.preventDefault();
+    };
 
-    // 3) Просим Telegram не сворачивать свайпом вниз (если поддерживается)
+    if (tg) {
+      tg.ready();
+
+      // BackButton по паттерну Telegram
+      if (isSubpage) tg.BackButton.show();
+      else tg.BackButton.hide();
+
+      tg.BackButton.onClick(onBack);
+
+      // Поведение miniapp
+      try {
+        tg.expand();
+        tg.disableVerticalSwipes();
+      } catch (e) {}
+    }
+
+    // Anti-zoom (особенно iOS / Telegram WebView)
     try {
-      tg.expand();
-      tg.disableVerticalSwipes();
-    } catch (e) {}
+      document.addEventListener("gesturestart", preventGesture, { passive: false });
+      document.addEventListener("gesturechange", preventGesture, { passive: false });
+      document.addEventListener("gestureend", preventGesture, { passive: false });
 
-    // (опционально) если хочешь подтверждение закрытия:
-    // try { tg.enableClosingConfirmation(); } catch (e) {}
+      document.addEventListener("touchstart", preventPinch, { passive: false });
+      document.addEventListener("touchmove", preventPinch, { passive: false });
+    } catch (e) {}
 
     return () => {
-      tg.BackButton.offClick(onBack);
+      if (tg) {
+        tg.BackButton.offClick(onBack);
+      }
+      try {
+        document.removeEventListener("gesturestart", preventGesture);
+        document.removeEventListener("gesturechange", preventGesture);
+        document.removeEventListener("gestureend", preventGesture);
+        document.removeEventListener("touchstart", preventPinch);
+        document.removeEventListener("touchmove", preventPinch);
+      } catch (e) {}
     };
-  }, [isSubpage, isDetails, screen]);
+  }, [isSubpage, isDetails, screen]); // важно: зависит от screen, чтобы back показывался/прятался
 
   console.log("APP HOT RELOAD CHECK 777");
 
@@ -65,8 +82,6 @@ export default function App() {
       <div className="phone">
         <div className="appRoot">
           <div className={`headerBg ${isDetails ? "headerBg--details" : ""}`} />
-
-          {/* УБРАЛИ debugBackBtn — теперь back в шапке Telegram */}
 
           <div className={`contentShell ${isDetails ? "contentShell--details" : ""}`}>
             {screen === "home" && (

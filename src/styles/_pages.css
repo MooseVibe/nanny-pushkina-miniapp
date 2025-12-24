@@ -446,19 +446,25 @@
     color: #808080;
   }
   
-  .hintBtn{
-    width: 32px;
-    height: 32px;
-    border: 0;
-    background: transparent;
+  .hintBtn {
+    width: 28px;
+    height: 28px;
     padding: 0;
-    margin: 0;         /* ← вместо margin-top */
-    cursor: pointer;
+  
     display: grid;
     place-items: center;
+  
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .hintIcon{
+  .hintIcon {
     width: 20px;
     height: 20px;
     display: block;
