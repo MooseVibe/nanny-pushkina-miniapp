@@ -5,10 +5,18 @@ import HomePage from "./pages/HomePage.jsx";
 import VysheListPage from "./pages/VysheListPage.jsx";
 import LessonDetailsPage from "./pages/LessonDetailsPage.jsx";
 import BookingPage from "./pages/BookingPage.jsx";
+import SuccessPage from "./pages/SuccessPage.jsx";
+
+// ✅ doodles для Success (поправь пути под свою структуру)
+import doodleTL from "./assets/illustrations/success-doodle-tl.svg";
+import doodleTR from "./assets/illustrations/success-doodle-tr.svg";
+import doodleML from "./assets/illustrations/success-doodle-ml.svg";
+import doodleMR from "./assets/illustrations/success-doodle-mr.svg";
 
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [lastBooking, setLastBooking] = useState(null);
 
   const isDetails =
     screen === "details" ||
@@ -18,6 +26,11 @@ export default function App() {
   const isSubpage = screen !== "home";
 
   const goBack = () => {
+    // 0) Из success назад на booking
+    if (screen === "success") {
+      setScreen("booking");
+      return;
+    }
     // 1) Из booking назад на details
     if (screen === "booking") {
       setScreen("details");
@@ -47,7 +60,6 @@ export default function App() {
     if (tg) {
       tg.ready();
 
-      // BackButton по паттерну Telegram
       if (isSubpage) tg.BackButton.show();
       else tg.BackButton.hide();
 
@@ -59,7 +71,6 @@ export default function App() {
       } catch (e) {}
     }
 
-    // Anti-zoom (особенно iOS / Telegram WebView)
     try {
       document.addEventListener("gesturestart", preventGesture, { passive: false });
       document.addEventListener("gesturechange", preventGesture, { passive: false });
@@ -88,6 +99,16 @@ export default function App() {
       <div className="phone">
         <div className="appRoot">
           <div className="headerBg" />
+
+          {/* ✅ SUCCESS DOODLES — ВНЕ contentShell (чтобы не резались padding:16) */}
+          {screen === "success" && (
+            <>
+              <img className="successDoodle successDoodle--tl" src={doodleTL} alt="" />
+              <img className="successDoodle successDoodle--tr" src={doodleTR} alt="" />
+              <img className="successDoodle successDoodle--ml" src={doodleML} alt="" />
+              <img className="successDoodle successDoodle--mr" src={doodleMR} alt="" />
+            </>
+          )}
 
           <div className="contentShell">
             {screen === "home" && (
@@ -118,10 +139,18 @@ export default function App() {
                 onBack={goBack}
                 onSubmit={(payload) => {
                   console.log("BOOKING SUBMIT:", payload);
-                  alert(
-                    `Записали: ${payload.name}\n${payload.lessonTitle}\n${payload.group}\n${payload.date} • ${payload.time}`
-                  );
+                  setLastBooking(payload);
+                  setScreen("success");
                 }}
+              />
+            )}
+
+            {screen === "success" && (
+              <SuccessPage
+                title="Вы записались на занятие"
+                subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
+                booking={lastBooking}
+                onHome={() => setScreen("home")}
               />
             )}
           </div>

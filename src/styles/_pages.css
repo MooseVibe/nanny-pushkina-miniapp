@@ -925,3 +925,112 @@ input.textInput::placeholder{
   margin-right: -16px;
   width: calc(100% + 32px);
 }
+
+/* ===== Success Page ===== */
+
+.successPage{
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ВАЖНО: это тот самый “большой автолэйаут” */
+.successLayout{
+  flex: 1 1 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+
+/* Блок “галочка + заголовок + подзаголовок” */
+.successContent{
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+/* Низ: кнопка как везде, но НЕ auto и НЕ sticky */
+.successPage .stickyCta{
+  flex: 0 0 auto;
+  margin-top: 0;
+  padding: 0 0px 30px;
+}
+
+/* большая галочка */
+.successCheck{
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: rgba(0,16,36,0.03);
+  margin-bottom: 24px;
+}
+
+
+.successPage .successTitle{
+  margin: 0;
+
+  font-family: system-ui, -apple-system, "SF Pro Display", sans-serif;
+  line-height: 1.2;
+  color: #1B1A18;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.successSubtitle{
+  margin-top: 8px;
+
+  font-family: system-ui, -apple-system, "SF Pro Display", sans-serif;
+  font-size: 14px;
+  font-weight: 400; /* Regular */
+  line-height: 1.4;
+  color: rgba(27, 26, 24, 0.5);
+}
+
+.successFooter{
+  margin-top: auto;
+  padding: 0 0px 30px; /* как у тебя на букинге: 30 снизу */
+  background: transparent;
+}
+
+.appRoot {
+  position: relative; /* ОБЯЗАТЕЛЬНО */
+}
+
+/* doodles */
+.successDoodle{
+  position: absolute;
+  z-index: 0;            /* под контентом */
+  pointer-events: none;
+}
+
+/* размеры ставь явно — SVG НЕ должны полагаться на intrinsic size */
+.successDoodle--tl{
+  top: -16px;
+  left: -16px;
+  width: 96px;
+}
+
+.successDoodle--tr{
+  top: -16.5px;
+  right: -16px;
+  width: 96px;
+}
+
+.successDoodle--ml{
+  top: 200px;
+  left: -76px;          /* МОЖНО выходить за край */
+  width: 88px;
+}
+
+.successDoodle--mr{
+  top: 320px;
+  right: -76px;
+  width: 88px;
+}
