@@ -11,6 +11,7 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [lastBooking, setLastBooking] = useState(null);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
 
   const isDetails =
     screen === "details" ||
@@ -88,6 +89,30 @@ export default function App() {
     };
   }, [isSubpage, isDetails, screen]);
 
+  // Отправка записи на сервер (Vercel Function: /api/book)
+  const submitBookingToServer = async (payload) => {
+    const res = await fetch("/api/book", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    // Попробуем прочитать json, но не обязуем
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (e) {}
+
+    if (!res.ok) {
+      const msg =
+        (data && (data.error || data.message)) ||
+        `Ошибка сервера (${res.status})`;
+      throw new Error(msg);
+    }
+
+    return data;
+  };
+
   return (
     <div className="app">
       <div className="phone">
@@ -121,21 +146,37 @@ export default function App() {
               <BookingPage
                 lesson={selectedLesson}
                 onBack={goBack}
-                onSubmit={(payload) => {
+                onSubmit={async (payload) => {
+                  if (isSubmittingBooking) return; // защита от дабл-клика
+
                   console.log("BOOKING SUBMIT:", payload);
-                  setLastBooking(payload);
-                  setScreen("success");
+
+                  setIsSubmittingBooking(true);
+                  try {
+                    await submitBookingToServer(payload);
+
+                    setLastBooking(payload);
+                    setScreen("success");
+                  } catch (err) {
+                    console.error("BOOKING SUBMIT ERROR:", err);
+                    alert(
+                      `Не удалось отправить запись.\n${err?.message || "Попробуйте ещё раз."}`
+                    );
+                  } finally {
+                    setIsSubmittingBooking(false);
+                  }
                 }}
               />
             )}
 
-{screen === "success" && (
-  <SuccessPage
-    title="Вы записались на занятие"
-    subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
-    onHome={() => setScreen("home")}
-  />
-)}
+            {screen === "success" && (
+              <SuccessPage
+                title="Вы записались на занятие"
+                subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
+                onHome={() => setScreen("home")}
+                // lastBooking пока не используем, но он сохранён в стейте
+              />
+            )}
           </div>
         </div>
       </div>
