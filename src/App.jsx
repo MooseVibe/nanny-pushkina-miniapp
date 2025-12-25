@@ -91,13 +91,19 @@ export default function App() {
 
   // Отправка записи на сервер (Vercel Function: /api/book)
   const submitBookingToServer = async (payload) => {
+    const tg = window.Telegram?.WebApp;
+    const initData = tg?.initData; // важно: initData (строка), не initDataUnsafe
+
+    if (!initData) {
+      throw new Error("Нет Telegram initData. Открой миниапп строго из бота.");
+    }
+
     const res = await fetch("/api/book", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ payload, initData }),
     });
 
-    // Попробуем прочитать json, но не обязуем
     let data = null;
     try {
       data = await res.json();
@@ -105,9 +111,12 @@ export default function App() {
 
     if (!res.ok) {
       const msg =
-        (data && (data.error || data.message)) ||
-        `Ошибка сервера (${res.status})`;
+        (data && (data.error || data.message)) || `Ошибка сервера (${res.status})`;
       throw new Error(msg);
+    }
+
+    if (data && data.ok === false) {
+      throw new Error(data.error || "Ошибка сервера");
     }
 
     return data;
