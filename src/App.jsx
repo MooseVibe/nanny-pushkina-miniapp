@@ -93,6 +93,9 @@ export default function App() {
   const submitBookingToServer = async (payload) => {
     const tg = window.Telegram?.WebApp;
     const initData = tg?.initData; // важно: initData (строка), не initDataUnsafe
+    console.log("TG initData length:", initData ? initData.length : 0);
+    console.log("TG initData has hash:", initData ? initData.includes("hash=") : false);
+    console.log("TG initData first 80:", initData ? initData.slice(0, 80) : "");
 
     if (!initData) {
       throw new Error("Нет Telegram initData. Открой миниапп строго из бота.");

@@ -1,91 +1,129 @@
 import { createClient } from "@supabase/supabase-js";
 
-async function tgAnswerCallback(token, callbackQueryId, text) {
-  await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
+async function tgApi(token, method, body) {
+  const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ callback_query_id: callbackQueryId, text, show_alert: false }),
+    body: JSON.stringify(body),
   });
+  const json = await res.json().catch(() => ({}));
+  if (!json.ok) throw new Error(`TG ${method} failed: ${json.description || "unknown error"}`);
+  return json.result;
 }
 
-async function tgSendMessage(token, chatId, text) {
-  await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
-  });
+async function safeAnswerCallback(token, callbackQueryId, text) {
+  try {
+    await tgApi(token, "answerCallbackQuery", {
+      callback_query_id: callbackQueryId,
+      text,
+      show_alert: false,
+    });
+  } catch (e) {
+    // НИЧЕГО: главное — не упасть окончательно
+    console.error("answerCallbackQuery error:", e?.message || e);
+  }
 }
 
 export default async function handler(req, res) {
+  // Telegram ждёт 200 OK быстро. Всегда отвечаем.
+  if (req.method !== "POST") return res.status(200).send("ok");
+
+  const BOT_TOKEN = process.env.BOT_TOKEN;
+  const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const update = req.body || {};
+  const cq = update?.callback_query;
+
+  // Если это не callback — просто ок.
+  if (!cq) return res.status(200).send("ok");
+
+  const callbackQueryId = cq.id;
+  const fromId = cq.from?.id;
+  const data = cq.data || "";
+
+  // Если env не поднялись — ответим пользователю, чтобы не висело.
+  if (!BOT_TOKEN || !ADMIN_CHAT_ID || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Сервис временно недоступен (env).");
+    return res.status(200).send("ok");
+  }
+
+  // Мгновенно “снимем загрузку” (это важно)
+  await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Проверяю запись…");
+
   try {
-    if (req.method !== "POST") return res.status(200).send("ok");
-
-    const BOT_TOKEN = process.env.BOT_TOKEN;
-    const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!BOT_TOKEN || !ADMIN_CHAT_ID || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      console.log("[/api/telegram-webhook] Missing env vars");
-      return res.status(200).send("ok");
-    }
-
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    const update = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
-    const cq = update?.callback_query;
-    if (!cq) return res.status(200).send("ok");
-
-    const fromId = cq.from?.id;
-    const data = cq.data || "";
-
     if (!data.startsWith("cancel:")) {
-      await tgAnswerCallback(BOT_TOKEN, cq.id, "Неизвестная команда");
+      await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Неизвестная команда");
       return res.status(200).send("ok");
     }
 
     const bookingId = data.split(":")[1];
     if (!bookingId) {
-      await tgAnswerCallback(BOT_TOKEN, cq.id, "Ошибка: нет id");
+      await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Ошибка: нет id");
       return res.status(200).send("ok");
     }
 
-    const { data: row, error } = await sb.from("bookings").select("*").eq("id", bookingId).maybeSingle();
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    if (error || !row) {
-      await tgAnswerCallback(BOT_TOKEN, cq.id, "Запись не найдена");
+    const { data: row, error } = await sb
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!row) {
+      await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись не найдена");
       return res.status(200).send("ok");
     }
 
     if (Number(row.user_id) !== Number(fromId)) {
-      await tgAnswerCallback(BOT_TOKEN, cq.id, "Это не ваша запись");
+      await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Это не ваша запись");
       return res.status(200).send("ok");
     }
 
     if (row.status === "cancelled") {
-      await tgAnswerCallback(BOT_TOKEN, cq.id, "Уже отменено");
+      await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Уже отменено");
       return res.status(200).send("ok");
     }
 
-    await sb.from("bookings").update({ status: "cancelled" }).eq("id", bookingId);
+    const { error: updErr } = await sb
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("id", bookingId);
 
-    await tgAnswerCallback(BOT_TOKEN, cq.id, "Запись отменена ✅");
+    if (updErr) throw updErr;
 
-    await tgSendMessage(
-      BOT_TOKEN,
-      fromId,
-      `❌ <b>Запись отменена</b>\n\n${row.lesson_title}\n${row.visit_date} • ${row.visit_time}`
-    );
+    // Подтверждаем пользователю
+    await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись отменена ✅");
 
-    await tgSendMessage(
-      BOT_TOKEN,
-      ADMIN_CHAT_ID,
-      `❌ <b>Отмена записи</b>\n\nКого: <b>${row.name}</b>\nЗанятие: <b>${row.lesson_title}</b>\nДата/время: <b>${row.visit_date} • ${row.visit_time}</b>\nBookingID: <code>${row.id}</code>`
-    );
+    // Сообщение пользователю
+    await tgApi(BOT_TOKEN, "sendMessage", {
+      chat_id: fromId,
+      text:
+        `❌ <b>Запись отменена</b>\n\n` +
+        `<b>${row.lesson_title}</b>\n` +
+        `${row.visit_date} • ${row.visit_time}`,
+      parse_mode: "HTML",
+    });
+
+    // Сообщение админу
+    await tgApi(BOT_TOKEN, "sendMessage", {
+      chat_id: ADMIN_CHAT_ID,
+      text:
+        `❌ <b>Отмена записи</b>\n\n` +
+        `Кого: <b>${row.name}</b>\n` +
+        `Занятие: <b>${row.lesson_title}</b>\n` +
+        `Возраст: <b>${row.group_label}</b>\n` +
+        `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>`,
+      parse_mode: "HTML",
+    });
 
     return res.status(200).send("ok");
   } catch (e) {
-    console.error("[/api/telegram-webhook] ERROR:", e);
+    console.error("telegram.webhook error:", e?.message || e);
+    await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Ошибка отмены. Попробуйте ещё раз.");
     return res.status(200).send("ok");
   }
 }
