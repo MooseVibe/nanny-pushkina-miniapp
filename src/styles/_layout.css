@@ -124,16 +124,17 @@
     overflow: hidden;        /* чтобы оверлей резался по радиусу */
   }
   
-  .lockedOverlay {
+  .lockedOverlay{
     position: absolute;
     inset: 0;
+    border-radius: 20px;
   
-    border-radius: 20px;                 /* как у карточки */
-    background: rgba(255, 255, 255, 0.1); /* белый 5% */
+    /* ключ: мягкая светлая вуаль */
+    background: rgba(255, 255, 255, 0.06);
   
-    /* Background Blur 6 */
+    /* blur поменьше */
+    -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(6px);
   
     display: flex;
     align-items: center;
@@ -143,7 +144,11 @@
     padding: 0;
     cursor: pointer;
   
-    z-index: 3;
+    z-index: 10;
+  
+    /* стабилизация композитинга в webview */
+    transform: translateZ(0);
+    will-change: backdrop-filter;
   }
   
   .lockBadge {
