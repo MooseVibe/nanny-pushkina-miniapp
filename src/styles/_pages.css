@@ -716,6 +716,21 @@
   align-items: center;
   justify-content: center;
 }
+
+.btnSpinner{
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: rgba(255,255,255,1);
+  animation: btnSpin 0.8s linear infinite;
+}
+
+@keyframes btnSpin{
+  to { transform: rotate(360deg); }
+}
+
+
 /* ===== Booking Page ===== */
 .bookingPage {
   min-height: 100%;

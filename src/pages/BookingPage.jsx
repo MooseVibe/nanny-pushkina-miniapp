@@ -21,7 +21,6 @@ function nextDatesForWeekday(ruDay, count = 4) {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // без времени
 
-  // ближайшая дата нужного дня недели (включая сегодня)
   const diff = (target - start.getDay() + 7) % 7;
   let cur = new Date(start);
   cur.setDate(cur.getDate() + diff);
@@ -43,7 +42,7 @@ function sanitizeName(value) {
     .replace(/^\s+/g, "");              // убираем пробелы в начале
 }
 
-export default function BookingPage({ lesson, onSubmit }) {
+export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) {
   // 1) Данные занятия + дефолтные группы (2 штуки)
   const data = useMemo(() => {
     if (lesson?.schedule?.groups?.length) {
@@ -86,7 +85,6 @@ export default function BookingPage({ lesson, onSubmit }) {
   const nameOk = nameClean.length >= 2;
 
   // формат: слова из букв, между словами/частями допустим пробел или дефис
-  // примеры ок: "Илья Лось", "Анна-Мария", "John Doe"
   const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
 
   const showNameError =
@@ -119,7 +117,7 @@ export default function BookingPage({ lesson, onSubmit }) {
         key: `${day}-${d.toISOString().slice(0, 10)}`,
         day,
         date: d,
-        label: formatDateRu(d), // "ПН, 12.01"
+        label: formatDateRu(d),
       }))
     );
 
@@ -139,7 +137,6 @@ export default function BookingPage({ lesson, onSubmit }) {
 
   const [selectedTime, setSelectedTime] = useState("");
 
-  // reset дата/время при пересборке опций
   useEffect(() => {
     setSelectedDateKey(dateOptions[0]?.key || "");
   }, [dateOptions]);
@@ -149,6 +146,7 @@ export default function BookingPage({ lesson, onSubmit }) {
   }, [timeOptions]);
 
   const canSubmit =
+    !isSubmitting &&
     nameOk &&
     nameFormatOk &&
     !nameHadInvalidChars &&
@@ -194,17 +192,11 @@ export default function BookingPage({ lesson, onSubmit }) {
                   const raw = e.target.value;
                   const cleaned = sanitizeName(raw);
 
-                  if (raw !== cleaned) setNameHadInvalidChars(true);
-
                   setName(cleaned);
+                  setNameHadInvalidChars(raw !== cleaned);
 
                   // начал ввод — убрали submit-error
                   if (submitAttempted) setSubmitAttempted(false);
-
-                  // если сейчас всё ок — снимаем флаг “вводил запрещённое”
-                  if (nameHadInvalidChars && raw === cleaned) {
-                    setNameHadInvalidChars(false);
-                  }
                 }}
                 placeholder="Имя и фамилия"
                 inputMode="text"
@@ -292,8 +284,10 @@ export default function BookingPage({ lesson, onSubmit }) {
             type="button"
             className={`primaryCta${canSubmit ? "" : " primaryCta--disabled"}`}
             onClick={handleSubmit}
+            disabled={!canSubmit}
+            aria-busy={isSubmitting ? "true" : "false"}
           >
-            Записаться
+            {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
           </button>
         </div>
       </div>

@@ -93,6 +93,7 @@ export default function App() {
   const submitBookingToServer = async (payload) => {
     const tg = window.Telegram?.WebApp;
     const initData = tg?.initData; // важно: initData (строка), не initDataUnsafe
+
     console.log("TG initData length:", initData ? initData.length : 0);
     console.log("TG initData has hash:", initData ? initData.includes("hash=") : false);
     console.log("TG initData first 80:", initData ? initData.slice(0, 80) : "");
@@ -158,6 +159,7 @@ export default function App() {
               <BookingPage
                 lesson={selectedLesson}
                 onBack={goBack}
+                isSubmitting={isSubmittingBooking}   // ✅ вот это добавили
                 onSubmit={async (payload) => {
                   if (isSubmittingBooking) return; // защита от дабл-клика
 
@@ -186,7 +188,6 @@ export default function App() {
                 title="Вы записались на занятие"
                 subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
                 onHome={() => setScreen("home")}
-                // lastBooking пока не используем, но он сохранён в стейте
               />
             )}
           </div>
