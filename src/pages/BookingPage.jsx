@@ -35,6 +35,14 @@ function nextDatesForWeekday(ruDay, count = 4) {
   return res;
 }
 
+// Разрешаем: RU/EN буквы + пробел + дефис
+function sanitizeName(value) {
+  return value
+    .replace(/[^A-Za-zА-Яа-яЁё\s-]/g, "") // выкидываем всё лишнее
+    .replace(/\s+/g, " ")               // схлопываем пробелы
+    .replace(/^\s+/g, "");              // убираем пробелы в начале
+}
+
 export default function BookingPage({ lesson, onSubmit }) {
   // 1) Данные занятия + дефолтные группы (2 штуки)
   const data = useMemo(() => {
@@ -72,8 +80,23 @@ export default function BookingPage({ lesson, onSubmit }) {
 
   // --- error state (ТОЛЬКО для инпута имени) ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const nameOk = name.trim().length >= 2;
-  const showNameError = submitAttempted && !nameOk;
+  const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
+
+  const nameClean = name.trim();
+  const nameOk = nameClean.length >= 2;
+
+  // формат: слова из букв, между словами/частями допустим пробел или дефис
+  // примеры ок: "Илья Лось", "Анна-Мария", "John Doe"
+  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
+
+  const showNameError =
+    submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
+
+  const nameErrorText = !nameOk
+    ? "Введите имя и фамилию"
+    : !nameFormatOk || nameHadInvalidChars
+    ? "Только буквы, пробел и дефис"
+    : "";
 
   // если поменялось занятие/группы — гарантированно ставим первую группу
   useEffect(() => {
@@ -127,6 +150,8 @@ export default function BookingPage({ lesson, onSubmit }) {
 
   const canSubmit =
     nameOk &&
+    nameFormatOk &&
+    !nameHadInvalidChars &&
     !!selectedGroupLabel &&
     !!selectedDateKey &&
     !!selectedTime;
@@ -140,7 +165,7 @@ export default function BookingPage({ lesson, onSubmit }) {
 
     onSubmit?.({
       lessonTitle: data.title,
-      name: name.trim(),
+      name: nameClean,
       group: selectedGroupLabel,
       date: pickedDateObj ? pickedDateObj.label : "",
       time: selectedTime,
@@ -166,8 +191,20 @@ export default function BookingPage({ lesson, onSubmit }) {
                 type="text"
                 value={name}
                 onChange={(e) => {
-                  setName(e.target.value);
-                  if (submitAttempted) setSubmitAttempted(false); // начал ввод — убрали ошибку
+                  const raw = e.target.value;
+                  const cleaned = sanitizeName(raw);
+
+                  if (raw !== cleaned) setNameHadInvalidChars(true);
+
+                  setName(cleaned);
+
+                  // начал ввод — убрали submit-error
+                  if (submitAttempted) setSubmitAttempted(false);
+
+                  // если сейчас всё ок — снимаем флаг “вводил запрещённое”
+                  if (nameHadInvalidChars && raw === cleaned) {
+                    setNameHadInvalidChars(false);
+                  }
                 }}
                 placeholder="Имя и фамилия"
                 inputMode="text"
@@ -175,7 +212,7 @@ export default function BookingPage({ lesson, onSubmit }) {
               />
 
               {showNameError && (
-                <div className="textInputErrorText">Введите имя и фамилию</div>
+                <div className="textInputErrorText">{nameErrorText}</div>
               )}
             </div>
 
@@ -251,13 +288,13 @@ export default function BookingPage({ lesson, onSubmit }) {
 
         {/* 2) Кнопка снизу */}
         <div className="stickyCta">
-        <button
-  type="button"
-  className={`primaryCta${canSubmit ? "" : " primaryCta--disabled"}`}
-  onClick={handleSubmit}
->
-  Записаться
-</button>
+          <button
+            type="button"
+            className={`primaryCta${canSubmit ? "" : " primaryCta--disabled"}`}
+            onClick={handleSubmit}
+          >
+            Записаться
+          </button>
         </div>
       </div>
     </div>
