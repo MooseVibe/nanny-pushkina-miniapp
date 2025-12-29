@@ -40,7 +40,10 @@ function validateInitData(initData, botToken) {
     .digest();
 
   // hash = HMAC_SHA256(secretKey, checkString)
-  const hmac = crypto.createHmac("sha256", secretKey).update(checkString).digest("hex");
+  const hmac = crypto
+    .createHmac("sha256", secretKey)
+    .update(checkString)
+    .digest("hex");
 
   return { ok: hmac === hash, reason: hmac === hash ? "" : "Bad signature", data };
 }
@@ -64,7 +67,8 @@ async function tgSendMessage(token, chatId, text, replyMarkup) {
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
+    if (req.method !== "POST")
+      return res.status(405).json({ ok: false, error: "Method not allowed" });
 
     const BOT_TOKEN = process.env.BOT_TOKEN;
     const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
@@ -105,6 +109,7 @@ export default async function handler(req, res) {
     const bookingId = rows?.[0]?.id;
     if (!bookingId) throw new Error("No bookingId");
 
+    // ----- сообщение пользователю -----
     const userText =
       `✅ <b>Запись создана</b>\n\n` +
       `Занятие: <b>${insert.lesson_title}</b>\n` +
@@ -119,14 +124,22 @@ export default async function handler(req, res) {
 
     await tgSendMessage(BOT_TOKEN, userId, userText, cancelMarkup);
 
+    // ----- сообщение админу: БЕЗ UserID/BookingID, но со ссылкой на человека -----
+    const username = user?.username ? String(user.username).replace(/^@/, "") : "";
+    const firstName = user?.first_name || "Пользователь";
+
+    // если username есть — покажем @username, иначе дадим tg:// ссылку по id
+    const whoBooked = username
+      ? `@${username}`
+      : `<a href="tg://user?id=${userId}">${firstName}</a>`;
+
     const adminText =
       `🆕 <b>Новая запись</b>\n\n` +
       `Кого: <b>${insert.name}</b>\n` +
       `Занятие: <b>${insert.lesson_title}</b>\n` +
       `Возраст: <b>${insert.group_label}</b>\n` +
       `Дата/время: <b>${insert.visit_date} • ${insert.visit_time}</b>\n` +
-      `UserID: <code>${userId}</code>\n` +
-      `BookingID: <code>${bookingId}</code>`;
+      `Кто записал: ${whoBooked}`;
 
     await tgSendMessage(BOT_TOKEN, ADMIN_CHAT_ID, adminText);
 
@@ -135,4 +148,4 @@ export default async function handler(req, res) {
     console.error(e);
     return res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
-} 
+}

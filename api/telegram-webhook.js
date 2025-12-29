@@ -19,7 +19,6 @@ async function safeAnswerCallback(token, callbackQueryId, text) {
       show_alert: false,
     });
   } catch (e) {
-    // НИЧЕГО: главное — не упасть окончательно
     console.error("answerCallbackQuery error:", e?.message || e);
   }
 }
@@ -49,7 +48,7 @@ export default async function handler(req, res) {
     return res.status(200).send("ok");
   }
 
-  // Мгновенно “снимем загрузку” (это важно)
+  // Мгновенно “снимем загрузку”
   await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Проверяю запись…");
 
   try {
@@ -108,7 +107,14 @@ export default async function handler(req, res) {
       parse_mode: "HTML",
     });
 
-    // Сообщение админу
+    // Кто отменил: username если есть, иначе кликабельная ссылка по id
+    const username = cq.from?.username ? String(cq.from.username).replace(/^@/, "") : "";
+    const firstName = cq.from?.first_name || "Пользователь";
+    const whoCancelled = username
+      ? `@${username}`
+      : `<a href="tg://user?id=${fromId}">${firstName}</a>`;
+
+    // Сообщение админу (БЕЗ userId/bookingId)
     await tgApi(BOT_TOKEN, "sendMessage", {
       chat_id: ADMIN_CHAT_ID,
       text:
@@ -116,7 +122,8 @@ export default async function handler(req, res) {
         `Кого: <b>${row.name}</b>\n` +
         `Занятие: <b>${row.lesson_title}</b>\n` +
         `Возраст: <b>${row.group_label}</b>\n` +
-        `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>`,
+        `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>\n` +
+        `Кто отменил: ${whoCancelled}`,
       parse_mode: "HTML",
     });
 
