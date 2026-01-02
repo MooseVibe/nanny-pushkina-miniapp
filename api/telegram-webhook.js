@@ -23,28 +23,23 @@ async function safeAnswerCallback(token, callbackQueryId, text) {
   }
 }
 
-// ✅ INLINE button (как "Отменить запись"), не reply keyboard
-function buildWelcomeMarkup(webAppUrl) {
+function buildWelcomeInlineMarkup(webAppUrl) {
+  // ВАЖНО: именно inline_keyboard + web_app
   return {
-    inline_keyboard: [
-      [{ text: "Открыть миниапп", web_app: { url: webAppUrl } }],
-    ],
+    inline_keyboard: [[{ text: "Открыть приложение", web_app: { url: webAppUrl } }]],
   };
 }
 
 export default async function handler(req, res) {
-  // Telegram ждёт 200 OK быстро. Всегда отвечаем.
   if (req.method !== "POST") return res.status(200).send("ok");
 
   const BOT_TOKEN = process.env.BOT_TOKEN;
   const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const WEBAPP_URL = process.env.WEBAPP_URL;
+  const WEBAPP_URL = process.env.WEBAPP_URL; // например https://nanny-pushkina-miniapp.vercel.app
 
   const update = req.body || {};
-
-  // Если токена нет — бессмысленно продолжать, но Telegram должен получить 200
   if (!BOT_TOKEN) return res.status(200).send("ok");
 
   // -----------------------------
@@ -56,8 +51,13 @@ export default async function handler(req, res) {
     if (text === "/start" || text.startsWith("/start ")) {
       const chatId = msg.chat?.id;
 
-      // WEBAPP_URL желательно хранить в env, но оставим дефолт на всякий
-      const webAppUrl = WEBAPP_URL || "https://nanny-pushkina-miniapp.vercel.app";
+      if (!WEBAPP_URL) {
+        await tgApi(BOT_TOKEN, "sendMessage", {
+          chat_id: chatId,
+          text: "Сервис временно недоступен (нет WEBAPP_URL).",
+        });
+        return res.status(200).send("ok");
+      }
 
       const welcomeText =
         `Привет! 👋\n\n` +
@@ -68,8 +68,7 @@ export default async function handler(req, res) {
       await tgApi(BOT_TOKEN, "sendMessage", {
         chat_id: chatId,
         text: welcomeText,
-        parse_mode: "HTML",
-        reply_markup: buildWelcomeMarkup(webAppUrl),
+        reply_markup: buildWelcomeInlineMarkup(WEBAPP_URL),
       });
 
       return res.status(200).send("ok");
@@ -91,7 +90,6 @@ export default async function handler(req, res) {
     return res.status(200).send("ok");
   }
 
-  // мгновенно снимаем “часики”
   await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Проверяю запись…");
 
   try {
