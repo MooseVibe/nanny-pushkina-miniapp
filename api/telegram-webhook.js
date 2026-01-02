@@ -23,6 +23,15 @@ async function safeAnswerCallback(token, callbackQueryId, text) {
   }
 }
 
+function buildWelcomeMarkup(webAppUrl) {
+  // ВАЖНО: это именно web_app (не url)
+  return {
+    keyboard: [[{ text: "Открыть миниапп", web_app: { url: webAppUrl } }]],
+    resize_keyboard: true,
+    one_time_keyboard: false,
+  };
+}
+
 export default async function handler(req, res) {
   // Telegram ждёт 200 OK быстро. Всегда отвечаем.
   if (req.method !== "POST") return res.status(200).send("ok");
@@ -31,24 +40,58 @@ export default async function handler(req, res) {
   const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const WEBAPP_URL = process.env.WEBAPP_URL;
 
   const update = req.body || {};
-  const cq = update?.callback_query;
 
-  // Если это не callback — просто ок.
+  // Если env не поднялись — не падаем.
+  if (!BOT_TOKEN) return res.status(200).send("ok");
+
+  // -----------------------------
+  // 1) /start (welcome message)
+  // -----------------------------
+  const msg = update?.message;
+  if (msg && typeof msg.text === "string") {
+    const text = msg.text.trim();
+    if (text === "/start" || text.startsWith("/start ")) {
+      const chatId = msg.chat?.id;
+
+      // WEBAPP_URL обязателен, иначе кнопка бессмысленна
+      const webAppUrl = WEBAPP_URL || "https://nanny-pushkina-miniapp.vercel.app";
+
+      // Можно потом заменить на картинку (sendPhoto). Сейчас — просто текст.
+      const welcomeText =
+        `Привет! 👋\n\n` +
+        `Тебя приветствует бот Няни Пушкина.\n` +
+        `Здесь ты можешь записаться на занятия «Выше».\n\n` +
+        `Жми кнопку ниже 👇`;
+
+      await tgApi(BOT_TOKEN, "sendMessage", {
+        chat_id: chatId,
+        text: welcomeText,
+        reply_markup: buildWelcomeMarkup(webAppUrl),
+      });
+
+      return res.status(200).send("ok");
+    }
+  }
+
+  // -----------------------------
+  // 2) Cancel booking (callback)
+  // -----------------------------
+  const cq = update?.callback_query;
   if (!cq) return res.status(200).send("ok");
 
   const callbackQueryId = cq.id;
   const fromId = cq.from?.id;
   const data = cq.data || "";
 
-  // Если env не поднялись — ответим пользователю, чтобы не висело.
-  if (!BOT_TOKEN || !ADMIN_CHAT_ID || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Сервис временно недоступен (env).");
+  if (!ADMIN_CHAT_ID || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Сервис временно недоступен.");
     return res.status(200).send("ok");
   }
 
-  // Мгновенно “снимем загрузку”
+  // мгновенно снимаем “часики”
   await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Проверяю запись…");
 
   try {
@@ -94,10 +137,8 @@ export default async function handler(req, res) {
 
     if (updErr) throw updErr;
 
-    // Подтверждаем пользователю
     await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись отменена ✅");
 
-    // Сообщение пользователю
     await tgApi(BOT_TOKEN, "sendMessage", {
       chat_id: fromId,
       text:
@@ -107,14 +148,6 @@ export default async function handler(req, res) {
       parse_mode: "HTML",
     });
 
-    // Кто отменил: username если есть, иначе кликабельная ссылка по id
-    const username = cq.from?.username ? String(cq.from.username).replace(/^@/, "") : "";
-    const firstName = cq.from?.first_name || "Пользователь";
-    const whoCancelled = username
-      ? `@${username}`
-      : `<a href="tg://user?id=${fromId}">${firstName}</a>`;
-
-    // Сообщение админу (БЕЗ userId/bookingId)
     await tgApi(BOT_TOKEN, "sendMessage", {
       chat_id: ADMIN_CHAT_ID,
       text:
@@ -122,8 +155,7 @@ export default async function handler(req, res) {
         `Кого: <b>${row.name}</b>\n` +
         `Занятие: <b>${row.lesson_title}</b>\n` +
         `Возраст: <b>${row.group_label}</b>\n` +
-        `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>\n` +
-        `Кто отменил: ${whoCancelled}`,
+        `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>`,
       parse_mode: "HTML",
     });
 
