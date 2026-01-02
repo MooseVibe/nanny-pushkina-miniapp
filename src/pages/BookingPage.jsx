@@ -37,13 +37,12 @@ function nextDatesForWeekday(ruDay, count = 4) {
 // Разрешаем: RU/EN буквы + пробел + дефис
 function sanitizeName(value) {
   return value
-    .replace(/[^A-Za-zА-Яа-яЁё\s-]/g, "") // выкидываем всё лишнее
-    .replace(/\s+/g, " ")               // схлопываем пробелы
-    .replace(/^\s+/g, "");              // убираем пробелы в начале
+    .replace(/[^A-Za-zА-Яа-яЁё\s-]/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/^\s+/g, "");
 }
 
-export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) {
-  // 1) Данные занятия + дефолтные группы (2 штуки)
+export default function BookingPage({ lesson, onSubmit }) {
   const data = useMemo(() => {
     if (lesson?.schedule?.groups?.length) {
       return {
@@ -73,22 +72,19 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     };
   }, [lesson]);
 
-  // --- form state ---
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(data.groups[0]?.label || "");
 
-  // --- error state (ТОЛЬКО для инпута имени) ---
+  // --- errors ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
 
   const nameClean = name.trim();
   const nameOk = nameClean.length >= 2;
 
-  // формат: слова из букв, между словами/частями допустим пробел или дефис
   const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
 
-  const showNameError =
-    submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
+  const showNameError = submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
 
   const nameErrorText = !nameOk
     ? "Введите имя и фамилию"
@@ -96,7 +92,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     ? "Только буквы, пробел и дефис"
     : "";
 
-  // если поменялось занятие/группы — гарантированно ставим первую группу
   useEffect(() => {
     setSelectedGroupLabel(data.groups[0]?.label || "");
   }, [data.groups]);
@@ -105,7 +100,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     return data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0];
   }, [data.groups, selectedGroupLabel]);
 
-  // 2) Даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(Boolean);
@@ -127,7 +121,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
   const [selectedDateKey, setSelectedDateKey] = useState("");
 
-  // 3) Время — уникальные времена из sessions
   const timeOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const uniqueTimes = Array.from(new Set(sessions.map((s) => s.time))).filter(Boolean);
@@ -146,7 +139,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   }, [timeOptions]);
 
   const canSubmit =
-    !isSubmitting &&
     nameOk &&
     nameFormatOk &&
     !nameHadInvalidChars &&
@@ -155,6 +147,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     !!selectedTime;
 
   const handleSubmit = () => {
+    // ВАЖНО: сначала включаем режим ошибок (кнопка может быть “серой”, но должна кликаться)
     setSubmitAttempted(true);
 
     if (!canSubmit) return;
@@ -173,14 +166,12 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   return (
     <div className="page bookingPage">
       <div className="bookingLayout">
-        {/* 1) Контент */}
         <div className="bookingContent">
           <div className="bookingHead">
             <h1 className="pageTitle">Запись на {data.title}</h1>
           </div>
 
           <div className="bookingForm">
-            {/* Имя */}
             <div className="formBlock">
               <div className="formLabel">Кого записываем</div>
 
@@ -192,23 +183,26 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                   const raw = e.target.value;
                   const cleaned = sanitizeName(raw);
 
+                  if (raw !== cleaned) setNameHadInvalidChars(true);
+
                   setName(cleaned);
-                  setNameHadInvalidChars(raw !== cleaned);
 
                   // начал ввод — убрали submit-error
                   if (submitAttempted) setSubmitAttempted(false);
+
+                  // если сейчас ввод “чистый” — снимаем флаг
+                  if (nameHadInvalidChars && raw === cleaned) {
+                    setNameHadInvalidChars(false);
+                  }
                 }}
                 placeholder="Имя и фамилия"
                 inputMode="text"
                 autoComplete="name"
               />
 
-              {showNameError && (
-                <div className="textInputErrorText">{nameErrorText}</div>
-              )}
+              {showNameError && <div className="textInputErrorText">{nameErrorText}</div>}
             </div>
 
-            {/* Возраст */}
             <div className="formBlock">
               <div className="formLabel">Возраст</div>
               <div className="chipRow">
@@ -228,7 +222,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               </div>
             </div>
 
-            {/* Дата */}
             <div className="formBlock">
               <div className="formLabel">Дата посещения</div>
 
@@ -256,7 +249,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               </div>
             </div>
 
-            {/* Время */}
             <div className="formBlock">
               <div className="formLabel">Время</div>
               <div className="chipRow">
@@ -278,16 +270,16 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
           </div>
         </div>
 
-        {/* 2) Кнопка снизу */}
         <div className="stickyCta">
           <button
             type="button"
             className={`primaryCta${canSubmit ? "" : " primaryCta--disabled"}`}
             onClick={handleSubmit}
-            disabled={!canSubmit}
-            aria-busy={isSubmitting ? "true" : "false"}
+            aria-disabled={!canSubmit}
+            // КЛЮЧЕВОЕ: даже если CSS “рубил” кнопку, этот inline всё перебьёт
+            style={{ pointerEvents: "auto" }}
           >
-            {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
+            Записаться
           </button>
         </div>
       </div>
