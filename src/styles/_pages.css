@@ -721,9 +721,10 @@
   width: 18px;
   height: 18px;
   border-radius: 999px;
-  border: 2px solid rgba(255,255,255,0.35);
-  border-top-color: rgba(255,255,255,1);
+  border: 2px solid currentColor;
+  border-right-color: transparent;
   animation: btnSpin 0.8s linear infinite;
+  display: inline-block;
 }
 
 @keyframes btnSpin{

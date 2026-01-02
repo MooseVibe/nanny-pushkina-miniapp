@@ -19,7 +19,7 @@ function nextDatesForWeekday(ruDay, count = 4) {
 
   const res = [];
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // без времени
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const diff = (target - start.getDay() + 7) % 7;
   let cur = new Date(start);
@@ -42,7 +42,11 @@ function sanitizeName(value) {
     .replace(/^\s+/g, "");
 }
 
-export default function BookingPage({ lesson, onSubmit }) {
+function ButtonSpinner() {
+  return <span className="btnSpinner" aria-label="Загрузка" />;
+}
+
+export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) {
   const data = useMemo(() => {
     if (lesson?.schedule?.groups?.length) {
       return {
@@ -75,7 +79,6 @@ export default function BookingPage({ lesson, onSubmit }) {
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(data.groups[0]?.label || "");
 
-  // --- errors ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
 
@@ -84,7 +87,8 @@ export default function BookingPage({ lesson, onSubmit }) {
 
   const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
 
-  const showNameError = submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
+  const showNameError =
+    submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
 
   const nameErrorText = !nameOk
     ? "Введите имя и фамилию"
@@ -147,10 +151,10 @@ export default function BookingPage({ lesson, onSubmit }) {
     !!selectedTime;
 
   const handleSubmit = () => {
-    // ВАЖНО: сначала включаем режим ошибок (кнопка может быть “серой”, но должна кликаться)
     setSubmitAttempted(true);
 
     if (!canSubmit) return;
+    if (isSubmitting) return; // защита от дабл-клика на уровне страницы
 
     const pickedDateObj = dateOptions.find((d) => d.key === selectedDateKey);
 
@@ -162,6 +166,8 @@ export default function BookingPage({ lesson, onSubmit }) {
       time: selectedTime,
     });
   };
+
+  const buttonDisabled = !canSubmit || isSubmitting;
 
   return (
     <div className="page bookingPage">
@@ -187,10 +193,8 @@ export default function BookingPage({ lesson, onSubmit }) {
 
                   setName(cleaned);
 
-                  // начал ввод — убрали submit-error
                   if (submitAttempted) setSubmitAttempted(false);
 
-                  // если сейчас ввод “чистый” — снимаем флаг
                   if (nameHadInvalidChars && raw === cleaned) {
                     setNameHadInvalidChars(false);
                   }
@@ -200,7 +204,9 @@ export default function BookingPage({ lesson, onSubmit }) {
                 autoComplete="name"
               />
 
-              {showNameError && <div className="textInputErrorText">{nameErrorText}</div>}
+              {showNameError && (
+                <div className="textInputErrorText">{nameErrorText}</div>
+              )}
             </div>
 
             <div className="formBlock">
@@ -214,6 +220,7 @@ export default function BookingPage({ lesson, onSubmit }) {
                       type="button"
                       className={`chip ${active ? "chipActive" : ""}`}
                       onClick={() => setSelectedGroupLabel(g.label)}
+                      disabled={isSubmitting}
                     >
                       {g.label}
                     </button>
@@ -237,6 +244,7 @@ export default function BookingPage({ lesson, onSubmit }) {
                         type="button"
                         className={`chip chipDate ${active ? "chipActive" : ""}`}
                         onClick={() => setSelectedDateKey(d.key)}
+                        disabled={isSubmitting}
                       >
                         <div className="chipDateInner">
                           <div className="chipDateCaption">{d.day}</div>
@@ -260,6 +268,7 @@ export default function BookingPage({ lesson, onSubmit }) {
                       type="button"
                       className={`chip ${active ? "chipActive" : ""}`}
                       onClick={() => setSelectedTime(t)}
+                      disabled={isSubmitting}
                     >
                       {t}
                     </button>
@@ -273,13 +282,12 @@ export default function BookingPage({ lesson, onSubmit }) {
         <div className="stickyCta">
           <button
             type="button"
-            className={`primaryCta${canSubmit ? "" : " primaryCta--disabled"}`}
+            className={`primaryCta${buttonDisabled ? " primaryCta--disabled" : ""}`}
             onClick={handleSubmit}
-            aria-disabled={!canSubmit}
-            // КЛЮЧЕВОЕ: даже если CSS “рубил” кнопку, этот inline всё перебьёт
-            style={{ pointerEvents: "auto" }}
+            disabled={buttonDisabled}
+            aria-busy={isSubmitting ? "true" : "false"}
           >
-            Записаться
+            {isSubmitting ? <ButtonSpinner /> : "Записаться"}
           </button>
         </div>
       </div>

@@ -21,22 +21,18 @@ export default function App() {
   const isSubpage = screen !== "home";
 
   const goBack = () => {
-    // 0) Из success назад на booking
     if (screen === "success") {
       setScreen("booking");
       return;
     }
-    // 1) Из booking назад на details
     if (screen === "booking") {
       setScreen("details");
       return;
     }
-    // 2) Из details назад на vyshe
     if (isDetails) {
       setScreen("vyshe");
       return;
     }
-    // 3) Из vyshe назад на home
     if (screen === "vyshe") {
       setScreen("home");
       return;
@@ -89,14 +85,10 @@ export default function App() {
     };
   }, [isSubpage, isDetails, screen]);
 
-  // Отправка записи на сервер (Vercel Function: /api/book)
+  // /api/book
   const submitBookingToServer = async (payload) => {
     const tg = window.Telegram?.WebApp;
-    const initData = tg?.initData; // важно: initData (строка), не initDataUnsafe
-
-    console.log("TG initData length:", initData ? initData.length : 0);
-    console.log("TG initData has hash:", initData ? initData.includes("hash=") : false);
-    console.log("TG initData first 80:", initData ? initData.slice(0, 80) : "");
+    const initData = tg?.initData;
 
     if (!initData) {
       throw new Error("Нет Telegram initData. Открой миниапп строго из бота.");
@@ -114,8 +106,7 @@ export default function App() {
     } catch (e) {}
 
     if (!res.ok) {
-      const msg =
-        (data && (data.error || data.message)) || `Ошибка сервера (${res.status})`;
+      const msg = (data && (data.error || data.message)) || `Ошибка сервера (${res.status})`;
       throw new Error(msg);
     }
 
@@ -159,11 +150,9 @@ export default function App() {
               <BookingPage
                 lesson={selectedLesson}
                 onBack={goBack}
-                isSubmitting={isSubmittingBooking}   // ✅ вот это добавили
+                isSubmitting={isSubmittingBooking}
                 onSubmit={async (payload) => {
-                  if (isSubmittingBooking) return; // защита от дабл-клика
-
-                  console.log("BOOKING SUBMIT:", payload);
+                  if (isSubmittingBooking) return;
 
                   setIsSubmittingBooking(true);
                   try {
@@ -173,9 +162,7 @@ export default function App() {
                     setScreen("success");
                   } catch (err) {
                     console.error("BOOKING SUBMIT ERROR:", err);
-                    alert(
-                      `Не удалось отправить запись.\n${err?.message || "Попробуйте ещё раз."}`
-                    );
+                    alert(`Не удалось отправить запись.\n${err?.message || "Попробуйте ещё раз."}`);
                   } finally {
                     setIsSubmittingBooking(false);
                   }
