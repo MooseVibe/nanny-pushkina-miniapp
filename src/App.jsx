@@ -85,7 +85,6 @@ export default function App() {
     };
   }, [isSubpage, isDetails, screen]);
 
-  // /api/book
   const submitBookingToServer = async (payload) => {
     const tg = window.Telegram?.WebApp;
     const initData = tg?.initData;
@@ -106,7 +105,8 @@ export default function App() {
     } catch (e) {}
 
     if (!res.ok) {
-      const msg = (data && (data.error || data.message)) || `Ошибка сервера (${res.status})`;
+      const msg =
+        (data && (data.error || data.message)) || `Ошибка сервера (${res.status})`;
       throw new Error(msg);
     }
 
@@ -124,9 +124,7 @@ export default function App() {
           <div className="headerBg" />
 
           <div className="contentShell">
-            {screen === "home" && (
-              <HomePage onOpenVyshe={() => setScreen("vyshe")} />
-            )}
+            {screen === "home" && <HomePage onOpenVyshe={() => setScreen("vyshe")} />}
 
             {screen === "vyshe" && (
               <VysheListPage
@@ -149,7 +147,6 @@ export default function App() {
             {screen === "booking" && (
               <BookingPage
                 lesson={selectedLesson}
-                onBack={goBack}
                 isSubmitting={isSubmittingBooking}
                 onSubmit={async (payload) => {
                   if (isSubmittingBooking) return;
@@ -157,7 +154,6 @@ export default function App() {
                   setIsSubmittingBooking(true);
                   try {
                     await submitBookingToServer(payload);
-
                     setLastBooking(payload);
                     setScreen("success");
                   } catch (err) {

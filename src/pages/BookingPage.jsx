@@ -42,10 +42,6 @@ function sanitizeName(value) {
     .replace(/^\s+/g, "");
 }
 
-function ButtonSpinner() {
-  return <span className="btnSpinner" aria-label="Загрузка" />;
-}
-
 export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) {
   const data = useMemo(() => {
     if (lesson?.schedule?.groups?.length) {
@@ -79,6 +75,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(data.groups[0]?.label || "");
 
+  // Ошибка для имени
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
 
@@ -151,10 +148,14 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     !!selectedTime;
 
   const handleSubmit = () => {
+    // ВАЖНО: всегда ставим попытку отправки, даже если форма невалидна
     setSubmitAttempted(true);
 
+    // если идет загрузка — не даём кликать повторно
+    if (isSubmitting) return;
+
+    // если невалидно — просто показываем ошибку, но не отправляем
     if (!canSubmit) return;
-    if (isSubmitting) return; // защита от дабл-клика на уровне страницы
 
     const pickedDateObj = dateOptions.find((d) => d.key === selectedDateKey);
 
@@ -166,8 +167,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
       time: selectedTime,
     });
   };
-
-  const buttonDisabled = !canSubmit || isSubmitting;
 
   return (
     <div className="page bookingPage">
@@ -193,8 +192,10 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
                   setName(cleaned);
 
+                  // начал ввод — убрали ошибку
                   if (submitAttempted) setSubmitAttempted(false);
 
+                  // если всё чисто — снимаем флаг
                   if (nameHadInvalidChars && raw === cleaned) {
                     setNameHadInvalidChars(false);
                   }
@@ -220,7 +221,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                       type="button"
                       className={`chip ${active ? "chipActive" : ""}`}
                       onClick={() => setSelectedGroupLabel(g.label)}
-                      disabled={isSubmitting}
                     >
                       {g.label}
                     </button>
@@ -244,7 +244,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                         type="button"
                         className={`chip chipDate ${active ? "chipActive" : ""}`}
                         onClick={() => setSelectedDateKey(d.key)}
-                        disabled={isSubmitting}
                       >
                         <div className="chipDateInner">
                           <div className="chipDateCaption">{d.day}</div>
@@ -268,7 +267,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                       type="button"
                       className={`chip ${active ? "chipActive" : ""}`}
                       onClick={() => setSelectedTime(t)}
-                      disabled={isSubmitting}
                     >
                       {t}
                     </button>
@@ -282,12 +280,12 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
         <div className="stickyCta">
           <button
             type="button"
-            className={`primaryCta${buttonDisabled ? " primaryCta--disabled" : ""}`}
+            // кнопка выглядит disabled, но кликается — чтобы показать ошибку
+            className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
             onClick={handleSubmit}
-            disabled={buttonDisabled}
-            aria-busy={isSubmitting ? "true" : "false"}
+            disabled={isSubmitting} // disabled ТОЛЬКО на время загрузки
           >
-            {isSubmitting ? <ButtonSpinner /> : "Записаться"}
+            {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
           </button>
         </div>
       </div>
