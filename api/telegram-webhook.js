@@ -23,23 +23,47 @@ async function safeAnswerCallback(token, callbackQueryId, text) {
   }
 }
 
-function buildWelcomeInlineMarkup(webAppUrl) {
-  // ВАЖНО: именно inline_keyboard + web_app
+/**
+ * ВАЖНО:
+ * - Для "нативного fullscreen" нужен MAIN MINI APP, открытый по direct link:
+ *   https://t.me/botusername?startapp
+ * - Кнопка web_app (reply keyboard) чаще открывает WebView (не то, что тебе нужно).
+ */
+function buildOpenAppLink(botUsername, startParam = "") {
+  const clean = String(botUsername || "").replace(/^@/, "").trim();
+  if (!clean) return "";
+
+  if (!startParam) {
+    // формат из доков: https://t.me/botusername?startapp
+    return `https://t.me/${clean}?startapp`;
+  }
+
+  return `https://t.me/${clean}?startapp=${encodeURIComponent(startParam)}`;
+}
+
+function buildWelcomeMarkup(openAppUrl) {
+  // Делай INLINE keyboard, потому что это ссылка (direct link), которая открывает main mini app
   return {
-    inline_keyboard: [[{ text: "Открыть приложение", web_app: { url: webAppUrl } }]],
+    inline_keyboard: [[{ text: "Открыть приложение", url: openAppUrl }]],
   };
 }
 
 export default async function handler(req, res) {
+  // Telegram ждёт 200 OK быстро. Всегда отвечаем.
   if (req.method !== "POST") return res.status(200).send("ok");
 
   const BOT_TOKEN = process.env.BOT_TOKEN;
   const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const WEBAPP_URL = process.env.WEBAPP_URL; // например https://nanny-pushkina-miniapp.vercel.app
+
+  // НОВОЕ: username бота (без @)
+  const BOT_USERNAME = process.env.BOT_USERNAME; // например: "Nanny_pushkina_bot"
+  // Опционально: что передавать в startapp (можно пусто)
+  const STARTAPP_PARAM = process.env.STARTAPP_PARAM || ""; // например: "home"
 
   const update = req.body || {};
+
   if (!BOT_TOKEN) return res.status(200).send("ok");
 
   // -----------------------------
@@ -51,10 +75,17 @@ export default async function handler(req, res) {
     if (text === "/start" || text.startsWith("/start ")) {
       const chatId = msg.chat?.id;
 
-      if (!WEBAPP_URL) {
+      const openAppUrl = buildOpenAppLink(BOT_USERNAME, STARTAPP_PARAM);
+
+      if (!openAppUrl) {
+        // Если ты забыл BOT_USERNAME — бот не упадёт, но и кнопку не покажет нормально.
         await tgApi(BOT_TOKEN, "sendMessage", {
           chat_id: chatId,
-          text: "Сервис временно недоступен (нет WEBAPP_URL).",
+          text:
+            `Привет! 👋\n\n` +
+            `Тебя приветствует бот Няни Пушкина.\n` +
+            `Сейчас не настроен BOT_USERNAME, поэтому кнопку открыть приложение показать не могу.\n\n` +
+            `Напиши разработчику 😄`,
         });
         return res.status(200).send("ok");
       }
@@ -68,7 +99,7 @@ export default async function handler(req, res) {
       await tgApi(BOT_TOKEN, "sendMessage", {
         chat_id: chatId,
         text: welcomeText,
-        reply_markup: buildWelcomeInlineMarkup(WEBAPP_URL),
+        reply_markup: buildWelcomeMarkup(openAppUrl),
       });
 
       return res.status(200).send("ok");
@@ -90,6 +121,7 @@ export default async function handler(req, res) {
     return res.status(200).send("ok");
   }
 
+  // мгновенно снимаем “часики”
   await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Проверяю запись…");
 
   try {
