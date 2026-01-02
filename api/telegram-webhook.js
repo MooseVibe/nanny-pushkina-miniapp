@@ -23,12 +23,12 @@ async function safeAnswerCallback(token, callbackQueryId, text) {
   }
 }
 
+// ✅ INLINE button (как "Отменить запись"), не reply keyboard
 function buildWelcomeMarkup(webAppUrl) {
-  // ВАЖНО: это именно web_app (не url)
   return {
-    keyboard: [[{ text: "Открыть миниапп", web_app: { url: webAppUrl } }]],
-    resize_keyboard: true,
-    one_time_keyboard: false,
+    inline_keyboard: [
+      [{ text: "Открыть миниапп", web_app: { url: webAppUrl } }],
+    ],
   };
 }
 
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
 
   const update = req.body || {};
 
-  // Если env не поднялись — не падаем.
+  // Если токена нет — бессмысленно продолжать, но Telegram должен получить 200
   if (!BOT_TOKEN) return res.status(200).send("ok");
 
   // -----------------------------
@@ -56,10 +56,9 @@ export default async function handler(req, res) {
     if (text === "/start" || text.startsWith("/start ")) {
       const chatId = msg.chat?.id;
 
-      // WEBAPP_URL обязателен, иначе кнопка бессмысленна
+      // WEBAPP_URL желательно хранить в env, но оставим дефолт на всякий
       const webAppUrl = WEBAPP_URL || "https://nanny-pushkina-miniapp.vercel.app";
 
-      // Можно потом заменить на картинку (sendPhoto). Сейчас — просто текст.
       const welcomeText =
         `Привет! 👋\n\n` +
         `Тебя приветствует бот Няни Пушкина.\n` +
@@ -69,6 +68,7 @@ export default async function handler(req, res) {
       await tgApi(BOT_TOKEN, "sendMessage", {
         chat_id: chatId,
         text: welcomeText,
+        parse_mode: "HTML",
         reply_markup: buildWelcomeMarkup(webAppUrl),
       });
 
