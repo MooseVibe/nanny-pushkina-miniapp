@@ -287,3 +287,108 @@
     min-width: 0;        /* КРИТИЧНО для flex */
     flex: 1 1 auto;
   }
+
+  /* Bottom Sheet */
+  .sheetRoot {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none; /* включим, когда open */
+  }
+
+  .sheetRoot--open {
+    pointer-events: auto;
+  }
+
+  .sheetBackdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transition: opacity 200ms ease;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .sheetRoot--open .sheetBackdrop {
+    opacity: 1;
+  }
+
+  .sheetPanel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  
+    background: #fff;
+    border-radius: 12px 12px 0 0;
+  
+    transform: translateY(110%);
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  
+    /* высота ДИНАМИЧЕСКАЯ */
+    max-height: calc(100vh - 24px);
+    overflow: hidden;
+  }
+
+  .sheetRoot--open .sheetPanel {
+    transform: translateY(0);
+  }
+
+  .sheetGrabArea {
+    position: relative;
+    height: 32px; /* зона для свайпа */
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .sheetGrabber {
+    margin-top: 10px;
+    width: 32px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(0, 16, 36, 0.22);
+  }
+
+.sheetHandleWrap {
+  padding-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.sheetHandle {
+  width: 32px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(0, 16, 36, 0.22); /* #001024 22% */
+}
+
+/* От handle до заголовка = 22px */
+.sheetTitle {
+  margin-top: px;        /* как ты сказал: от grabber */
+  padding: 0 20px;
+
+  font-family: inherit;     /* SF Pro */
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  color: #001024;
+}
+
+.sheetBody {
+  padding: 12px 16px 56px 16px;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 22px;
+  color: rgba(0, 16, 36, 0.72);
+
+  /* если контента много — появится скролл */
+  overflow: auto;
+  max-height: calc(100vh - 24px - 32px - 22px - 24px);
+}
+
+.sheetBottomSafe {
+  height: 24px; /* как ты сказал: до system bottom bar */
+}

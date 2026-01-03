@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import iconSand from "../assets/icons/sand.svg";
 import iconIzo from "../assets/icons/izo.svg";
 import iconVocal from "../assets/icons/vocal.svg";
@@ -6,8 +8,11 @@ import iconActor from "../assets/icons/actor.svg";
 import iconPuppets from "../assets/icons/puppets.svg";
 import iconEnglish from "../assets/icons/english.svg";
 import hintIcon from "../assets/icons/hint.svg";
+
 import LessonCard from "../components/LessonCard";
-import iconAny from "../assets/illustrations/vyshe.svg"; // временно, потом заменим на реальные иконки
+import BottomSheet from "../components/BottomSheet";
+
+import iconAny from "../assets/illustrations/vyshe.svg"; // временно
 
 const lessons = [
   { title: "Изобразительное искусство", price: "700 ₽", age: "от 6 лет", icon: iconIzo },
@@ -32,7 +37,9 @@ const lessons = [
   { title: "Подготовка к школе", price: "900 ₽", age: "от 5 лет" },
 ];
 
-export default function VysheListPage({ onHelp, onOpenLesson }) {
+export default function VysheListPage({ onOpenLesson }) {
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+
   return (
     <div className="page vyshePage">
       <div className="pageHeaderRow">
@@ -42,27 +49,41 @@ export default function VysheListPage({ onHelp, onOpenLesson }) {
         </div>
 
         <button
-  className="hintBtn"
-  type="button"
-  onClick={onHelp}
-  aria-label="Что такое «Выше»"
->
-  <img className="hintIcon" src={hintIcon} alt="" />
-</button>
+          className="hintBtn"
+          type="button"
+          onClick={() => setIsAboutOpen(true)}
+          aria-label="Что такое «Выше»"
+        >
+          <img className="hintIcon" src={hintIcon} alt="" />
+        </button>
       </div>
 
       <div className="vysheList">
         {lessons.map((l) => (
           <LessonCard
-          key={l.title}
-          iconSrc={l.icon || iconAny}
-          title={l.title}
-          price={l.price}
-          age={l.age}
-          onClick={() => onOpenLesson(l)}
-        />
+            key={l.title}
+            iconSrc={l.icon || iconAny}
+            title={l.title}
+            price={l.price}
+            age={l.age}
+            onClick={() => onOpenLesson(l)}
+          />
         ))}
       </div>
+
+      <BottomSheet
+        open={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+        title="Что такое «Выше»?"
+      >
+        <div>
+          «Выше» — это занятия для детей и взрослых, которые помогают развивать навыки,
+          уверенность и творческое мышление.
+          <br />
+          <br />
+          Выберите направление, посмотрите расписание и запишитесь — детали придут в бот.
+        </div>
+      </BottomSheet>
     </div>
   );
 }
