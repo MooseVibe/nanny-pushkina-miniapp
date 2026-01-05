@@ -577,19 +577,43 @@
 }
 
 /* teacher */
-.teacherCard{
-  width: 100%;              /* на 375 будет 343 (из-за 16px слева/справа у page) */
-  height: 84px;
-  border-radius: 24px;
-  background: #fff;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+.teacherCard {
+  appearance: none;
+  -webkit-appearance: none;
 
+  border: 0 !important;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+
+  width: 100%;
+  text-align: left;
+
+  /* дальше — твоя верстка карточки */
   display: flex;
   align-items: center;
+  gap: 12px;
 
-  padding: 14px;            /* 14 сверху/снизу и слева/справа */
-  gap: 16px;                /* расстояние до текста */
+  /* если у тебя была белая карточка — оставь/восстанови */
+  background: #fff;
+  border-radius: 24px; /* или сколько у тебя было */
+  box-shadow: 0 6px 18px rgba(0, 16, 36, 0.08); /* если было */
+  padding: 12px 14px;
+
+  cursor: pointer;
 }
+
+.teacherCard:active {
+  opacity: 0.98;
+}
+
+/* красивый фокус с клавиатуры (не убираем полностью) */
+.teacherCard:focus-visible {
+  outline: 2px solid rgba(0, 16, 36, 0.25);
+  outline-offset: 2px;
+}
+
 
 .teacherAvatar{
   width: 56px;
