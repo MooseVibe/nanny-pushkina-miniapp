@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const WEEKDAY_ORDER = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 const JS_DAY_TO_RU = { 1: "ПН", 2: "ВТ", 3: "СР", 4: "ЧТ", 5: "ПТ", 6: "СБ", 0: "ВС" };
@@ -64,6 +64,8 @@ function capitalizeWords(value) {
 }
 
 export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) {
+  const nameInputRef = useRef(null);
+
   const data = useMemo(() => {
     if (lesson?.schedule?.groups?.length) {
       return {
@@ -172,13 +174,9 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     !!selectedTime;
 
   const handleSubmit = () => {
-    // всегда фиксируем попытку — чтобы показать ошибку
     setSubmitAttempted(true);
 
-    // на загрузке не даём повторный клик
     if (isSubmitting) return;
-
-    // невалидно — просто показываем ошибку
     if (!canSubmit) return;
 
     const pickedDateObj = dateOptions.find((d) => d.key === selectedDateKey);
@@ -206,6 +204,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               <div className="formLabel">Кого записываем</div>
 
               <input
+                ref={nameInputRef}
                 className={`textInput${showNameError ? " textInputError" : ""}`}
                 type="text"
                 value={name}
@@ -218,12 +217,16 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                   // НЕ капитализируем на каждый ввод, чтобы не прыгал курсор
                   setName(cleaned);
 
-                  // начал ввод — убрали submit-ошибку
                   if (submitAttempted) setSubmitAttempted(false);
 
-                  // если пользователь больше не вводит “запрещёнку” — снимаем флаг
                   if (nameHadInvalidChars && raw === cleaned) {
                     setNameHadInvalidChars(false);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    nameInputRef.current?.blur(); // ✅ закрывает клавиатуру
                   }
                 }}
                 onBlur={() => {
@@ -235,6 +238,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                 autoComplete="name"
                 autoCapitalize="words"
                 autoCorrect="off"
+                enterKeyHint="done"
               />
 
               {showNameError && <div className="textInputErrorText">{nameErrorText}</div>}
@@ -319,7 +323,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             type="button"
             className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
             onClick={handleSubmit}
-            disabled={isSubmitting} // блокируем ТОЛЬКО на загрузке (чтобы ошибка работала всегда)
+            disabled={isSubmitting}
           >
             {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
           </button>
