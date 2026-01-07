@@ -4,33 +4,36 @@ import pushkinImg from "../assets/illustrations/pushkin.svg";
 import kommunalkaImg from "../assets/illustrations/kommunalka.svg";
 import ServiceCard from "../components/Card";
 
-function LockedCard({ children, onClick }) {
+function LockBadge() {
   return (
-    <div className="lockedCard">
-      {children}
-
-      {/* overlay поверх карточки */}
-      <button
-        type="button"
-        className="lockedOverlay"
-        onClick={onClick}
-        aria-label="Раздел пока недоступен"
-      >
-        <span className="lockBadge">
-          <img src="/icons/lock.svg" alt="" />
-        </span>
-      </button>
+    <div className="lockBadge" aria-hidden="true">
+      <img className="lockIconImg" src="/icons/lock.svg" alt="" />
     </div>
   );
 }
 
+function LockedCard({ children, onClick }) {
+  return (
+    <button
+      type="button"
+      className="lockedWrap"
+      onClick={onClick}
+      aria-label="Раздел пока недоступен"
+    >
+      <div className="lockedContent">{children}</div>
+      <LockBadge />
+    </button>
+  );
+}
+
 export default function HomePage({ onOpenVyshe }) {
-  const lockedAlert = () =>
-    alert("Этот раздел пока в разработке. Скоро откроем 🙂");
+  const lockedAlert = () => alert("Этот раздел пока в разработке. Скоро откроем 🙂");
 
   return (
     <div className="page">
       <h1>Добро пожаловать к Няне Пушкина!</h1>
+
+      {/* Ближайшие события скрыты */}
 
       <div className="servicesGrid">
         <ServiceCard

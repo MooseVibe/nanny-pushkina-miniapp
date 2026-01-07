@@ -118,56 +118,57 @@
     gap: 0; /* важно: иначе gap у .page может ломать расчёт */
   }
 
-  .lockedCard {
-    position: relative;
-    border-radius: 20px;     /* как в макете */
-    overflow: hidden;        /* чтобы оверлей резался по радиусу */
-  }
-  
-  .lockedOverlay{
-    position: absolute;
-    inset: 0;
-    border-radius: 20px;
-  
-    /* ключ: мягкая светлая вуаль */
-    background: rgba(255, 255, 255, 0.06);
-  
-    /* blur поменьше */
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
-  
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-  
-    z-index: 10;
-  
-    /* стабилизация композитинга в webview */
-    transform: translateZ(0);
-    will-change: backdrop-filter;
-  }
-  
-  .lockBadge {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-  
-    background: rgba(68, 68, 68, 0.1);
-  
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .lockBadge img {
-    width: 16px;
-    height: 16px;
-  }
+  /* NEW: залоченная карточка = кнопка-обёртка */
+.lockedWrap {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  border-radius: 20px;
 
-  .lockedOverlay:active {
-    transform: scale(0.999);
-  }
+  /* чтобы iOS не подсвечивал серым */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* NEW: тут делаем "как в Фигме" — opacity на всю карточку */
+.lockedContent {
+  opacity: 0.5;            /* попробуй 0.6 или 0.7 */
+  border-radius: 20px;
+}
+
+/* NEW: замок поверх и НЕ глушится */
+.lockBadge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 47px;
+  height: 47px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.10);
+
+  display: grid;
+  place-items: center;
+
+  pointer-events: none; /* чтобы клик шёл в кнопку */
+}
+
+/* если у тебя замок картинкой из public/icons/lock.svg */
+.lockIconImg {
+  width: 24px;
+  height: 24px;
+  display: block;
+  opacity: 0.8; 
+}
+
+/* опционально: убираем чёрную рамку фокуса */
+.lockedWrap:focus {
+  outline: none;
+}
+.lockedWrap:focus-visible {
+  outline: none;
+}
