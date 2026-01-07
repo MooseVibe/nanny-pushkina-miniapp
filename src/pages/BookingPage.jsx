@@ -42,6 +42,27 @@ function sanitizeName(value) {
     .replace(/^\s+/g, "");
 }
 
+// "илья петров" -> "Илья Петров", "анна-мария иванова" -> "Анна-Мария Иванова"
+function capitalizeWords(value) {
+  const v = value.trim().replace(/\s+/g, " ");
+  if (!v) return "";
+
+  return v
+    .split(" ")
+    .map((word) =>
+      word
+        .split("-")
+        .map((part) => {
+          if (!part) return "";
+          const first = part[0].toLocaleUpperCase("ru-RU");
+          const rest = part.slice(1).toLocaleLowerCase("ru-RU");
+          return first + rest;
+        })
+        .join("-")
+    )
+    .join(" ");
+}
+
 export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) {
   const data = useMemo(() => {
     if (lesson?.schedule?.groups?.length) {
@@ -72,20 +93,19 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     };
   }, [lesson]);
 
+  // --- form state ---
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(data.groups[0]?.label || "");
 
-  // Ошибка для имени
+  // --- error state (имя) ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
 
   const nameClean = name.trim();
   const nameOk = nameClean.length >= 2;
-
   const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
 
-  const showNameError =
-    submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
+  const showNameError = submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
 
   const nameErrorText = !nameOk
     ? "Введите имя и фамилию"
@@ -93,6 +113,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     ? "Только буквы, пробел и дефис"
     : "";
 
+  // если поменялось занятие/группы — ставим первую группу
   useEffect(() => {
     setSelectedGroupLabel(data.groups[0]?.label || "");
   }, [data.groups]);
@@ -101,6 +122,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     return data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0];
   }, [data.groups, selectedGroupLabel]);
 
+  // Даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(Boolean);
@@ -122,6 +144,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
   const [selectedDateKey, setSelectedDateKey] = useState("");
 
+  // Время — уникальные времена из sessions
   const timeOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const uniqueTimes = Array.from(new Set(sessions.map((s) => s.time))).filter(Boolean);
@@ -131,6 +154,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
   const [selectedTime, setSelectedTime] = useState("");
 
+  // reset дата/время при пересборке опций
   useEffect(() => {
     setSelectedDateKey(dateOptions[0]?.key || "");
   }, [dateOptions]);
@@ -148,13 +172,13 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     !!selectedTime;
 
   const handleSubmit = () => {
-    // ВАЖНО: всегда ставим попытку отправки, даже если форма невалидна
+    // всегда фиксируем попытку — чтобы показать ошибку
     setSubmitAttempted(true);
 
-    // если идет загрузка — не даём кликать повторно
+    // на загрузке не даём повторный клик
     if (isSubmitting) return;
 
-    // если невалидно — просто показываем ошибку, но не отправляем
+    // невалидно — просто показываем ошибку
     if (!canSubmit) return;
 
     const pickedDateObj = dateOptions.find((d) => d.key === selectedDateKey);
@@ -177,6 +201,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
           </div>
 
           <div className="bookingForm">
+            {/* Имя */}
             <div className="formBlock">
               <div className="formLabel">Кого записываем</div>
 
@@ -190,26 +215,32 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
                   if (raw !== cleaned) setNameHadInvalidChars(true);
 
+                  // НЕ капитализируем на каждый ввод, чтобы не прыгал курсор
                   setName(cleaned);
 
-                  // начал ввод — убрали ошибку
+                  // начал ввод — убрали submit-ошибку
                   if (submitAttempted) setSubmitAttempted(false);
 
-                  // если всё чисто — снимаем флаг
+                  // если пользователь больше не вводит “запрещёнку” — снимаем флаг
                   if (nameHadInvalidChars && raw === cleaned) {
                     setNameHadInvalidChars(false);
                   }
                 }}
+                onBlur={() => {
+                  // фоллбек: когда закончил ввод — приводим к "Имя Фамилия"
+                  setName((prev) => capitalizeWords(prev));
+                }}
                 placeholder="Имя и фамилия"
                 inputMode="text"
                 autoComplete="name"
+                autoCapitalize="words"
+                autoCorrect="off"
               />
 
-              {showNameError && (
-                <div className="textInputErrorText">{nameErrorText}</div>
-              )}
+              {showNameError && <div className="textInputErrorText">{nameErrorText}</div>}
             </div>
 
+            {/* Возраст */}
             <div className="formBlock">
               <div className="formLabel">Возраст</div>
               <div className="chipRow">
@@ -221,6 +252,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                       type="button"
                       className={`chip ${active ? "chipActive" : ""}`}
                       onClick={() => setSelectedGroupLabel(g.label)}
+                      disabled={isSubmitting}
                     >
                       {g.label}
                     </button>
@@ -229,6 +261,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               </div>
             </div>
 
+            {/* Дата */}
             <div className="formBlock">
               <div className="formLabel">Дата посещения</div>
 
@@ -244,6 +277,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                         type="button"
                         className={`chip chipDate ${active ? "chipActive" : ""}`}
                         onClick={() => setSelectedDateKey(d.key)}
+                        disabled={isSubmitting}
                       >
                         <div className="chipDateInner">
                           <div className="chipDateCaption">{d.day}</div>
@@ -256,6 +290,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               </div>
             </div>
 
+            {/* Время */}
             <div className="formBlock">
               <div className="formLabel">Время</div>
               <div className="chipRow">
@@ -267,6 +302,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                       type="button"
                       className={`chip ${active ? "chipActive" : ""}`}
                       onClick={() => setSelectedTime(t)}
+                      disabled={isSubmitting}
                     >
                       {t}
                     </button>
@@ -277,13 +313,13 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
           </div>
         </div>
 
+        {/* CTA */}
         <div className="stickyCta">
           <button
             type="button"
-            // кнопка выглядит disabled, но кликается — чтобы показать ошибку
             className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
             onClick={handleSubmit}
-            disabled={isSubmitting} // disabled ТОЛЬКО на время загрузки
+            disabled={isSubmitting} // блокируем ТОЛЬКО на загрузке (чтобы ошибка работала всегда)
           >
             {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
           </button>
