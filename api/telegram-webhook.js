@@ -38,6 +38,16 @@ function serialText(row) {
   return row?.serial_number ? `#${row.serial_number}` : "";
 }
 
+function buildWhoLinkFromTelegramUser(tgUser) {
+  const id = tgUser?.id;
+  const username = tgUser?.username ? String(tgUser.username).replace(/^@/, "") : "";
+  const firstName = tgUser?.first_name || "Пользователь";
+
+  if (username) return `@${username}`;
+  if (id) return `<a href="tg://user?id=${id}">${firstName}</a>`;
+  return "Пользователь";
+}
+
 function adminActiveText(row, whoBookedText = "") {
   return (
     `🆕 <b>Новая запись</b> ${serialText(row)}\n\n` +
@@ -49,19 +59,19 @@ function adminActiveText(row, whoBookedText = "") {
   );
 }
 
-function adminCancelledText(row, whoBookedText = "") {
+function adminCancelledText(row, whoBookedText = "", whoCancelledText = "") {
   return (
     `❌ <b>Отменено</b> ${serialText(row)}\n\n` +
     `Кого: <b>${row.name}</b>\n` +
     `Занятие: <b>${row.lesson_title}</b>\n` +
     `Возраст: <b>${row.group_label}</b>\n` +
     `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>\n` +
-    (whoBookedText ? `Кто записал: ${whoBookedText}` : "")
+    (whoBookedText ? `Кто записал: ${whoBookedText}\n` : "") +
+    (whoCancelledText ? `Кто отменил: ${whoCancelledText}` : "")
   );
 }
 
 export default async function handler(req, res) {
-  // Telegram ждёт 200 OK быстро
   if (req.method !== "POST") return res.status(200).send("ok");
 
   const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -141,12 +151,7 @@ export default async function handler(req, res) {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: row, error } = await sb
-      .from("bookings")
-      .select("*")
-      .eq("id", bookingId)
-      .maybeSingle();
-
+    const { data: row, error } = await sb.from("bookings").select("*").eq("id", bookingId).maybeSingle();
     if (error) throw error;
 
     if (!row) {
@@ -154,7 +159,7 @@ export default async function handler(req, res) {
       return res.status(200).send("ok");
     }
 
-    // защита: отменять может только тот, кто записал
+    // отменять может только тот, кто записал
     if (Number(row.user_id) !== Number(fromId)) {
       await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Это не ваша запись");
       return res.status(200).send("ok");
@@ -165,27 +170,29 @@ export default async function handler(req, res) {
       return res.status(200).send("ok");
     }
 
-    // 1) обновляем статус в базе
-    const { error: updErr } = await sb
-      .from("bookings")
-      .update({ status: "cancelled" })
-      .eq("id", bookingId);
-
+    // 1) обновляем статус
+    const { error: updErr } = await sb.from("bookings").update({ status: "cancelled" }).eq("id", bookingId);
     if (updErr) throw updErr;
 
     await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись отменена ✅");
 
-    // 2) пользователю можно оставить короткое подтверждение
+    // 2) пользователю — подтверждение (можно без номера, но оставим как было у тебя)
     await tgApi(BOT_TOKEN, "sendMessage", {
       chat_id: fromId,
       text:
-        `❌ <b>Запись отменена</b> ${serialText(row)}\n\n` +
+        `❌ <b>Запись отменена</b>\n\n` +
         `<b>${row.lesson_title}</b>\n` +
         `${row.visit_date} • ${row.visit_time}`,
       parse_mode: "HTML",
+      disable_web_page_preview: true,
     });
 
-    // 3) КЛЮЧЕВОЕ: редактируем СТАРОЕ сообщение админу, а не шлём новое
+    // 3) редактируем СТАРОЕ сообщение админу + добавляем "Кто отменил"
+    const whoCancelled = buildWhoLinkFromTelegramUser(cq.from);
+
+    // В твоей модели тот, кто отменил = тот, кто записал (проверка выше)
+    const whoBooked = whoCancelled;
+
     const adminChatId = row.admin_chat_id ? Number(row.admin_chat_id) : Number(ADMIN_CHAT_ID);
     const adminMessageId = row.admin_message_id;
 
@@ -193,15 +200,15 @@ export default async function handler(req, res) {
       await tgApi(BOT_TOKEN, "editMessageText", {
         chat_id: adminChatId,
         message_id: adminMessageId,
-        text: adminCancelledText(row),
+        text: adminCancelledText(row, whoBooked, whoCancelled),
         parse_mode: "HTML",
         disable_web_page_preview: true,
       });
     } else {
-      // если по какой-то причине не сохранились message_id/chat_id — фоллбек: отправим новое сообщение
+      // фоллбек: если не сохранились ids — отправим новое сообщение
       await tgApi(BOT_TOKEN, "sendMessage", {
         chat_id: ADMIN_CHAT_ID,
-        text: adminCancelledText(row),
+        text: adminCancelledText(row, whoBooked, whoCancelled),
         parse_mode: "HTML",
         disable_web_page_preview: true,
       });

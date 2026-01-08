@@ -30,15 +30,9 @@ function validateInitData(initData, botToken) {
     .map((k) => `${k}=${data[k]}`)
     .join("\n");
 
-  const secretKey = crypto
-    .createHmac("sha256", "WebAppData")
-    .update(botToken)
-    .digest();
+  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
 
-  const hmac = crypto
-    .createHmac("sha256", secretKey)
-    .update(checkString)
-    .digest("hex");
+  const hmac = crypto.createHmac("sha256", secretKey).update(checkString).digest("hex");
 
   return { ok: hmac === hash, reason: hmac === hash ? "" : "Bad signature", data };
 }
@@ -113,12 +107,11 @@ export default async function handler(req, res) {
     const serialNumber = rows?.[0]?.serial_number;
 
     if (!bookingId) throw new Error("No bookingId");
-    // serialNumber может быть null, если sequence не привязался — но ты уже сделал SQL, так что должен быть.
     const serialText = serialNumber ? `#${serialNumber}` : "";
 
-    // 2) сообщение пользователю + кнопка отмены (callback_data хранит UUID!)
+    // 2) сообщение пользователю (БЕЗ порядкового номера) + кнопка отмены
     const userText =
-      `✅ <b>Запись создана</b> ${serialText}\n\n` +
+      `✅ <b>Запись создана</b>\n\n` +
       `Занятие: <b>${insert.lesson_title}</b>\n` +
       `Кого: <b>${insert.name}</b>\n` +
       `Возраст: <b>${insert.group_label}</b>\n` +
@@ -131,7 +124,7 @@ export default async function handler(req, res) {
 
     await tgSendMessage(BOT_TOKEN, userId, userText, cancelMarkup);
 
-    // 3) сообщение админу (и сохраняем message_id в таблицу, чтобы потом редактировать)
+    // 3) сообщение админу (С порядковым номером)
     const username = user?.username ? String(user.username).replace(/^@/, "") : "";
     const firstName = user?.first_name || "Пользователь";
 
@@ -149,8 +142,7 @@ export default async function handler(req, res) {
 
     const adminMsg = await tgSendMessage(BOT_TOKEN, ADMIN_CHAT_ID, adminText);
 
-    // 4) сохраняем admin_chat_id + admin_message_id в базе
-    // (чтобы telegram-webhook мог editMessageText при отмене)
+    // 4) сохраняем admin_chat_id + admin_message_id в базе (для editMessageText при отмене)
     const { error: updErr } = await sb
       .from("bookings")
       .update({
