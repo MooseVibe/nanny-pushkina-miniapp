@@ -2,7 +2,6 @@ import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
 function safeDecodeInitData(initData) {
-  // Иногда строка уже декодирована — не ломаем
   try {
     return initData.includes("%") ? decodeURIComponent(initData) : initData;
   } catch {
@@ -26,20 +25,16 @@ function validateInitData(initData, botToken) {
 
   delete data.hash;
 
-  // Telegram: key=value, сортировка по ключу, join "\n"
   const checkString = Object.keys(data)
     .sort()
     .map((k) => `${k}=${data[k]}`)
     .join("\n");
 
-  // ✅ Правильный секрет для WebApp initData:
-  // secret = HMAC_SHA256("WebAppData", botToken)
   const secretKey = crypto
     .createHmac("sha256", "WebAppData")
     .update(botToken)
     .digest();
 
-  // hash = HMAC_SHA256(secretKey, checkString)
   const hmac = crypto
     .createHmac("sha256", secretKey)
     .update(checkString)
@@ -57,18 +52,20 @@ async function tgSendMessage(token, chatId, text, replyMarkup) {
       text,
       parse_mode: "HTML",
       reply_markup: replyMarkup,
+      disable_web_page_preview: true,
     }),
   });
 
   const json = await res.json();
   if (!json.ok) throw new Error(`TG sendMessage failed: ${json.description}`);
-  return json.result;
+  return json.result; // тут есть message_id
 }
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== "POST")
+    if (req.method !== "POST") {
       return res.status(405).json({ ok: false, error: "Method not allowed" });
+    }
 
     const BOT_TOKEN = process.env.BOT_TOKEN;
     const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
@@ -93,6 +90,7 @@ export default async function handler(req, res) {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // 1) создаём запись в базе и сразу получаем id + serial_number
     const insert = {
       user_id: userId,
       lesson_title: payload.lessonTitle,
@@ -103,15 +101,24 @@ export default async function handler(req, res) {
       status: "active",
     };
 
-    const { data: rows, error } = await sb.from("bookings").insert(insert).select("id").limit(1);
+    const { data: rows, error } = await sb
+      .from("bookings")
+      .insert(insert)
+      .select("id, serial_number")
+      .limit(1);
+
     if (error) throw error;
 
     const bookingId = rows?.[0]?.id;
-    if (!bookingId) throw new Error("No bookingId");
+    const serialNumber = rows?.[0]?.serial_number;
 
-    // ----- сообщение пользователю -----
+    if (!bookingId) throw new Error("No bookingId");
+    // serialNumber может быть null, если sequence не привязался — но ты уже сделал SQL, так что должен быть.
+    const serialText = serialNumber ? `#${serialNumber}` : "";
+
+    // 2) сообщение пользователю + кнопка отмены (callback_data хранит UUID!)
     const userText =
-      `✅ <b>Запись создана</b>\n\n` +
+      `✅ <b>Запись создана</b> ${serialText}\n\n` +
       `Занятие: <b>${insert.lesson_title}</b>\n` +
       `Кого: <b>${insert.name}</b>\n` +
       `Возраст: <b>${insert.group_label}</b>\n` +
@@ -124,26 +131,43 @@ export default async function handler(req, res) {
 
     await tgSendMessage(BOT_TOKEN, userId, userText, cancelMarkup);
 
-    // ----- сообщение админу: БЕЗ UserID/BookingID, но со ссылкой на человека -----
+    // 3) сообщение админу (и сохраняем message_id в таблицу, чтобы потом редактировать)
     const username = user?.username ? String(user.username).replace(/^@/, "") : "";
     const firstName = user?.first_name || "Пользователь";
 
-    // если username есть — покажем @username, иначе дадим tg:// ссылку по id
     const whoBooked = username
       ? `@${username}`
       : `<a href="tg://user?id=${userId}">${firstName}</a>`;
 
     const adminText =
-      `🆕 <b>Новая запись</b>\n\n` +
+      `🆕 <b>Новая запись</b> ${serialText}\n\n` +
       `Кого: <b>${insert.name}</b>\n` +
       `Занятие: <b>${insert.lesson_title}</b>\n` +
       `Возраст: <b>${insert.group_label}</b>\n` +
       `Дата/время: <b>${insert.visit_date} • ${insert.visit_time}</b>\n` +
       `Кто записал: ${whoBooked}`;
 
-    await tgSendMessage(BOT_TOKEN, ADMIN_CHAT_ID, adminText);
+    const adminMsg = await tgSendMessage(BOT_TOKEN, ADMIN_CHAT_ID, adminText);
 
-    return res.status(200).json({ ok: true, bookingId, userId });
+    // 4) сохраняем admin_chat_id + admin_message_id в базе
+    // (чтобы telegram-webhook мог editMessageText при отмене)
+    const { error: updErr } = await sb
+      .from("bookings")
+      .update({
+        admin_chat_id: Number(ADMIN_CHAT_ID),
+        admin_message_id: adminMsg?.message_id,
+      })
+      .eq("id", bookingId);
+
+    if (updErr) throw updErr;
+
+    return res.status(200).json({
+      ok: true,
+      bookingId,
+      serialNumber,
+      userId,
+      adminMessageId: adminMsg?.message_id,
+    });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ ok: false, error: String(e?.message || e) });

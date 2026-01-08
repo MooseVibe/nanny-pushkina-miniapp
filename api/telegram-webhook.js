@@ -23,33 +23,45 @@ async function safeAnswerCallback(token, callbackQueryId, text) {
   }
 }
 
-/**
- * ВАЖНО:
- * - Для "нативного fullscreen" нужен MAIN MINI APP, открытый по direct link:
- *   https://t.me/botusername?startapp
- * - Кнопка web_app (reply keyboard) чаще открывает WebView (не то, что тебе нужно).
- */
 function buildOpenAppLink(botUsername, startParam = "") {
   const clean = String(botUsername || "").replace(/^@/, "").trim();
   if (!clean) return "";
-
-  if (!startParam) {
-    // формат из доков: https://t.me/botusername?startapp
-    return `https://t.me/${clean}?startapp`;
-  }
-
+  if (!startParam) return `https://t.me/${clean}?startapp`;
   return `https://t.me/${clean}?startapp=${encodeURIComponent(startParam)}`;
 }
 
 function buildWelcomeMarkup(openAppUrl) {
-  // Делай INLINE keyboard, потому что это ссылка (direct link), которая открывает main mini app
-  return {
-    inline_keyboard: [[{ text: "Открыть приложение", url: openAppUrl }]],
-  };
+  return { inline_keyboard: [[{ text: "Открыть приложение", url: openAppUrl }]] };
+}
+
+function serialText(row) {
+  return row?.serial_number ? `#${row.serial_number}` : "";
+}
+
+function adminActiveText(row, whoBookedText = "") {
+  return (
+    `🆕 <b>Новая запись</b> ${serialText(row)}\n\n` +
+    `Кого: <b>${row.name}</b>\n` +
+    `Занятие: <b>${row.lesson_title}</b>\n` +
+    `Возраст: <b>${row.group_label}</b>\n` +
+    `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>\n` +
+    (whoBookedText ? `Кто записал: ${whoBookedText}` : "")
+  );
+}
+
+function adminCancelledText(row, whoBookedText = "") {
+  return (
+    `❌ <b>Отменено</b> ${serialText(row)}\n\n` +
+    `Кого: <b>${row.name}</b>\n` +
+    `Занятие: <b>${row.lesson_title}</b>\n` +
+    `Возраст: <b>${row.group_label}</b>\n` +
+    `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>\n` +
+    (whoBookedText ? `Кто записал: ${whoBookedText}` : "")
+  );
 }
 
 export default async function handler(req, res) {
-  // Telegram ждёт 200 OK быстро. Всегда отвечаем.
+  // Telegram ждёт 200 OK быстро
   if (req.method !== "POST") return res.status(200).send("ok");
 
   const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -57,48 +69,40 @@ export default async function handler(req, res) {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // НОВОЕ: username бота (без @)
-  const BOT_USERNAME = process.env.BOT_USERNAME; // например: "Nanny_pushkina_bot"
-  // Опционально: что передавать в startapp (можно пусто)
-  const STARTAPP_PARAM = process.env.STARTAPP_PARAM || ""; // например: "home"
+  const BOT_USERNAME = process.env.BOT_USERNAME;
+  const STARTAPP_PARAM = process.env.STARTAPP_PARAM || "";
 
   const update = req.body || {};
-
   if (!BOT_TOKEN) return res.status(200).send("ok");
 
   // -----------------------------
-  // 1) /start (welcome message)
+  // 1) /start
   // -----------------------------
   const msg = update?.message;
   if (msg && typeof msg.text === "string") {
     const text = msg.text.trim();
     if (text === "/start" || text.startsWith("/start ")) {
       const chatId = msg.chat?.id;
-
       const openAppUrl = buildOpenAppLink(BOT_USERNAME, STARTAPP_PARAM);
 
       if (!openAppUrl) {
-        // Если ты забыл BOT_USERNAME — бот не упадёт, но и кнопку не покажет нормально.
         await tgApi(BOT_TOKEN, "sendMessage", {
           chat_id: chatId,
           text:
             `Привет! 👋\n\n` +
-            `Тебя приветствует бот Няни Пушкина.\n` +
-            `Сейчас не настроен BOT_USERNAME, поэтому кнопку открыть приложение показать не могу.\n\n` +
-            `Напиши разработчику 😄`,
+            `Сейчас не настроен BOT_USERNAME, поэтому кнопку открыть приложение показать не могу.\n` +
+            `Напиши разработчику 🙂`,
         });
         return res.status(200).send("ok");
       }
 
-      const welcomeText =
-        `Привет! 👋\n\n` +
-        `Тебя приветствует бот Няни Пушкина.\n` +
-        `Здесь ты можешь записаться на занятия «Выше».\n\n` +
-        `Жми кнопку ниже 👇`;
-
       await tgApi(BOT_TOKEN, "sendMessage", {
         chat_id: chatId,
-        text: welcomeText,
+        text:
+          `Привет! 👋\n\n` +
+          `Это бот Няни Пушкина.\n` +
+          `Здесь ты можешь записаться на занятия «Выше».\n\n` +
+          `Жми кнопку ниже 👇`,
         reply_markup: buildWelcomeMarkup(openAppUrl),
       });
 
@@ -107,7 +111,7 @@ export default async function handler(req, res) {
   }
 
   // -----------------------------
-  // 2) Cancel booking (callback)
+  // 2) cancel (callback)
   // -----------------------------
   const cq = update?.callback_query;
   if (!cq) return res.status(200).send("ok");
@@ -121,7 +125,6 @@ export default async function handler(req, res) {
     return res.status(200).send("ok");
   }
 
-  // мгновенно снимаем “часики”
   await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Проверяю запись…");
 
   try {
@@ -145,11 +148,13 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (error) throw error;
+
     if (!row) {
       await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись не найдена");
       return res.status(200).send("ok");
     }
 
+    // защита: отменять может только тот, кто записал
     if (Number(row.user_id) !== Number(fromId)) {
       await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Это не ваша запись");
       return res.status(200).send("ok");
@@ -160,6 +165,7 @@ export default async function handler(req, res) {
       return res.status(200).send("ok");
     }
 
+    // 1) обновляем статус в базе
     const { error: updErr } = await sb
       .from("bookings")
       .update({ status: "cancelled" })
@@ -169,25 +175,37 @@ export default async function handler(req, res) {
 
     await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись отменена ✅");
 
+    // 2) пользователю можно оставить короткое подтверждение
     await tgApi(BOT_TOKEN, "sendMessage", {
       chat_id: fromId,
       text:
-        `❌ <b>Запись отменена</b>\n\n` +
+        `❌ <b>Запись отменена</b> ${serialText(row)}\n\n` +
         `<b>${row.lesson_title}</b>\n` +
         `${row.visit_date} • ${row.visit_time}`,
       parse_mode: "HTML",
     });
 
-    await tgApi(BOT_TOKEN, "sendMessage", {
-      chat_id: ADMIN_CHAT_ID,
-      text:
-        `❌ <b>Отмена записи</b>\n\n` +
-        `Кого: <b>${row.name}</b>\n` +
-        `Занятие: <b>${row.lesson_title}</b>\n` +
-        `Возраст: <b>${row.group_label}</b>\n` +
-        `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>`,
-      parse_mode: "HTML",
-    });
+    // 3) КЛЮЧЕВОЕ: редактируем СТАРОЕ сообщение админу, а не шлём новое
+    const adminChatId = row.admin_chat_id ? Number(row.admin_chat_id) : Number(ADMIN_CHAT_ID);
+    const adminMessageId = row.admin_message_id;
+
+    if (adminChatId && adminMessageId) {
+      await tgApi(BOT_TOKEN, "editMessageText", {
+        chat_id: adminChatId,
+        message_id: adminMessageId,
+        text: adminCancelledText(row),
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      });
+    } else {
+      // если по какой-то причине не сохранились message_id/chat_id — фоллбек: отправим новое сообщение
+      await tgApi(BOT_TOKEN, "sendMessage", {
+        chat_id: ADMIN_CHAT_ID,
+        text: adminCancelledText(row),
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      });
+    }
 
     return res.status(200).send("ok");
   } catch (e) {
