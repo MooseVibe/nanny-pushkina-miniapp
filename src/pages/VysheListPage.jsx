@@ -69,14 +69,14 @@ const lessons = [
     schedule: {
       groups: [
         {
-          label: "5–6 лет (2 года до школы)",
+          label: "2 года до школы",
           sessions: [
             { day: "ВТ", time: "16:00" },
             { day: "ЧТ", time: "16:00" },
           ],
         },
         {
-          label: "6–7 лет (1 год до школы)",
+          label: "1 год до школы",
           sessions: [
             { day: "ПН", time: "17:00" },
             { day: "СР", time: "17:00" },
@@ -208,7 +208,7 @@ const lessons = [
   },
 
   {
-    title: "Лепка (выходной день)",
+    title: "Лепка",
     price: "700 ₽",
     icon: clayIcon,
     ageRange: "3–6 лет",
@@ -216,7 +216,7 @@ const lessons = [
   },
 
   {
-    title: "Рисование (выходной день)",
+    title: "Рисование",
     price: "700 ₽",
     icon: drawingIcon,
     ageRange: "3–6 лет",
@@ -224,7 +224,7 @@ const lessons = [
   },
 
   {
-    title: "Музыкально-игровые программы (выходной день)",
+    title: "Музыкально-игровые программы",
     price: "700 ₽",
     icon: musicGamesIcon,
     ageRange: "3–6 лет",

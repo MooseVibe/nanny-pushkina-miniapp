@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const WEEKDAY_ORDER = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
-const JS_DAY_TO_RU = { 1: "ПН", 2: "ВТ", 3: "СР", 4: "ЧТ", 5: "ПТ", 6: "СБ", 0: "ВС" };
+const JS_DAY_TO_RU = {
+  1: "ПН",
+  2: "ВТ",
+  3: "СР",
+  4: "ЧТ",
+  5: "ПТ",
+  6: "СБ",
+  0: "ВС",
+};
 const RU_TO_JS_DAY = { ПН: 1, ВТ: 2, СР: 3, ЧТ: 4, ПТ: 5, СБ: 6, ВС: 0 };
 
 function pad2(n) {
@@ -63,41 +71,52 @@ function capitalizeWords(value) {
     .join(" ");
 }
 
+// Делает группы для записи из lesson.schedule
+function buildGroupsFromLesson(lesson) {
+  const sch = lesson?.schedule;
+
+  // 1) если есть groups — берём как есть
+  if (Array.isArray(sch?.groups) && sch.groups.length) {
+    return sch.groups;
+  }
+
+  // 2) если есть sessions — делаем одну группу
+  if (Array.isArray(sch?.sessions) && sch.sessions.length) {
+    const label =
+      (typeof lesson?.age === "string" && lesson.age.trim()) ||
+      (typeof lesson?.ageRange === "string" && lesson.ageRange.trim()) ||
+      (typeof lesson?.ageMin === "number" ? `от ${lesson.ageMin} лет` : "Группа");
+
+    return [{ label, sessions: sch.sessions }];
+  }
+
+  // 3) фоллбек
+  return [
+    {
+      label: (typeof lesson?.age === "string" && lesson.age.trim()) || "Группа",
+      sessions: [
+        { day: "ПН", time: "12:00" },
+        { day: "СР", time: "12:00" },
+      ],
+    },
+  ];
+}
+
 export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) {
   const nameInputRef = useRef(null);
 
   const data = useMemo(() => {
-    if (lesson?.schedule?.groups?.length) {
-      return {
-        title: lesson?.title || "Занятие",
-        groups: lesson.schedule.groups,
-      };
-    }
-
     return {
       title: lesson?.title || "Занятие",
-      groups: [
-        {
-          label: "6–7 лет",
-          sessions: [
-            { day: "ПН", time: "12:00" },
-            { day: "СР", time: "12:00" },
-          ],
-        },
-        {
-          label: "8–9 лет",
-          sessions: [
-            { day: "ВТ", time: "13:00" },
-            { day: "ЧТ", time: "13:00" },
-          ],
-        },
-      ],
+      groups: buildGroupsFromLesson(lesson),
     };
   }, [lesson]);
 
   // --- form state ---
   const [name, setName] = useState("");
-  const [selectedGroupLabel, setSelectedGroupLabel] = useState(data.groups[0]?.label || "");
+  const [selectedGroupLabel, setSelectedGroupLabel] = useState(
+    data.groups[0]?.label || ""
+  );
 
   // --- error state (имя) ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -105,9 +124,12 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
   const nameClean = name.trim();
   const nameOk = nameClean.length >= 2;
-  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
+  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(
+    nameClean
+  );
 
-  const showNameError = submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
+  const showNameError =
+    submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
 
   const nameErrorText = !nameOk
     ? "Введите имя и фамилию"
@@ -121,13 +143,17 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   }, [data.groups]);
 
   const selectedGroup = useMemo(() => {
-    return data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0];
+    return (
+      data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0]
+    );
   }, [data.groups, selectedGroupLabel]);
 
-  // Даты зависят от выбранной группы
+  // даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
-    const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(Boolean);
+    const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(
+      Boolean
+    );
 
     uniqueDays.sort((a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b));
 
@@ -146,24 +172,33 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
   const [selectedDateKey, setSelectedDateKey] = useState("");
 
-  // Время — уникальные времена из sessions
-  const timeOptions = useMemo(() => {
-    const sessions = selectedGroup?.sessions || [];
-    const uniqueTimes = Array.from(new Set(sessions.map((s) => s.time))).filter(Boolean);
-    uniqueTimes.sort();
-    return uniqueTimes.length ? uniqueTimes : ["12:00"];
-  }, [selectedGroup]);
-
-  const [selectedTime, setSelectedTime] = useState("");
-
-  // reset дата/время при пересборке опций
   useEffect(() => {
     setSelectedDateKey(dateOptions[0]?.key || "");
   }, [dateOptions]);
 
+  const selectedDay = useMemo(() => {
+    if (!selectedDateKey) return "";
+    return selectedDateKey.split("-")[0];
+  }, [selectedDateKey]);
+
+  // время зависит от выбранного дня
+  const timeOptions = useMemo(() => {
+    const sessions = selectedGroup?.sessions || [];
+    const filtered = selectedDay ? sessions.filter((s) => s.day === selectedDay) : sessions;
+
+    const uniqueTimes = Array.from(new Set(filtered.map((s) => s.time))).filter(Boolean);
+    uniqueTimes.sort();
+    return uniqueTimes.length ? uniqueTimes : ["12:00"];
+  }, [selectedGroup, selectedDay]);
+
+  const [selectedTime, setSelectedTime] = useState("");
+
   useEffect(() => {
     setSelectedTime(timeOptions[0] || "");
   }, [timeOptions]);
+
+  const isSingleGroup = data.groups.length <= 1;
+  const isSingleTime = timeOptions.length <= 1;
 
   const canSubmit =
     nameOk &&
@@ -214,7 +249,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
                   if (raw !== cleaned) setNameHadInvalidChars(true);
 
-                  // НЕ капитализируем на каждый ввод, чтобы не прыгал курсор
                   setName(cleaned);
 
                   if (submitAttempted) setSubmitAttempted(false);
@@ -226,13 +260,10 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    nameInputRef.current?.blur(); // ✅ закрывает клавиатуру
+                    nameInputRef.current?.blur(); // закрывает клаву
                   }
                 }}
-                onBlur={() => {
-                  // фоллбек: когда закончил ввод — приводим к "Имя Фамилия"
-                  setName((prev) => capitalizeWords(prev));
-                }}
+                onBlur={() => setName((prev) => capitalizeWords(prev))}
                 placeholder="Имя и фамилия"
                 inputMode="text"
                 autoComplete="name"
@@ -241,27 +272,32 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                 enterKeyHint="done"
               />
 
-              {showNameError && <div className="textInputErrorText">{nameErrorText}</div>}
+              {showNameError && (
+                <div className="textInputErrorText">{nameErrorText}</div>
+              )}
             </div>
 
-            {/* Возраст */}
+            {/* Возраст — ВСЕГДА показываем + делаем scroll как у дат */}
             <div className="formBlock">
               <div className="formLabel">Возраст</div>
-              <div className="chipRow">
-                {data.groups.map((g) => {
-                  const active = g.label === selectedGroupLabel;
-                  return (
-                    <button
-                      key={g.label}
-                      type="button"
-                      className={`chip ${active ? "chipActive" : ""}`}
-                      onClick={() => setSelectedGroupLabel(g.label)}
-                      disabled={isSubmitting}
-                    >
-                      {g.label}
-                    </button>
-                  );
-                })}
+
+              <div className="fullBleed">
+                <div className="chipRow chipRowScroll">
+                  {data.groups.map((g) => {
+                    const active = g.label === selectedGroupLabel;
+                    return (
+                      <button
+                        key={g.label}
+                        type="button"
+                        className={`chip ${active ? "chipActive" : ""}`}
+                        onClick={() => setSelectedGroupLabel(g.label)}
+                        disabled={isSubmitting || isSingleGroup} // одна группа — просто предвыбрано
+                      >
+                        {g.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -294,24 +330,27 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               </div>
             </div>
 
-            {/* Время */}
+            {/* Время — ВСЕГДА показываем + делаем scroll как у дат */}
             <div className="formBlock">
               <div className="formLabel">Время</div>
-              <div className="chipRow">
-                {timeOptions.map((t) => {
-                  const active = t === selectedTime;
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      className={`chip ${active ? "chipActive" : ""}`}
-                      onClick={() => setSelectedTime(t)}
-                      disabled={isSubmitting}
-                    >
-                      {t}
-                    </button>
-                  );
-                })}
+
+              <div className="fullBleed">
+                <div className="chipRow chipRowScroll">
+                  {timeOptions.map((t) => {
+                    const active = t === selectedTime;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        className={`chip ${active ? "chipActive" : ""}`}
+                        onClick={() => setSelectedTime(t)}
+                        disabled={isSubmitting || isSingleTime} // одно время — просто предвыбрано
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -321,11 +360,17 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
         <div className="stickyCta">
           <button
             type="button"
-            className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
+            className={`primaryCta${
+              canSubmit && !isSubmitting ? "" : " primaryCta--disabled"
+            }`}
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
+            {isSubmitting ? (
+              <span className="btnSpinner" aria-hidden="true" />
+            ) : (
+              "Записаться"
+            )}
           </button>
         </div>
       </div>
