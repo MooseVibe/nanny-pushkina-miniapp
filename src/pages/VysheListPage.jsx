@@ -1,10 +1,25 @@
 import { useState } from "react";
 
 import hintIcon from "../assets/icons/hint.svg";
-import iconAny from "../assets/illustrations/vyshe.svg"; // временно
 
 import LessonCard from "../components/LessonCard";
 import BottomSheet from "../components/BottomSheet";
+
+// ✅ ИКОНКИ ЗАНЯТИЙ (твои реальные файлы)
+import schoolPrepIcon from "../assets/icons/school-prep.svg";
+import speedReadingIcon from "../assets/icons/speed-reading.svg";
+import calligraphyIcon from "../assets/icons/calligraphy.svg";
+import englishIcon from "../assets/icons/english.svg";
+import chessIcon from "../assets/icons/chess.svg";
+import scienceLabIcon from "../assets/icons/science-lab.svg";
+import watercolorIcon from "../assets/icons/watercolor.svg";
+import graphicsIcon from "../assets/icons/graphics.svg";
+import sculptureIcon from "../assets/icons/sculpture.svg";
+import actorIcon from "../assets/icons/actor.svg"; // мультипликация
+import handsIcon from "../assets/icons/hands.svg"; // очумелые ручки
+import clayIcon from "../assets/icons/clay.svg"; // лепка
+import drawingIcon from "../assets/icons/drawing.svg"; // рисование
+import musicGamesIcon from "../assets/icons/music-games.svg"; // муз-игровые
 
 // --------------------
 // helpers
@@ -49,7 +64,7 @@ const lessons = [
   {
     title: "Подготовка к школе",
     price: "700 ₽",
-    icon: iconAny,
+    icon: schoolPrepIcon,
     ageMin: 5,
     schedule: {
       groups: [
@@ -70,10 +85,11 @@ const lessons = [
       ],
     },
   },
+
   {
     title: "Скорочтение",
     price: "700 ₽",
-    icon: iconAny,
+    icon: speedReadingIcon,
     ageMin: 8,
     schedule: {
       sessions: [
@@ -82,10 +98,11 @@ const lessons = [
       ],
     },
   },
+
   {
     title: "Каллиграфия",
     price: "700 ₽",
-    icon: iconAny,
+    icon: calligraphyIcon,
     ageMin: 7,
     schedule: {
       sessions: [
@@ -94,10 +111,11 @@ const lessons = [
       ],
     },
   },
+
   {
     title: "Английский язык",
     price: "700 ₽",
-    icon: iconAny,
+    icon: englishIcon,
     ageMin: 3,
     schedule: {
       groups: [
@@ -122,10 +140,11 @@ const lessons = [
       ],
     },
   },
+
   {
     title: "Шахматы",
     price: "700 ₽",
-    icon: iconAny,
+    icon: chessIcon,
     ageMin: 7,
     schedule: {
       sessions: [
@@ -134,45 +153,51 @@ const lessons = [
       ],
     },
   },
+
   {
     title: "Секретная лаборатория",
     price: "700 ₽",
-    icon: iconAny,
+    icon: scienceLabIcon,
     ageMin: 7,
     schedule: { sessions: [{ day: "ПТ", time: "17:00" }] },
   },
+
   {
     title: "Акварель",
     price: "700 ₽",
-    icon: iconAny,
+    icon: watercolorIcon,
     ageMin: 6,
     schedule: { sessions: [{ day: "СР", time: "16:00" }] },
   },
+
   {
     title: "Графика",
     price: "700 ₽",
-    icon: iconAny,
+    icon: graphicsIcon,
     ageMin: 8,
     schedule: { sessions: [{ day: "ПН", time: "16:30" }] },
   },
+
   {
     title: "Скульптура",
     price: "700 ₽",
-    icon: iconAny,
+    icon: sculptureIcon,
     ageMin: 8,
     schedule: { sessions: [{ day: "ЧТ", time: "16:30" }] },
   },
+
   {
     title: "Мультипликация",
     price: "700 ₽",
-    icon: iconAny,
+    icon: actorIcon,
     ageMin: 7,
     schedule: { sessions: [{ day: "ВТ", time: "19:00" }] },
   },
+
   {
     title: "Очумелые ручки",
     price: "700 ₽",
-    icon: iconAny,
+    icon: handsIcon,
     ageMin: 6,
     schedule: {
       sessions: [
@@ -181,24 +206,27 @@ const lessons = [
       ],
     },
   },
+
   {
     title: "Лепка (выходной день)",
     price: "700 ₽",
-    icon: iconAny,
+    icon: clayIcon,
     ageRange: "3–6 лет",
     schedule: { sessions: [{ day: "СБ", time: "11:00" }] },
   },
+
   {
     title: "Рисование (выходной день)",
     price: "700 ₽",
-    icon: iconAny,
+    icon: drawingIcon,
     ageRange: "3–6 лет",
     schedule: { sessions: [{ day: "ВС", time: "10:00" }] },
   },
+
   {
     title: "Музыкально-игровые программы (выходной день)",
     price: "700 ₽",
-    icon: iconAny,
+    icon: musicGamesIcon,
     ageRange: "3–6 лет",
     schedule: { sessions: [{ day: "ВС", time: "11:00" }] },
   },
@@ -232,14 +260,14 @@ export default function VysheListPage({ onOpenLesson }) {
           return (
             <LessonCard
               key={l.title}
-              iconSrc={l.icon || iconAny}
+              iconSrc={l.icon}
               title={l.title}
               price={l.price}
               age={ageText}
               onClick={() =>
                 onOpenLesson({
                   ...l,
-                  age: ageText, // 🔥 фикс: в деталку уходит ровно то же, что на бейдже
+                  age: ageText, // ✅ чтобы в деталке возраст совпадал с бейджем
                 })
               }
             />
