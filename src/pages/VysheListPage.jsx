@@ -9,21 +9,19 @@ import BottomSheet from "../components/BottomSheet";
 // --------------------
 // helpers
 // --------------------
-function formatAgeFromGroupLabel(label) {
-  // "3–6 лет" -> "3–6 лет", "6-7 лет" -> "6–7 лет"
-  if (!label) return "";
-  return label.replace("-", "–");
+function normalizeDashes(s) {
+  return String(s || "").replace(/-/g, "–");
 }
 
 function getMinAgeFromLesson(lesson) {
-  // 1) Если явно задано ageMin — используем
-  if (typeof lesson.ageMin === "number") return lesson.ageMin;
+  // 1) ageMin
+  if (typeof lesson?.ageMin === "number") return lesson.ageMin;
 
-  // 2) Если есть группы — берём минимальную цифру из label
+  // 2) try parse groups labels: "5–6 лет", "3-6 лет", "7 лет"
   const groups = lesson?.schedule?.groups;
   if (Array.isArray(groups) && groups.length) {
     const nums = groups
-      .map((g) => String(g.label || "").match(/\d+/g))
+      .map((g) => String(g?.label || "").match(/\d+/g))
       .flat()
       .filter(Boolean)
       .map((n) => Number(n))
@@ -31,30 +29,28 @@ function getMinAgeFromLesson(lesson) {
     if (nums.length) return Math.min(...nums);
   }
 
-  // 3) Фоллбек
+  // 3) fallback
   return 6;
 }
 
-function ageBadgeText(lesson) {
-  // Если явно задан диапазон (например "3–6 лет") — показываем его
-  if (lesson.ageRange) return formatAgeFromGroupLabel(lesson.ageRange);
+function ageTextFromLesson(lesson) {
+  // Если задан диапазон (например "3–6 лет") — показываем диапазон
+  if (lesson?.ageRange) return normalizeDashes(lesson.ageRange);
 
-  // Иначе показываем "от X лет"
+  // Иначе "от X лет"
   const min = getMinAgeFromLesson(lesson);
   return `от ${min} лет`;
 }
 
 // --------------------
-// data (ПРОВЕРЬ/ПРАВЬ ПО МЕРЕ ПРИХОДА ДАННЫХ ОТ ЮРИЯ)
+// data (пока черновик)
 // --------------------
 const lessons = [
   {
     title: "Подготовка к школе",
     price: "700 ₽",
     icon: iconAny,
-    // Минимальный возраст для бейджа на списке:
-    ageMin: 5, // условно (2 года до школы)
-    // Группы внутри деталки:
+    ageMin: 5,
     schedule: {
       groups: [
         {
@@ -74,13 +70,11 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Скорочтение",
     price: "700 ₽",
     icon: iconAny,
     ageMin: 8,
-    // без групп — просто расписание
     schedule: {
       sessions: [
         { day: "ПН", time: "18:00" },
@@ -88,7 +82,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Каллиграфия",
     price: "700 ₽",
@@ -101,19 +94,16 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Английский язык",
     price: "700 ₽",
     icon: iconAny,
-    ageMin: 3, // минимальный возраст теперь 3
+    ageMin: 3,
     schedule: {
       groups: [
         {
           label: "3–6 лет (выходной день)",
-          sessions: [
-            { day: "СБ", time: "10:00" },
-          ],
+          sessions: [{ day: "СБ", time: "10:00" }],
         },
         {
           label: "7 лет",
@@ -132,7 +122,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Шахматы",
     price: "700 ₽",
@@ -145,67 +134,41 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Секретная лаборатория",
     price: "700 ₽",
     icon: iconAny,
     ageMin: 7,
-    schedule: {
-      sessions: [
-        { day: "ПТ", time: "17:00" },
-      ],
-    },
+    schedule: { sessions: [{ day: "ПТ", time: "17:00" }] },
   },
-
   {
     title: "Акварель",
     price: "700 ₽",
     icon: iconAny,
     ageMin: 6,
-    schedule: {
-      sessions: [
-        { day: "СР", time: "16:00" },
-      ],
-    },
+    schedule: { sessions: [{ day: "СР", time: "16:00" }] },
   },
-
   {
     title: "Графика",
     price: "700 ₽",
     icon: iconAny,
     ageMin: 8,
-    schedule: {
-      sessions: [
-        { day: "ПН", time: "16:30" },
-      ],
-    },
+    schedule: { sessions: [{ day: "ПН", time: "16:30" }] },
   },
-
   {
     title: "Скульптура",
     price: "700 ₽",
     icon: iconAny,
     ageMin: 8,
-    schedule: {
-      sessions: [
-        { day: "ЧТ", time: "16:30" },
-      ],
-    },
+    schedule: { sessions: [{ day: "ЧТ", time: "16:30" }] },
   },
-
   {
     title: "Мультипликация",
     price: "700 ₽",
     icon: iconAny,
     ageMin: 7,
-    schedule: {
-      sessions: [
-        { day: "ВТ", time: "19:00" },
-      ],
-    },
+    schedule: { sessions: [{ day: "ВТ", time: "19:00" }] },
   },
-
   {
     title: "Очумелые ручки",
     price: "700 ₽",
@@ -218,40 +181,26 @@ const lessons = [
       ],
     },
   },
-
-  // Группа выходного дня 3–6
   {
     title: "Лепка (выходной день)",
     price: "700 ₽",
     icon: iconAny,
     ageRange: "3–6 лет",
-    schedule: {
-      sessions: [
-        { day: "СБ", time: "11:00" },
-      ],
-    },
+    schedule: { sessions: [{ day: "СБ", time: "11:00" }] },
   },
   {
     title: "Рисование (выходной день)",
     price: "700 ₽",
     icon: iconAny,
     ageRange: "3–6 лет",
-    schedule: {
-      sessions: [
-        { day: "ВС", time: "10:00" },
-      ],
-    },
+    schedule: { sessions: [{ day: "ВС", time: "10:00" }] },
   },
   {
     title: "Музыкально-игровые программы (выходной день)",
     price: "700 ₽",
     icon: iconAny,
     ageRange: "3–6 лет",
-    schedule: {
-      sessions: [
-        { day: "ВС", time: "11:00" },
-      ],
-    },
+    schedule: { sessions: [{ day: "ВС", time: "11:00" }] },
   },
 ];
 
@@ -277,16 +226,25 @@ export default function VysheListPage({ onOpenLesson }) {
       </div>
 
       <div className="vysheList">
-        {lessons.map((l) => (
-          <LessonCard
-            key={l.title}
-            iconSrc={l.icon || iconAny}
-            title={l.title}
-            price={l.price}
-            age={ageBadgeText(l)}     // <-- ВОТ ЗДЕСЬ МИНИМАЛЬНЫЙ ВОЗРАСТ/ДИАПАЗОН
-            onClick={() => onOpenLesson(l)} // <-- передаём ВЕСЬ lesson со schedule
-          />
-        ))}
+        {lessons.map((l) => {
+          const ageText = ageTextFromLesson(l);
+
+          return (
+            <LessonCard
+              key={l.title}
+              iconSrc={l.icon || iconAny}
+              title={l.title}
+              price={l.price}
+              age={ageText}
+              onClick={() =>
+                onOpenLesson({
+                  ...l,
+                  age: ageText, // 🔥 фикс: в деталку уходит ровно то же, что на бейдже
+                })
+              }
+            />
+          );
+        })}
       </div>
 
       <BottomSheet
@@ -295,11 +253,16 @@ export default function VysheListPage({ onOpenLesson }) {
         title="Что такое «Выше»?"
       >
         <div>
-          «Выше» — это комплексная программа интеллектуального, творческого и социального развития детей
-          <br /><br />
-          Наша цель — сформировать у ребёнка интерес к обучению, помочь раскрыть его способности и научить получать удовольствие от процесса познания
-          <br /><br />
-          Наш подход строится на доверии и комфорте: без стресса, без формализма, с уважением к темпу и интересам каждого ребёнка
+          «Выше» — это комплексная программа интеллектуального, творческого и
+          социального развития детей
+          <br />
+          <br />
+          Наша цель — сформировать у ребёнка интерес к обучению, помочь раскрыть
+          его способности и научить получать удовольствие от процесса познания
+          <br />
+          <br />
+          Наш подход строится на доверии и комфорте: без стресса, без формализма,
+          с уважением к темпу и интересам каждого ребёнка
         </div>
       </BottomSheet>
     </div>

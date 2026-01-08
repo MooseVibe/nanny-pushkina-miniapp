@@ -1,51 +1,56 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
 import BottomSheet from "../components/BottomSheet";
+
+function calcAgeFallback(lesson) {
+  if (lesson?.age) return lesson.age;
+  if (typeof lesson?.ageMin === "number") return `от ${lesson.ageMin} лет`;
+  if (lesson?.ageRange) return String(lesson.ageRange).replace(/-/g, "–");
+  return "от 6 лет";
+}
 
 export default function LessonDetailsPage({ lesson, onBook }) {
   const [isTeacherOpen, setIsTeacherOpen] = useState(false);
 
-  // дефолты, чтобы не падало, даже если lesson пока “бедный”
-  const data = {
-    title: lesson?.title || "Занятие",
-    subtitle:
-      lesson?.subtitle ||
-      "Занятия, направленные на развитие навыков и интересов.",
-    age: lesson?.age || "от 6 лет",
-    price: lesson?.price || "700 ₽",
-    duration: lesson?.duration || "1 час",
+  const data = useMemo(() => {
+    return {
+      title: lesson?.title || "Занятие",
+      subtitle:
+        lesson?.subtitle || "Занятия, направленные на развитие навыков и интересов.",
+      age: calcAgeFallback(lesson),
+      price: lesson?.price || "700 ₽",
+      duration: lesson?.duration || "1 час",
 
-    // teacher object (чтобы потом легко подставить контент)
-    teacher: lesson?.teacher || {
-      name: "Такой-то Такойтович",
-      role: "Преподаватель",
-      bio:
-        "Педагог с опытом 7+ лет. Помогает раскрыть творческое мышление и уверенность через практику и поддержку.",
-      education: "Профильное педагогическое образование",
-      approach: "Мягко, понятно, с результатом",
-      avatar: teacherPlaceholder,
-    },
+      teacher: lesson?.teacher || {
+        name: "Такой-то Такойтович",
+        role: "Преподаватель",
+        bio:
+          "Скоро здесь появится подробная информация о преподавателе: опыт, подход и достижения.",
+        education: "",
+        approach: "",
+        avatar: teacherPlaceholder,
+      },
 
-    schedule: lesson?.schedule || {
-      groups: [
-        {
-          label: "6–7 лет",
-          sessions: [
-            { day: "ПН", time: "12:00" },
-            { day: "СР", time: "12:00" },
-          ],
-        },
-        {
-          label: "8–9 лет",
-          sessions: [
-            { day: "ПН", time: "13:00" },
-            { day: "СР", time: "13:00" },
-          ],
-        },
-      ],
-      // sessions: [{ day:"ПН", time:"12:00" }, { day:"СР", time:"12:00" }],
-    },
-  };
+      schedule: lesson?.schedule || {
+        groups: [
+          {
+            label: "6–7 лет",
+            sessions: [
+              { day: "ПН", time: "12:00" },
+              { day: "СР", time: "12:00" },
+            ],
+          },
+          {
+            label: "8–9 лет",
+            sessions: [
+              { day: "ПН", time: "13:00" },
+              { day: "СР", time: "13:00" },
+            ],
+          },
+        ],
+      },
+    };
+  }, [lesson]);
 
   const hasGroups =
     Array.isArray(data.schedule?.groups) && data.schedule.groups.length > 0;
@@ -54,7 +59,6 @@ export default function LessonDetailsPage({ lesson, onBook }) {
     ? data.schedule.sessions
     : [];
 
-  // нормализуем teacher (вдруг у тебя где-то строкой пришло)
   const teacherObj =
     typeof data.teacher === "string"
       ? {
@@ -70,13 +74,11 @@ export default function LessonDetailsPage({ lesson, onBook }) {
 
   return (
     <div className="page lessonDetailsPage">
-      {/* Заголовок + подзаголовок */}
       <div className="lessonHead">
         <h1 className="lessonTitle">{data.title}</h1>
         <div className="lessonSubtitle">{data.subtitle}</div>
       </div>
 
-      {/* Плашка “Возраст / Цена / Длительность” */}
       <div className="lessonMeta">
         <div className="lessonMetaItem">
           <div className="lessonMetaLabel">Возраст</div>
@@ -94,14 +96,17 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </div>
       </div>
 
-      {/* Преподаватель (кликабельно) */}
       <button
         type="button"
         className="teacherCard"
         onClick={() => setIsTeacherOpen(true)}
         aria-label="Открыть информацию о преподавателе"
       >
-        <img className="teacherAvatar" src={teacherObj.avatar || teacherPlaceholder} alt="" />
+        <img
+          className="teacherAvatar"
+          src={teacherObj.avatar || teacherPlaceholder}
+          alt=""
+        />
 
         <div className="teacherText">
           <div className="teacherLabel">{teacherObj.role || "Преподаватель"}</div>
@@ -109,7 +114,6 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </div>
       </button>
 
-      {/* Расписание */}
       <div className="scheduleBlock">
         <div className="sectionTitleLarge">Когда проходят занятия</div>
 
@@ -141,7 +145,6 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         )}
       </div>
 
-      {/* Bottom Sheet: преподаватель */}
       <BottomSheet
         open={isTeacherOpen}
         onClose={() => setIsTeacherOpen(false)}
@@ -164,13 +167,8 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </div>
       </BottomSheet>
 
-      {/* Кнопка снизу */}
       <div className="stickyCta">
-        <button
-          type="button"
-          className="primaryCta"
-          onClick={() => onBook?.(lesson)}
-        >
+        <button type="button" className="primaryCta" onClick={() => onBook?.(lesson)}>
           Записаться
         </button>
       </div>
