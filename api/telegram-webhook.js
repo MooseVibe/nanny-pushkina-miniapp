@@ -59,14 +59,14 @@ function adminActiveText(row, whoBookedText = "") {
   );
 }
 
-function adminCancelledText(row, whoBookedText = "", whoCancelledText = "") {
+// ✅ ВАЖНО: тут ТОЛЬКО "Кто отменил", без "Кто записал"
+function adminCancelledText(row, whoCancelledText = "") {
   return (
     `❌ <b>Отменено</b> ${serialText(row)}\n\n` +
     `Кого: <b>${row.name}</b>\n` +
     `Занятие: <b>${row.lesson_title}</b>\n` +
     `Возраст: <b>${row.group_label}</b>\n` +
     `Дата/время: <b>${row.visit_date} • ${row.visit_time}</b>\n` +
-    (whoBookedText ? `Кто записал: ${whoBookedText}\n` : "") +
     (whoCancelledText ? `Кто отменил: ${whoCancelledText}` : "")
   );
 }
@@ -151,7 +151,12 @@ export default async function handler(req, res) {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { data: row, error } = await sb.from("bookings").select("*").eq("id", bookingId).maybeSingle();
+    const { data: row, error } = await sb
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .maybeSingle();
+
     if (error) throw error;
 
     if (!row) {
@@ -176,7 +181,7 @@ export default async function handler(req, res) {
 
     await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись отменена ✅");
 
-    // 2) пользователю — подтверждение (можно без номера, но оставим как было у тебя)
+    // 2) пользователю — подтверждение (как ты хотел: без порядкового номера)
     await tgApi(BOT_TOKEN, "sendMessage", {
       chat_id: fromId,
       text:
@@ -187,11 +192,8 @@ export default async function handler(req, res) {
       disable_web_page_preview: true,
     });
 
-    // 3) редактируем СТАРОЕ сообщение админу + добавляем "Кто отменил"
+    // 3) админ — редактируем старое сообщение и пишем ТОЛЬКО "Кто отменил"
     const whoCancelled = buildWhoLinkFromTelegramUser(cq.from);
-
-    // В твоей модели тот, кто отменил = тот, кто записал (проверка выше)
-    const whoBooked = whoCancelled;
 
     const adminChatId = row.admin_chat_id ? Number(row.admin_chat_id) : Number(ADMIN_CHAT_ID);
     const adminMessageId = row.admin_message_id;
@@ -200,7 +202,7 @@ export default async function handler(req, res) {
       await tgApi(BOT_TOKEN, "editMessageText", {
         chat_id: adminChatId,
         message_id: adminMessageId,
-        text: adminCancelledText(row, whoBooked, whoCancelled),
+        text: adminCancelledText(row, whoCancelled),
         parse_mode: "HTML",
         disable_web_page_preview: true,
       });
@@ -208,7 +210,7 @@ export default async function handler(req, res) {
       // фоллбек: если не сохранились ids — отправим новое сообщение
       await tgApi(BOT_TOKEN, "sendMessage", {
         chat_id: ADMIN_CHAT_ID,
-        text: adminCancelledText(row, whoBooked, whoCancelled),
+        text: adminCancelledText(row, whoCancelled),
         parse_mode: "HTML",
         disable_web_page_preview: true,
       });
