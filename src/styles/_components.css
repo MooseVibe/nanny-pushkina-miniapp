@@ -394,7 +394,7 @@
 }
 
 /* =========================
-   Press / tap feedback
+   Press / tap feedback (stable in Telegram WebView)
    ========================= */
    .pressable {
     -webkit-tap-highlight-color: transparent;
@@ -406,28 +406,18 @@
     will-change: transform;
   }
   
-  .pressable:active {
+  /* ВАЖНО: вместо :active — класс */
+  .pressable.isPressed {
     transform: scale(0.98);
   }
   
-  /* На десктопе: можно подсказать, что кликабельно */
-  .pressable {
-    cursor: pointer;
-  }
+  /* курсор для десктопа */
+  .pressable { cursor: pointer; }
   
-  /* Уважение к настройке “Reduce Motion” */
+  /* reduce motion */
   @media (prefers-reduced-motion: reduce) {
-    .pressable {
-      transition: none !important;
-    }
+    .pressable { transition: none !important; }
   }
-
-  /* --- FIX 1: убираем "залипший hover" на тач-устройствах --- */
-@media (hover: none) and (pointer: coarse) {
-  .pressable:hover {
-    transform: none !important;
-  }
-}
 
 /* --- FIX 2: если где-то есть hover-скейл на карточках, он тоже должен отключиться на таче --- */
 @media (hover: none) and (pointer: coarse) {

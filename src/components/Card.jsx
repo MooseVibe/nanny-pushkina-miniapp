@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 export default function ServiceCard({
   title,
   subtitle,
@@ -9,6 +11,8 @@ export default function ServiceCard({
   imageY = 0,
   onClick,
 }) {
+  const [pressed, setPressed] = useState(false);
+
   const handleKeyDown = (e) => {
     if (!onClick) return;
     if (e.key === "Enter" || e.key === " ") {
@@ -19,10 +23,13 @@ export default function ServiceCard({
 
   return (
     <div
-      className="serviceCard pressable"
+      className={`serviceCard pressable${pressed ? " isPressed" : ""}`}
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      onTouchStart={() => {}}   
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
       role="button"
       tabIndex={0}
     >

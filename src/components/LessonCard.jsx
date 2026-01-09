@@ -1,10 +1,17 @@
+import { useState } from "react";
+
 export default function LessonCard({ iconSrc, title, price, age, onClick }) {
+  const [pressed, setPressed] = useState(false);
+
   return (
     <button
-      className="lessonCard pressable"
+      className={`lessonCard pressable${pressed ? " isPressed" : ""}`}
       type="button"
       onClick={onClick}
-      onTouchStart={() => {}}  // ✅ фикс iOS/WebView активного состояния
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
     >
       <div className="lessonCard__iconBox">
         <img className="lessonCard__icon" src={iconSrc} alt="" />
