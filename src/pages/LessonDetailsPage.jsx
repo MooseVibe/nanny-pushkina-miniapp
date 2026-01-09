@@ -96,9 +96,10 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </div>
       </div>
 
+      {/* ✅ Пресс-эффект на карточке преподавателя */}
       <button
         type="button"
-        className="teacherCard"
+        className="teacherCard pressable"
         onClick={() => setIsTeacherOpen(true)}
         aria-label="Открыть информацию о преподавателе"
       >
@@ -168,7 +169,12 @@ export default function LessonDetailsPage({ lesson, onBook }) {
       </BottomSheet>
 
       <div className="stickyCta">
-        <button type="button" className="primaryCta" onClick={() => onBook?.(lesson)}>
+        {/* ✅ Тоже добавил pressable, потому что это кнопка (если не хочешь — убери слово pressable) */}
+        <button
+          type="button"
+          className="primaryCta pressable"
+          onClick={() => onBook?.(lesson)}
+        >
           Записаться
         </button>
       </div>

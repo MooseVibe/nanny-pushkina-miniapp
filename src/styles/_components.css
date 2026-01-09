@@ -392,3 +392,48 @@
 .sheetBottomSafe {
   height: 24px; /* как ты сказал: до system bottom bar */
 }
+
+/* =========================
+   Press / tap feedback
+   ========================= */
+   .pressable {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+  
+    transition: transform 140ms cubic-bezier(.2,.8,.2,1);
+    transform-origin: center;
+    will-change: transform;
+  }
+  
+  .pressable:active {
+    transform: scale(0.98);
+  }
+  
+  /* На десктопе: можно подсказать, что кликабельно */
+  .pressable {
+    cursor: pointer;
+  }
+  
+  /* Уважение к настройке “Reduce Motion” */
+  @media (prefers-reduced-motion: reduce) {
+    .pressable {
+      transition: none !important;
+    }
+  }
+
+  /* --- FIX 1: убираем "залипший hover" на тач-устройствах --- */
+@media (hover: none) and (pointer: coarse) {
+  .pressable:hover {
+    transform: none !important;
+  }
+}
+
+/* --- FIX 2: если где-то есть hover-скейл на карточках, он тоже должен отключиться на таче --- */
+@media (hover: none) and (pointer: coarse) {
+  .lessonCard:hover,
+  .serviceCard:hover,
+  .teacherCard:hover {
+    transform: none !important;
+  }
+}

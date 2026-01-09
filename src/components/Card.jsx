@@ -9,24 +9,39 @@ export default function ServiceCard({
   imageY = 0,
   onClick,
 }) {
+  const handleKeyDown = (e) => {
+    if (!onClick) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <div className="serviceCard" onClick={onClick} role="button" tabIndex={0}>
+    <div
+      className="serviceCard pressable"
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      onTouchStart={() => {}}   
+      role="button"
+      tabIndex={0}
+    >
       <div className="serviceCard__text">
         <div className="serviceCard__title">{title}</div>
         <div className="serviceCard__subtitle">{subtitle}</div>
       </div>
 
       <div className="serviceCard__imageWrap">
-      <img
-  className="serviceCard__image"
-  src={imageSrc}
-  alt={imageAlt}
-  style={{
-    width: imageWidth,
-    height: imageHeight,
-    transform: `translate(${imageX}px, ${imageY}px)`,
-  }}
-/>
+        <img
+          className="serviceCard__image"
+          src={imageSrc}
+          alt={imageAlt}
+          style={{
+            width: imageWidth,
+            height: imageHeight,
+            transform: `translate(${imageX}px, ${imageY}px)`,
+          }}
+        />
       </div>
     </div>
   );
