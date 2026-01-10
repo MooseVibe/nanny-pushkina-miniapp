@@ -289,108 +289,85 @@
   }
 
   /* Bottom Sheet */
-  .sheetRoot {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    pointer-events: none; /* включим, когда open */
-  }
+  /* ===== BottomSheet ===== */
+.sheetRoot{
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
 
-  .sheetRoot--open {
-    pointer-events: auto;
-  }
+/* backdrop */
+.sheetBackdrop{
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(0,0,0,0);
+  transition: background 260ms cubic-bezier(.2,.8,.2,1);
+}
 
-  .sheetBackdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.35);
-    opacity: 0;
-    transition: opacity 240ms ease;
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-  }
+/* panel */
+.sheetPanel{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
-  .sheetRoot--open .sheetBackdrop {
-    opacity: 1;
-  }
+  background: #fff;
+  border-radius: 24px 24px 0 0;
 
-  .sheetPanel {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  
-    background: #fff;
-    border-radius: 12px 12px 0 0;
-  
-    transform: translateY(110%);
-    transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  
-    /* высота ДИНАМИЧЕСКАЯ */
-    max-height: calc(100vh - 24px);
-    overflow: hidden;
-  }
+  transform: translate3d(0, 110%, 0);
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1);
 
-  .sheetRoot--open .sheetPanel {
-    transform: translateY(0);
-  }
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+}
 
-  .sheetGrabArea {
-    position: relative;
-    height: 32px; /* зона для свайпа */
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-  }
+/* open state */
+.sheetRoot--open .sheetBackdrop{
+  background: rgba(0,0,0,0.35);
+}
+.sheetRoot--open .sheetPanel{
+  transform: translate3d(0, 0, 0);
+}
 
-  .sheetGrabber {
-    margin-top: 10px;
-    width: 32px;
-    height: 4px;
-    border-radius: 999px;
-    background: rgba(0, 16, 36, 0.22);
-  }
-
-.sheetHandleWrap {
-  padding-top: 10px;
+/* grabber */
+.sheetGrabArea{
   display: flex;
   justify-content: center;
+  padding: 10px 0 6px;
 }
-
-.sheetHandle {
-  width: 32px;
-  height: 4px;
+.sheetGrabber{
+  width: 44px;
+  height: 5px;
   border-radius: 999px;
-  background: rgba(0, 16, 36, 0.22); /* #001024 22% */
+  background: rgba(0,0,0,0.18);
 }
 
-/* От handle до заголовка = 22px */
-.sheetTitle {
-  margin-top: px;        /* как ты сказал: от grabber */
-  padding: 0 20px;
-
-  font-family: inherit;     /* SF Pro */
-  font-size: 20px;
-  line-height: 24px;
-  font-weight: 500;
-  color: #001024;
+/* title/body (не трогаю твои шрифты — только базовые размеры/отступы) */
+.sheetTitle{
+  padding: 10px 18px 6px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #1B1A18;
 }
 
-.sheetBody {
-  padding: 12px 16px 40px 16px;
-  font-family: inherit;
+.sheetBody{
+  padding: 0 18px 14px;
   font-size: 16px;
-  line-height: 22px;
-  color: rgba(0, 0, 0, 0.72);
-
-  /* если контента много — появится скролл */
-  overflow: auto;
-  max-height: calc(100vh - 24px - 32px - 22px - 24px);
+  line-height: 1.35;
+  color: #1B1A18;
 }
 
-.sheetBottomSafe {
-  height: 24px; /* как ты сказал: до system bottom bar */
+/* safe-area снизу */
+.sheetBottomSafe{
+  height: 18px;
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .sheetBackdrop, .sheetPanel { transition: none !important; }
 }
 
 /* =========================
@@ -412,7 +389,7 @@
   }
   
   .pressable.isPressed {
-    transform: scale(0.98);
+    transform: scale(0.96);
   
     /* PRESS (нажал) — тоже не резко */
     transition-duration: 160ms;

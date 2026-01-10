@@ -1,33 +1,32 @@
 import { useEffect, useRef, useState } from "react";
 
-const CLOSE_MS = 240; // должно совпадать с transition в CSS (≈220–260)
+const CLOSE_MS = 260; // должно совпадать с CSS transition (см. ниже)
 
 export default function BottomSheet({ open, onClose, title, children }) {
   const [mounted, setMounted] = useState(open);
-  const [visible, setVisible] = useState(open); // управляет классом --open
+  const [visible, setVisible] = useState(false);
   const closeTimerRef = useRef(null);
 
-  // Когда open=true → монтируем и показываем (с анимацией)
   useEffect(() => {
     if (open) {
       setMounted(true);
 
-      // Важно: следующий тик, чтобы CSS transition успел схватиться
+      // важно: следующий кадр, чтобы transition гарантированно стартанул в WebView
       requestAnimationFrame(() => setVisible(true));
       return;
     }
 
-    // Когда open=false → запускаем анимацию закрытия
+    // закрываем
     setVisible(false);
 
-    // и размонтируем ПОСЛЕ анимации
-    clearTimeout(closeTimerRef.current);
+    // размонтируем ПОСЛЕ анимации
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeTimerRef.current = setTimeout(() => {
       setMounted(false);
     }, CLOSE_MS);
   }, [open]);
 
-  // Esc → закрыть
+  // Esc -> закрыть
   useEffect(() => {
     if (!mounted) return;
 
@@ -39,7 +38,7 @@ export default function BottomSheet({ open, onClose, title, children }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [mounted, onClose]);
 
-  // Блокируем скролл фона, пока штора открыта/анимируется
+  // блокируем фон-скролл, пока шторка в DOM (и при открытии, и при закрытии-анимации)
   useEffect(() => {
     if (!mounted) return;
 
@@ -52,7 +51,9 @@ export default function BottomSheet({ open, onClose, title, children }) {
   }, [mounted]);
 
   useEffect(() => {
-    return () => clearTimeout(closeTimerRef.current);
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
   }, []);
 
   if (!mounted) return null;
@@ -84,6 +85,7 @@ export default function BottomSheet({ open, onClose, title, children }) {
 
         <div className="sheetBody">{children}</div>
 
+        {/* нижний safe-area */}
         <div className="sheetBottomSafe" />
       </div>
     </div>
