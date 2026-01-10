@@ -71,25 +71,6 @@
     padding-left: 0;
     padding-right: 0;
   }
-  
-  /* ===== Debug back button ===== */
-  /*.debugBackBtn {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    z-index: 5;
-  
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    cursor: pointer;
-  
-    font-size: 18px;
-    line-height: 36px;
-  }*/
 
   .bookingLayout{
     flex: 1 1 auto;  /* занимает всю доступную высоту страницы */

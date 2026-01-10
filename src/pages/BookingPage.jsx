@@ -118,6 +118,9 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     data.groups[0]?.label || ""
   );
 
+  // --- CTA press state (только для кнопки) ---
+  const [ctaPressed, setCtaPressed] = useState(false);
+
   // --- error state (имя) ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
@@ -155,7 +158,9 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
       Boolean
     );
 
-    uniqueDays.sort((a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b));
+    uniqueDays.sort(
+      (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b)
+    );
 
     const dates = uniqueDays.flatMap((day) =>
       nextDatesForWeekday(day, 4).map((d) => ({
@@ -184,9 +189,13 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   // время зависит от выбранного дня
   const timeOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
-    const filtered = selectedDay ? sessions.filter((s) => s.day === selectedDay) : sessions;
+    const filtered = selectedDay
+      ? sessions.filter((s) => s.day === selectedDay)
+      : sessions;
 
-    const uniqueTimes = Array.from(new Set(filtered.map((s) => s.time))).filter(Boolean);
+    const uniqueTimes = Array.from(new Set(filtered.map((s) => s.time))).filter(
+      Boolean
+    );
     uniqueTimes.sort();
     return uniqueTimes.length ? uniqueTimes : ["12:00"];
   }, [selectedGroup, selectedDay]);
@@ -277,7 +286,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               )}
             </div>
 
-            {/* Возраст — ВСЕГДА показываем + делаем scroll как у дат */}
+            {/* Возраст */}
             <div className="formBlock">
               <div className="formLabel">Возраст</div>
 
@@ -291,7 +300,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                         type="button"
                         className={`chip ${active ? "chipActive" : ""}`}
                         onClick={() => setSelectedGroupLabel(g.label)}
-                        disabled={isSubmitting || isSingleGroup} // одна группа — просто предвыбрано
+                        disabled={isSubmitting || isSingleGroup}
                       >
                         {g.label}
                       </button>
@@ -330,7 +339,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               </div>
             </div>
 
-            {/* Время — ВСЕГДА показываем + делаем scroll как у дат */}
+            {/* Время */}
             <div className="formBlock">
               <div className="formLabel">Время</div>
 
@@ -344,7 +353,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                         type="button"
                         className={`chip ${active ? "chipActive" : ""}`}
                         onClick={() => setSelectedTime(t)}
-                        disabled={isSubmitting || isSingleTime} // одно время — просто предвыбрано
+                        disabled={isSubmitting || isSingleTime}
                       >
                         {t}
                       </button>
@@ -360,11 +369,15 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
         <div className="stickyCta">
           <button
             type="button"
-            className={`primaryCta${
+            className={`primaryCta pressable${ctaPressed ? " isPressed" : ""}${
               canSubmit && !isSubmitting ? "" : " primaryCta--disabled"
             }`}
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            onPointerDown={() => setCtaPressed(true)}
+            onPointerUp={() => setCtaPressed(false)}
+            onPointerCancel={() => setCtaPressed(false)}
+            onPointerLeave={() => setCtaPressed(false)}
+            aria-disabled={isSubmitting ? "true" : "false"}
           >
             {isSubmitting ? (
               <span className="btnSpinner" aria-hidden="true" />

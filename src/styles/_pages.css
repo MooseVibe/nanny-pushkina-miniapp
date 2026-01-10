@@ -494,21 +494,6 @@
     color: #808080;
   }
   
-  .hintBtn{
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  
-
-  .hintIcon{
-    width: 22px;
-    height: 22px;
-    display: block;
-  }
   
   .vysheList{ 
     display: flex;
@@ -945,14 +930,6 @@ input.textInput::placeholder{
   /* ВАЖНО: никаких padding-top/height тут не надо */
 }
 
-.page.bookingPage{
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0; /* важно: иначе gap у .page может ломать расчёт */
-}
-
 .contentShell > .page{
   flex: 1 1 auto;
   min-height: 0;
@@ -1071,4 +1048,35 @@ input.textInput::placeholder{
   top: 320px;
   right: -76px;
   width: 88px;
+}
+
+.hintBtn{
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+
+  display: inline-flex;          /* важно: чтобы transform был заметен */
+  align-items: center;
+  justify-content: center;
+
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+
+  transition: transform 140ms cubic-bezier(.2,.8,.2,1);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.hintBtn.isPressed{
+  transform: scale(0.92);
+}
+
+.hintIcon{
+  width: 22px;
+  height: 22px;
+  display: block;
 }

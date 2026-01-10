@@ -418,4 +418,3 @@
   @media (prefers-reduced-motion: reduce) {
     .pressable { transition: none !important; }
   }
-

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import hintIcon from "../assets/icons/hint.svg";
 
@@ -29,10 +29,8 @@ function normalizeDashes(s) {
 }
 
 function getMinAgeFromLesson(lesson) {
-  // 1) ageMin
   if (typeof lesson?.ageMin === "number") return lesson.ageMin;
 
-  // 2) try parse groups labels: "5–6 лет", "3-6 лет", "7 лет"
   const groups = lesson?.schedule?.groups;
   if (Array.isArray(groups) && groups.length) {
     const nums = groups
@@ -44,15 +42,12 @@ function getMinAgeFromLesson(lesson) {
     if (nums.length) return Math.min(...nums);
   }
 
-  // 3) fallback
   return 6;
 }
 
 function ageTextFromLesson(lesson) {
-  // Если задан диапазон (например "3–6 лет") — показываем диапазон
   if (lesson?.ageRange) return normalizeDashes(lesson.ageRange);
 
-  // Иначе "от X лет"
   const min = getMinAgeFromLesson(lesson);
   return `от ${min} лет`;
 }
@@ -235,6 +230,15 @@ const lessons = [
 export default function VysheListPage({ onOpenLesson }) {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
+  // ✅ держим pressed чуть дольше, чтобы было видно даже на быстром тапе
+  const [hintPressed, setHintPressed] = useState(false);
+  const pressTimerRef = useRef(null);
+
+  const releasePressSoon = () => {
+    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+    pressTimerRef.current = setTimeout(() => setHintPressed(false), 120);
+  };
+
   return (
     <div className="page vyshePage">
       <div className="pageHeaderRow">
@@ -244,10 +248,14 @@ export default function VysheListPage({ onOpenLesson }) {
         </div>
 
         <button
-          className="hintBtn"
+          className={`hintBtn${hintPressed ? " isPressed" : ""}`}
           type="button"
-          onClick={() => setIsAboutOpen(true)}
           aria-label="Что такое «Выше»"
+          onPointerDown={() => setHintPressed(true)}
+          onPointerUp={releasePressSoon}
+          onPointerCancel={() => setHintPressed(false)}
+          onPointerLeave={() => setHintPressed(false)}
+          onClick={() => setIsAboutOpen(true)}
         >
           <img className="hintIcon" src={hintIcon} alt="" />
         </button>
@@ -267,7 +275,7 @@ export default function VysheListPage({ onOpenLesson }) {
               onClick={() =>
                 onOpenLesson({
                   ...l,
-                  age: ageText, // ✅ чтобы в деталке возраст совпадал с бейджем
+                  age: ageText,
                 })
               }
             />
