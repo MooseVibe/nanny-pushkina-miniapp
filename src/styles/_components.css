@@ -419,11 +419,3 @@
     .pressable { transition: none !important; }
   }
 
-/* --- FIX 2: если где-то есть hover-скейл на карточках, он тоже должен отключиться на таче --- */
-@media (hover: none) and (pointer: coarse) {
-  .lessonCard:hover,
-  .serviceCard:hover,
-  .teacherCard:hover {
-    transform: none !important;
-  }
-}
