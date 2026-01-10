@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import hintIcon from "../assets/icons/hint.svg";
 
 import LessonCard from "../components/LessonCard";
 import BottomSheet from "../components/BottomSheet";
+import Pressable from "../components/Pressable";
 
 // ✅ ИКОНКИ ЗАНЯТИЙ (твои реальные файлы)
 import schoolPrepIcon from "../assets/icons/school-prep.svg";
@@ -230,15 +231,6 @@ const lessons = [
 export default function VysheListPage({ onOpenLesson }) {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
-  // ✅ держим pressed чуть дольше, чтобы было видно даже на быстром тапе
-  const [hintPressed, setHintPressed] = useState(false);
-  const pressTimerRef = useRef(null);
-
-  const releasePressSoon = () => {
-    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-    pressTimerRef.current = setTimeout(() => setHintPressed(false), 120);
-  };
-
   return (
     <div className="page vyshePage">
       <div className="pageHeaderRow">
@@ -247,18 +239,16 @@ export default function VysheListPage({ onOpenLesson }) {
           <div className="pageSubtitle">Занятия для детей и взрослых</div>
         </div>
 
-        <button
-          className={`hintBtn${hintPressed ? " isPressed" : ""}`}
-          type="button"
+        {/* ✅ Хинт = Pressable. Без таймеров и ручного pressed */}
+        <Pressable
+          as="button"
+          className="hintBtn"
           aria-label="Что такое «Выше»"
-          onPointerDown={() => setHintPressed(true)}
-          onPointerUp={releasePressSoon}
-          onPointerCancel={() => setHintPressed(false)}
-          onPointerLeave={() => setHintPressed(false)}
-          onClick={() => setIsAboutOpen(true)}
+          onPress={() => setIsAboutOpen(true)}
+          delayMs={140} // чтобы прожим реально успевал “показаться”
         >
           <img className="hintIcon" src={hintIcon} alt="" />
-        </button>
+        </Pressable>
       </div>
 
       <div className="vysheList">

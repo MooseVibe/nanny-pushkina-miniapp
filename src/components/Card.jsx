@@ -1,4 +1,4 @@
-import { useState } from "react";
+import Pressable from "./Pressable";
 
 export default function ServiceCard({
   title,
@@ -11,27 +11,14 @@ export default function ServiceCard({
   imageY = 0,
   onClick,
 }) {
-  const [pressed, setPressed] = useState(false);
-
-  const handleKeyDown = (e) => {
-    if (!onClick) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
   return (
-    <div
-      className={`serviceCard pressable${pressed ? " isPressed" : ""}`}
-      onClick={onClick}
-      onKeyDown={handleKeyDown}
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerCancel={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
+    <Pressable
+      as="div"
+      className="serviceCard"
       role="button"
       tabIndex={0}
+      onPress={onClick}
+      delayMs={140}
     >
       <div className="serviceCard__text">
         <div className="serviceCard__title">{title}</div>
@@ -50,6 +37,6 @@ export default function ServiceCard({
           }}
         />
       </div>
-    </div>
+    </Pressable>
   );
 }

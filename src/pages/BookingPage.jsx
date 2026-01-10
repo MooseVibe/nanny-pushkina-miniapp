@@ -1,3 +1,4 @@
+import Pressable from "../components/Pressable";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const WEEKDAY_ORDER = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
@@ -364,29 +365,20 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             </div>
           </div>
         </div>
-
-        {/* CTA */}
-        <div className="stickyCta">
-          <button
-            type="button"
-            className={`primaryCta pressable${ctaPressed ? " isPressed" : ""}${
-              canSubmit && !isSubmitting ? "" : " primaryCta--disabled"
-            }`}
-            onClick={handleSubmit}
-            onPointerDown={() => setCtaPressed(true)}
-            onPointerUp={() => setCtaPressed(false)}
-            onPointerCancel={() => setCtaPressed(false)}
-            onPointerLeave={() => setCtaPressed(false)}
-            aria-disabled={isSubmitting ? "true" : "false"}
-          >
-            {isSubmitting ? (
-              <span className="btnSpinner" aria-hidden="true" />
-            ) : (
-              "Записаться"
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+{/* CTA */}
+<div className="stickyCta">
+  <Pressable
+    as="button"
+    className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
+    onPress={handleSubmit}
+    delayMs={120}
+    disabled={isSubmitting}
+    aria-disabled={isSubmitting ? "true" : "false"}
+  >
+    {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
+  </Pressable>
+</div>
+</div>
+</div>
+);
 }

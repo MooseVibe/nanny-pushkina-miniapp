@@ -401,14 +401,16 @@
     touch-action: manipulation;
     user-select: none;
   
-    transition: transform 140ms cubic-bezier(.2,.8,.2,1);
+    transform: scale(1);
     transform-origin: center;
     will-change: transform;
+  
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1);
   }
   
   /* ВАЖНО: вместо :active — класс */
   .pressable.isPressed {
-    transform: scale(0.98);
+    transform: scale(0.95);
   }
   
   /* курсор для десктопа */

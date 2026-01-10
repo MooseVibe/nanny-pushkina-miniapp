@@ -1,18 +1,8 @@
-import { useState } from "react";
+import Pressable from "./Pressable";
 
 export default function LessonCard({ iconSrc, title, price, age, onClick }) {
-  const [pressed, setPressed] = useState(false);
-
   return (
-    <button
-      className={`lessonCard pressable${pressed ? " isPressed" : ""}`}
-      type="button"
-      onClick={onClick}
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerCancel={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
-    >
+    <Pressable as="button" className="lessonCard" onPress={onClick} delayMs={140}>
       <div className="lessonCard__iconBox">
         <img className="lessonCard__icon" src={iconSrc} alt="" />
       </div>
@@ -23,6 +13,6 @@ export default function LessonCard({ iconSrc, title, price, age, onClick }) {
       </div>
 
       <div className="lessonCard__badge">{age}</div>
-    </button>
+    </Pressable>
   );
 }
