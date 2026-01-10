@@ -346,15 +346,15 @@
 
 /* title/body (не трогаю твои шрифты — только базовые размеры/отступы) */
 .sheetTitle{
-  padding: 10px 18px 6px;
-  font-size: 22px;
-  font-weight: 600;
+  padding: 10px 16px 6px;
+  font-size: 24px;
+  font-weight: 500;
   line-height: 1.2;
   color: #1B1A18;
 }
 
 .sheetBody{
-  padding: 0 18px 14px;
+  padding: 0 16px 32px;
   font-size: 16px;
   line-height: 1.35;
   color: #1B1A18;
@@ -384,7 +384,7 @@
   
     /* RELEASE (отпустил) — медленнее */
     transition-property: transform;
-    transition-duration: 260ms;
+    transition-duration: 400ms;
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
   
