@@ -239,13 +239,13 @@ export default function VysheListPage({ onOpenLesson }) {
           <div className="pageSubtitle">Занятия для детей и взрослых</div>
         </div>
 
-        {/* ✅ Хинт = Pressable. Без таймеров и ручного pressed */}
+        {/* ✅ Хинт: press + delay */}
         <Pressable
           as="button"
           className="hintBtn"
           aria-label="Что такое «Выше»"
+          delayMs={140}
           onPress={() => setIsAboutOpen(true)}
-          delayMs={140} // чтобы прожим реально успевал “показаться”
         >
           <img className="hintIcon" src={hintIcon} alt="" />
         </Pressable>
@@ -255,6 +255,20 @@ export default function VysheListPage({ onOpenLesson }) {
         {lessons.map((l) => {
           const ageText = ageTextFromLesson(l);
 
+          // ✅ Переход на деталку — тоже через Pressable delay
+          // ВАЖНО: LessonCard остаётся как есть (button внутри),
+          // поэтому мы просто прокидываем onClick с задержкой.
+          const openLessonDelayed = () => {
+            // Если вдруг Pressable тебе важнее — мы оставим delay здесь,
+            // потому что именно здесь происходит переход.
+            setTimeout(() => {
+              onOpenLesson({
+                ...l,
+                age: ageText,
+              });
+            }, 140);
+          };
+
           return (
             <LessonCard
               key={l.title}
@@ -262,12 +276,7 @@ export default function VysheListPage({ onOpenLesson }) {
               title={l.title}
               price={l.price}
               age={ageText}
-              onClick={() =>
-                onOpenLesson({
-                  ...l,
-                  age: ageText,
-                })
-              }
+              onClick={openLessonDelayed}
             />
           );
         })}

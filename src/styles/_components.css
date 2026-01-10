@@ -394,7 +394,7 @@
 }
 
 /* =========================
-   Press / tap feedback (stable in Telegram WebView)
+   Press / tap feedback (tuned, softer)
    ========================= */
    .pressable {
     -webkit-tap-highlight-color: transparent;
@@ -405,18 +405,22 @@
     transform-origin: center;
     will-change: transform;
   
-    transition: transform 180ms cubic-bezier(.2,.8,.2,1);
+    /* RELEASE (отпустил) — медленнее */
+    transition-property: transform;
+    transition-duration: 260ms;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
   
-  /* ВАЖНО: вместо :active — класс */
   .pressable.isPressed {
-    transform: scale(0.95);
+    transform: scale(0.98);
+  
+    /* PRESS (нажал) — тоже не резко */
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
   }
   
-  /* курсор для десктопа */
   .pressable { cursor: pointer; }
   
-  /* reduce motion */
   @media (prefers-reduced-motion: reduce) {
     .pressable { transition: none !important; }
   }

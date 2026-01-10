@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
 import BottomSheet from "../components/BottomSheet";
+import Pressable from "../components/Pressable";
 
 function calcAgeFallback(lesson) {
   if (lesson?.age) return lesson.age;
@@ -11,12 +12,6 @@ function calcAgeFallback(lesson) {
 
 export default function LessonDetailsPage({ lesson, onBook }) {
   const [isTeacherOpen, setIsTeacherOpen] = useState(false);
-
-  // press state (для teacherCard)
-  const [teacherPressed, setTeacherPressed] = useState(false);
-
-  // press state (для CTA — по желанию, но раз уж хочешь “по-айфоновски”, держи)
-  const [ctaPressed, setCtaPressed] = useState(false);
 
   const data = useMemo(() => {
     return {
@@ -103,16 +98,13 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </div>
       </div>
 
-      {/* ✅ Пресс-эффект на карточке преподавателя (Telegram-safe) */}
-      <button
-        type="button"
-        className={`teacherCard pressable${teacherPressed ? " isPressed" : ""}`}
-        onClick={() => setIsTeacherOpen(true)}
-        onPointerDown={() => setTeacherPressed(true)}
-        onPointerUp={() => setTeacherPressed(false)}
-        onPointerCancel={() => setTeacherPressed(false)}
-        onPointerLeave={() => setTeacherPressed(false)}
+      {/* ✅ Преподаватель: Pressable + onPress (Telegram-safe) */}
+      <Pressable
+        as="button"
+        className="teacherCard"
         aria-label="Открыть информацию о преподавателе"
+        onPress={() => setIsTeacherOpen(true)}
+        delayMs={140}
       >
         <img
           className="teacherAvatar"
@@ -126,7 +118,7 @@ export default function LessonDetailsPage({ lesson, onBook }) {
           </div>
           <div className="teacherName">{teacherObj.name}</div>
         </div>
-      </button>
+      </Pressable>
 
       <div className="scheduleBlock">
         <div className="sectionTitleLarge">Когда проходят занятия</div>
@@ -181,19 +173,16 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </div>
       </BottomSheet>
 
+      {/* ✅ CTA: тоже через Pressable, чтобы action шёл после “прожима” */}
       <div className="stickyCta">
-        {/* ✅ Если хочешь press на CTA — оставь. Если нет — убери pressable/isPressed/handlers */}
-        <button
-          type="button"
-          className={`primaryCta pressable${ctaPressed ? " isPressed" : ""}`}
-          onClick={() => onBook?.(lesson)}
-          onPointerDown={() => setCtaPressed(true)}
-          onPointerUp={() => setCtaPressed(false)}
-          onPointerCancel={() => setCtaPressed(false)}
-          onPointerLeave={() => setCtaPressed(false)}
+        <Pressable
+          as="button"
+          className="primaryCta"
+          onPress={() => onBook?.(lesson)}
+          delayMs={140}
         >
           Записаться
-        </button>
+        </Pressable>
       </div>
     </div>
   );

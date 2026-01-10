@@ -119,18 +119,13 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     data.groups[0]?.label || ""
   );
 
-  // --- CTA press state (только для кнопки) ---
-  const [ctaPressed, setCtaPressed] = useState(false);
-
   // --- error state (имя) ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
 
   const nameClean = name.trim();
   const nameOk = nameClean.length >= 2;
-  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(
-    nameClean
-  );
+  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
 
   const showNameError =
     submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
@@ -147,21 +142,15 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   }, [data.groups]);
 
   const selectedGroup = useMemo(() => {
-    return (
-      data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0]
-    );
+    return data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0];
   }, [data.groups, selectedGroupLabel]);
 
   // даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
-    const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(
-      Boolean
-    );
+    const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(Boolean);
 
-    uniqueDays.sort(
-      (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b)
-    );
+    uniqueDays.sort((a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b));
 
     const dates = uniqueDays.flatMap((day) =>
       nextDatesForWeekday(day, 4).map((d) => ({
@@ -190,13 +179,9 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   // время зависит от выбранного дня
   const timeOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
-    const filtered = selectedDay
-      ? sessions.filter((s) => s.day === selectedDay)
-      : sessions;
+    const filtered = selectedDay ? sessions.filter((s) => s.day === selectedDay) : sessions;
 
-    const uniqueTimes = Array.from(new Set(filtered.map((s) => s.time))).filter(
-      Boolean
-    );
+    const uniqueTimes = Array.from(new Set(filtered.map((s) => s.time))).filter(Boolean);
     uniqueTimes.sort();
     return uniqueTimes.length ? uniqueTimes : ["12:00"];
   }, [selectedGroup, selectedDay]);
@@ -219,6 +204,8 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     !!selectedTime;
 
   const handleSubmit = () => {
+    // ВАЖНО: прожим всегда можно показать,
+    // а вот действие — только если можно.
     setSubmitAttempted(true);
 
     if (isSubmitting) return;
@@ -270,7 +257,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    nameInputRef.current?.blur(); // закрывает клаву
+                    nameInputRef.current?.blur();
                   }
                 }}
                 onBlur={() => setName((prev) => capitalizeWords(prev))}
@@ -282,9 +269,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
                 enterKeyHint="done"
               />
 
-              {showNameError && (
-                <div className="textInputErrorText">{nameErrorText}</div>
-              )}
+              {showNameError && <div className="textInputErrorText">{nameErrorText}</div>}
             </div>
 
             {/* Возраст */}
@@ -365,20 +350,23 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             </div>
           </div>
         </div>
-{/* CTA */}
-<div className="stickyCta">
-  <Pressable
-    as="button"
-    className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
-    onPress={handleSubmit}
-    delayMs={120}
-    disabled={isSubmitting}
-    aria-disabled={isSubmitting ? "true" : "false"}
-  >
-    {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
-  </Pressable>
-</div>
-</div>
-</div>
-);
+
+        {/* CTA */}
+        <div className="stickyCta">
+          <Pressable
+            as="button"
+            className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
+            onPress={handleSubmit}
+            // задержка — чтобы прожим был виден до сабмита/ошибки/спиннера
+            delayMs={140}
+            // когда реально сабмитим — блокируем
+            disabled={isSubmitting}
+            aria-disabled={isSubmitting ? "true" : "false"}
+          >
+            {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
+          </Pressable>
+        </div>
+      </div>
+    </div>
+  );
 }

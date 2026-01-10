@@ -29,7 +29,6 @@ export default function Pressable({
 
   const handlePointerDown = (e) => {
     if (disabled) return;
-    // только основная кнопка мыши
     if (e.pointerType === "mouse" && e.button !== 0) return;
 
     firedRef.current = false;
@@ -45,6 +44,7 @@ export default function Pressable({
     setPressed(false);
     clearTimer();
 
+    // Даём прожиму “показаться”, и только потом делаем action
     tRef.current = setTimeout(() => {
       fire();
     }, delayMs);
@@ -55,16 +55,64 @@ export default function Pressable({
   const handlePointerCancel = (e) => {
     setPressed(false);
     clearTimer();
+    firedRef.current = false;
     props.onPointerCancel?.(e);
   };
 
   const handlePointerLeave = (e) => {
-    // если мышь ушла — считаем “передумал”
+    // Если мышь ушла — считаем “передумал”
     if (e.pointerType === "mouse") {
       setPressed(false);
       clearTimer();
+      firedRef.current = false;
     }
     props.onPointerLeave?.(e);
+  };
+
+  // Fallback: если pointer события не прилетели (или клавиатура)
+  const handleClick = (e) => {
+    if (disabled) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // Если уже сработали через pointerUp — второй раз не надо
+    if (firedRef.current) return;
+
+    // Если это ссылка — пусть ведёт куда надо (но мы всё равно можем задержать)
+    // Для button/div просто вызываем action.
+    if (delayMs > 0) {
+      e.preventDefault();
+      clearTimer();
+      tRef.current = setTimeout(() => {
+        fire();
+      }, delayMs);
+    } else {
+      fire();
+    }
+
+    props.onClick?.(e);
+  };
+
+  const handleKeyDown = (e) => {
+    if (disabled) return;
+
+    // Enter / Space должны работать как “tap”
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      firedRef.current = false;
+      clearTimer();
+      setPressed(true);
+
+      // Небольшая задержка, чтобы прожим был виден даже с клавиатуры
+      tRef.current = setTimeout(() => {
+        setPressed(false);
+        fire();
+      }, delayMs);
+    }
+
+    props.onKeyDown?.(e);
   };
 
   const mergedClass =
@@ -77,12 +125,13 @@ export default function Pressable({
       className={mergedClass}
       disabled={Tag === "button" ? disabled : undefined}
       aria-disabled={Tag !== "button" && disabled ? "true" : undefined}
+      tabIndex={disabled && Tag !== "button" ? -1 : props.tabIndex}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onPointerLeave={handlePointerLeave}
-      // важно: чтобы не было “мгновенного” перехода обычным onClick
-      onClick={(e) => e.preventDefault()}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
     />
   );
 }
