@@ -56,6 +56,49 @@ export default function App() {
     };
   }, []);
 
+  // =========================================
+  // iOS/Telegram keyboard fix:
+  // when keyboard opens, viewport height shrinks -> fixed/sticky jumps.
+  // We add .keyboardOpen on <html> so CSS can disable sticky CTA.
+  // =========================================
+  useEffect(() => {
+    const root = document.documentElement;
+
+    let lastH = window.innerHeight;
+
+    const onResize = () => {
+      const h = window.innerHeight;
+
+      // keyboard-open heuristic (works well in iOS WebView)
+      if (h < lastH - 120) {
+        root.classList.add("keyboardOpen");
+      } else if (h >= lastH - 40) {
+        // close / bounce-back
+        root.classList.remove("keyboardOpen");
+      }
+
+      lastH = h;
+    };
+
+    window.addEventListener("resize", onResize);
+
+    // Also: if user taps Done and Telegram restores height without resize timing,
+    // run a small delayed check.
+    const onFocusOut = () => {
+      setTimeout(() => {
+        root.classList.remove("keyboardOpen");
+      }, 50);
+    };
+
+    window.addEventListener("focusout", onFocusOut);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("focusout", onFocusOut);
+      root.classList.remove("keyboardOpen");
+    };
+  }, []);
+
   useEffect(() => {
     if (!isLocalDev()) return;
 
@@ -290,7 +333,6 @@ export default function App() {
       );
     }
 
-    // fallback
     return null;
   };
 
