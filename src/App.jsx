@@ -57,124 +57,79 @@ export default function App() {
   }, []);
 
   // =========================================
-  // iOS/Telegram keyboard fix (NO FLICKER)
-  // - uses visualViewport (best signal in iOS WebView)
-  // - sets:
-  //    html.keyboardOpen
-  //    css var --kb (keyboard height)
-  // - locks scroll via body position:fixed (stable on iOS)
+  // 1) Freeze app height ONCE (keyboard must NOT resize layout)
   // =========================================
   useEffect(() => {
     const root = document.documentElement;
-    const vv = window.visualViewport;
 
-    // If no visualViewport — nothing to do (desktop/android ok)
-    if (!vv) return;
-
-    let raf = 0;
-    let kbOpen = false;
-    let savedScrollY = 0;
-
-    const lockScroll = () => {
-      if (document.body.dataset._scrollLocked === "1") return;
-
-      savedScrollY = window.scrollY || 0;
-
-      document.body.dataset._scrollLocked = "1";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${savedScrollY}px`;
-      document.body.style.left = "0";
-      document.body.style.right = "0";
-      document.body.style.width = "100%";
-      document.body.style.overflow = "hidden";
-      document.body.style.overscrollBehavior = "none";
+    const setAppH = () => {
+      // берем текущую высоту и ЗАМОРАЖИВАЕМ
+      const h = Math.max(1, Math.round(window.innerHeight));
+      root.style.setProperty("--appH", `${h}px`);
     };
 
-    const unlockScroll = () => {
-      if (document.body.dataset._scrollLocked !== "1") return;
+    setAppH();
 
-      document.body.dataset._scrollLocked = "0";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      document.body.style.width = "";
-      document.body.style.overflow = "";
-      document.body.style.overscrollBehavior = "";
+    // ВАЖНО: не реагируем на resize от клавиатуры.
+    // Но: при смене ориентации можно обновить.
+    const onOrientation = () => setTimeout(setAppH, 200);
+    window.addEventListener("orientationchange", onOrientation);
 
-      // restore scroll
-      window.scrollTo(0, savedScrollY);
+    return () => {
+      window.removeEventListener("orientationchange", onOrientation);
+      // --appH можно оставить, но уберём аккуратно
+      // root.style.removeProperty("--appH");
     };
+  }, []);
 
-    const setKbState = (open, kbPx) => {
-      // css var always актуальна
-      root.style.setProperty("--kb", `${open ? kbPx : 0}px`);
+  // =========================================
+  // 2) Keyboard overlay mode:
+  // - when focusing input/textarea -> html.keyboardOpen
+  // - disable scroll while typing
+  // =========================================
+  useEffect(() => {
+    const root = document.documentElement;
 
-      if (open === kbOpen) return;
-      kbOpen = open;
+    let kb = false;
 
+    const setKb = (open) => {
+      if (open === kb) return;
+      kb = open;
       root.classList.toggle("keyboardOpen", open);
-
-      if (open) lockScroll();
-      else unlockScroll();
     };
 
-    const compute = () => {
-      // layout viewport: window.innerHeight
-      // visual viewport shrinks when keyboard opens
-      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-
-      // порог, чтобы не ловить микро-скачки iOS
-      const open = kb > 90;
-      const kbPx = open ? Math.round(kb) : 0;
-
-      setKbState(open, kbPx);
+    const isTextField = (el) => {
+      if (!el) return false;
+      const tag = el.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA";
     };
 
-    const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(compute);
-    };
-
-    // init
-    compute();
-
-    vv.addEventListener("resize", schedule);
-    vv.addEventListener("scroll", schedule);
-
-    // Sometimes iOS updates viewport чуть позже фокуса
     const onFocusIn = (e) => {
-      const t = e.target;
-      if (!t) return;
-      const tag = t.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") {
-        setTimeout(compute, 0);
-        setTimeout(compute, 60);
+      if (isTextField(e.target)) setKb(true);
+    };
+
+    const onFocusOut = (e) => {
+      if (isTextField(e.target)) {
+        // iOS иногда отдаёт blur раньше анимации — небольшой таймаут
+        setTimeout(() => setKb(false), 80);
       }
     };
 
-    const onFocusOut = () => {
-      setTimeout(compute, 0);
-      setTimeout(compute, 120);
+    // жёстко блокируем “ездящий” touch-scroll во время ввода
+    const onTouchMove = (e) => {
+      if (!kb) return;
+      e.preventDefault();
     };
 
     window.addEventListener("focusin", onFocusIn);
     window.addEventListener("focusout", onFocusOut);
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
 
     return () => {
-      cancelAnimationFrame(raf);
-
-      vv.removeEventListener("resize", schedule);
-      vv.removeEventListener("scroll", schedule);
-
       window.removeEventListener("focusin", onFocusIn);
       window.removeEventListener("focusout", onFocusOut);
-
+      document.removeEventListener("touchmove", onTouchMove);
       root.classList.remove("keyboardOpen");
-      root.style.removeProperty("--kb");
-
-      unlockScroll();
-      delete document.body.dataset._scrollLocked;
     };
   }, []);
 
@@ -426,7 +381,7 @@ export default function App() {
               {renderScreen()}
             </ScreenStack>
 
-            {/* BUILD бейдж: чтобы видеть новый билд в Telegram */}
+            {/* BUILD бейдж */}
             <div
               style={{
                 position: "fixed",
@@ -441,7 +396,7 @@ export default function App() {
                 pointerEvents: "none",
               }}
             >
-              BUILD: kbfix-no-flicker-1
+              BUILD: kb-overlay-1
             </div>
 
             {isLocalDev() && (

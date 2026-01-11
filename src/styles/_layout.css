@@ -155,21 +155,12 @@
      (App.jsx will toggle .keyboardOpen on <html>)
      ========================================= */
 
-/* Когда клавиатура открыта — НЕ скрываем CTA через display:none.
-   Просто “уводим” её вниз за клавиатуру, чтобы она не прыгала. */
-:root{ --kb: 0px; }
 
 .stickyCta{
   transform: translate3d(0, var(--kb), 0);
   will-change: transform;
   transition: transform 140ms cubic-bezier(.2,.8,.2,1);
   backface-visibility: hidden;
-}
-
-/* Если App.jsx по какой-то причине не пишет --kb,
-   то хотя бы не ломаемся: при keyboardOpen ничего не делаем. */
-.keyboardOpen .stickyCta{
-  /* намеренно пусто */
 }
   
   
@@ -237,3 +228,35 @@
     margin-right: -16px;
     width: calc(100% + 32px);
   }
+
+  /* =========================================
+   Keyboard "overlay" mode:
+   nothing moves, no scroll while typing
+   App.jsx sets --appH ONCE and toggles html.keyboardOpen
+   ========================================= */
+
+:root { --appH: 100vh; }
+
+/* фиксируем высоту оболочек (не реагируем на клавиатуру) */
+.app,
+.phone,
+.appRoot {
+  min-height: var(--appH);
+}
+
+.contentShell{
+  min-height: calc(var(--appH) - var(--shellTop));
+}
+
+/* во время ввода: никакого скролла/резины */
+html.keyboardOpen,
+html.keyboardOpen body{
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+/* страховка: чтобы внутри белой карточки тоже не было скролла */
+html.keyboardOpen .contentShell{
+  overflow: hidden !important;
+  touch-action: none;
+}
