@@ -1,26 +1,37 @@
 import { useEffect, useRef, useState } from "react";
 
-const CLOSE_MS = 260; // должно совпадать с CSS transition (см. ниже)
+const OPEN_MS = 260;  // открытие как было
+const CLOSE_MS = 360; // закрытие мягче (важно: совпадает с CSS)
 
 export default function BottomSheet({ open, onClose, title, children }) {
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
   const closeTimerRef = useRef(null);
 
+  const clearCloseTimer = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
   useEffect(() => {
     if (open) {
+      // если начали открывать во время "закрывающей" анимации — отменяем размонтирование
+      clearCloseTimer();
+
       setMounted(true);
 
-      // важно: следующий кадр, чтобы transition гарантированно стартанул в WebView
+      // следующий кадр — чтобы transition гарантированно стартанул в WebView
       requestAnimationFrame(() => setVisible(true));
       return;
     }
 
-    // закрываем
+    // закрываем (анимация вниз)
     setVisible(false);
 
-    // размонтируем ПОСЛЕ анимации
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    // размонтируем ПОСЛЕ анимации закрытия
+    clearCloseTimer();
     closeTimerRef.current = setTimeout(() => {
       setMounted(false);
     }, CLOSE_MS);
@@ -51,9 +62,7 @@ export default function BottomSheet({ open, onClose, title, children }) {
   }, [mounted]);
 
   useEffect(() => {
-    return () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    };
+    return () => clearCloseTimer();
   }, []);
 
   if (!mounted) return null;
@@ -76,16 +85,12 @@ export default function BottomSheet({ open, onClose, title, children }) {
         aria-label={title || "Bottom sheet"}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Grabber */}
         <div className="sheetGrabArea">
           <div className="sheetGrabber" />
         </div>
 
         {title ? <div className="sheetTitle">{title}</div> : null}
-
         <div className="sheetBody">{children}</div>
-
-        {/* нижний safe-area */}
         <div className="sheetBottomSafe" />
       </div>
     </div>

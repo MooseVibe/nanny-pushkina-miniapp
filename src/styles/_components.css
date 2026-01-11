@@ -271,94 +271,119 @@
   
   
   /* =========================================
-     BottomSheet
-     ========================================= */
-  
-  .sheetRoot {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    isolation: isolate;
+   BottomSheet
+   ========================================= */
+
+.sheetRoot{
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  isolation: isolate;
+
+  /* open = как было, close = мягче */
+  --sheet-open-ms: 260ms;
+  --sheet-close-ms: 360ms;
+  --sheet-ease: cubic-bezier(.2, .8, .2, 1);
+}
+
+/* backdrop */
+.sheetBackdrop{
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+
+  background: rgba(0, 0, 0, 0);
+
+  /* по умолчанию (закрытие) — медленнее */
+  transition: background var(--sheet-close-ms) var(--sheet-ease);
+
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* panel */
+.sheetPanel{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+
+  transform: translate3d(0, 110%, 0);
+  -webkit-transform: translate3d(0, 110%, 0);
+
+  /* по умолчанию (закрытие) — медленнее */
+  transition: transform var(--sheet-close-ms) var(--sheet-ease);
+
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* open state */
+.sheetRoot--open .sheetBackdrop{
+  background: rgba(0, 0, 0, 0.35);
+  transition-duration: var(--sheet-open-ms);
+}
+
+.sheetRoot--open .sheetPanel{
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transition-duration: var(--sheet-open-ms);
+}
+
+/* grabber */
+.sheetGrabArea{
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 6px;
+}
+
+.sheetGrabber{
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* title/body */
+.sheetTitle{
+  padding: 12px 16px 12px;
+  font: inherit;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #1B1A18;
+}
+
+.sheetBody{
+  padding: 0 16px 32px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.35;
+  color: #1B1A18;
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* safe-area снизу */
+.sheetBottomSafe{
+  height: 18px;
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .sheetBackdrop,
+  .sheetPanel{
+    transition: none !important;
   }
-  
-  .sheetBackdrop {
-    position: absolute;
-    inset: 0;
-    border: 0;
-    padding: 0;
-  
-    background: rgba(0, 0, 0, 0);
-    transition: background 260ms cubic-bezier(.2, .8, .2, 1);
-  
-    cursor: default;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  .sheetPanel {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-  
-    background: #fff;
-    border-radius: 24px 24px 0 0;
-  
-    transform: translate3d(0, 110%, 0);
-    -webkit-transform: translate3d(0, 110%, 0);
-  
-    transition: transform 260ms cubic-bezier(.2, .8, .2, 1);
-  
-    max-height: calc(100vh - 24px);
-    overflow: hidden;
-  
-    will-change: transform;
-    backface-visibility: hidden;
-  }
-  
-  .sheetRoot--open .sheetBackdrop { background: rgba(0, 0, 0, 0.35); }
-  .sheetRoot--open .sheetPanel {
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
-  }
-  
-  .sheetGrabArea {
-    display: flex;
-    justify-content: center;
-    padding: 10px 0 6px;
-  }
-  
-  .sheetGrabber {
-    width: 44px;
-    height: 5px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.18);
-  }
-  
-  .sheetTitle {
-    padding: 12px 16px 12px;
-    font: inherit;
-    font-size: 24px;
-    font-weight: 500;
-    line-height: 1.2;
-    color: #1B1A18;
-  }
-  
-  .sheetBody {
-    padding: 0 16px 32px;
-    font: inherit;
-    font-size: 16px;
-    line-height: 1.35;
-    color: #1B1A18;
-  
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .sheetBottomSafe { height: 18px; }
-  
-  @media (prefers-reduced-motion: reduce) {
-    .sheetBackdrop, .sheetPanel { transition: none !important; }
-  }
+}
   
   
   /* =========================================
