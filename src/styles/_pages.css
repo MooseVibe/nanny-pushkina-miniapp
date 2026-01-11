@@ -568,13 +568,13 @@
 
 /* размеры ставь явно — SVG НЕ должны полагаться на intrinsic size */
 .successDoodle--tl{
-  top: -16px;
+  top: -22px;
   left: -16px;
   width: 96px;
 }
 
 .successDoodle--tr{
-  top: -16.5px;
+  top: -22px;
   right: -16px;
   width: 96px;
 }

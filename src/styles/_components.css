@@ -618,27 +618,20 @@
   
   .lessonMetaItem{
     height: 69px;
-  
     display: flex;
     flex-direction: column;
     justify-content: center;
   
-    /* Центруем весь блок внутри колонки */
-    align-items: center;
-  
-    /* текст внутри блока — по левому */
-    text-align: left;
-  
+    align-items: center;   /* ✅ вернуть */
     padding: 0;
   }
   
-  /* вместо width: 86px — безопасный контейнер */
   .lessonMetaLabel,
-  .lessonMetaValue{
-    width: max-content;
-    max-width: 110px;   /* можно 100–130 по вкусу */
-    min-width: 0;
-  }
+.lessonMetaValue{
+  width: 86px;           /* ✅ центрируемый “блок” */
+  text-align: left;      /* ✅ текст слева ВНУТРИ блока */
+  display: block;
+}
   
   .lessonMetaLabel{
     margin: 0;
