@@ -517,7 +517,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 20px;
   text-align: center;
   padding: 0 24px;
 }
@@ -528,8 +528,6 @@
   height: 120px;
   border-radius: 999px;
   background: rgba(0,16,36,0.03);
-
-  margin-bottom: 44px; /* было 24px → стало 44px (24 + 20) */
 }
 
 
@@ -575,7 +573,7 @@
 }
 
 .successDoodle--tr{
-  top: -20px;
+  top: -20.5px;
   right: -16px;
   width: 96px;
 }
