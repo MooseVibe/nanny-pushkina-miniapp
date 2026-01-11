@@ -57,116 +57,124 @@ export default function App() {
   }, []);
 
   // =========================================
-  // iOS/Telegram keyboard fix (stable)
-  // - uses visualViewport (best for iOS WebView)
-  // - toggles .keyboardOpen on <html> (matches _layout.css)
-  // - locks scrolling while keyboard is open (prevents "weird scroll")
+  // iOS/Telegram keyboard fix (NO FLICKER)
+  // - uses visualViewport (best signal in iOS WebView)
+  // - sets:
+  //    html.keyboardOpen
+  //    css var --kb (keyboard height)
+  // - locks scroll via body position:fixed (stable on iOS)
   // =========================================
   useEffect(() => {
     const root = document.documentElement;
     const vv = window.visualViewport;
 
+    // If no visualViewport — nothing to do (desktop/android ok)
+    if (!vv) return;
+
     let raf = 0;
-    let isKb = false;
+    let kbOpen = false;
+    let savedScrollY = 0;
 
     const lockScroll = () => {
-      // фиксируем скролл, чтобы не было "обрезалось и ещё скроллится"
-      const body = document.body;
-      body.dataset._prevOverflow = body.style.overflow || "";
-      body.dataset._prevOverscroll = body.style.overscrollBehavior || "";
-      body.style.overflow = "hidden";
-      body.style.overscrollBehavior = "none";
+      if (document.body.dataset._scrollLocked === "1") return;
+
+      savedScrollY = window.scrollY || 0;
+
+      document.body.dataset._scrollLocked = "1";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${savedScrollY}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+      document.body.style.overscrollBehavior = "none";
     };
 
     const unlockScroll = () => {
-      const body = document.body;
-      body.style.overflow = body.dataset._prevOverflow || "";
-      body.style.overscrollBehavior = body.dataset._prevOverscroll || "";
-      delete body.dataset._prevOverflow;
-      delete body.dataset._prevOverscroll;
+      if (document.body.dataset._scrollLocked !== "1") return;
+
+      document.body.dataset._scrollLocked = "0";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      document.body.style.overscrollBehavior = "";
+
+      // restore scroll
+      window.scrollTo(0, savedScrollY);
     };
 
-    const setKeyboardOpen = (open) => {
-      if (open === isKb) return;
-      isKb = open;
+    const setKbState = (open, kbPx) => {
+      // css var always актуальна
+      root.style.setProperty("--kb", `${open ? kbPx : 0}px`);
+
+      if (open === kbOpen) return;
+      kbOpen = open;
 
       root.classList.toggle("keyboardOpen", open);
 
-      // лочим/разлочим скролл
       if (open) lockScroll();
       else unlockScroll();
     };
 
-    const updateFromViewport = () => {
-      if (!vv) return;
-
+    const compute = () => {
+      // layout viewport: window.innerHeight
+      // visual viewport shrinks when keyboard opens
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      const open = kb > 90; // порог, чтобы не ловить мелкие скачки
 
-      setKeyboardOpen(open);
+      // порог, чтобы не ловить микро-скачки iOS
+      const open = kb > 90;
+      const kbPx = open ? Math.round(kb) : 0;
+
+      setKbState(open, kbPx);
     };
 
     const schedule = () => {
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(updateFromViewport);
+      raf = requestAnimationFrame(compute);
     };
 
-    // Если visualViewport нет — остаёмся в режиме "по фокусу"
-    const updateFromFocus = (open) => setKeyboardOpen(open);
+    // init
+    compute();
 
-    // 1) visualViewport — главный источник правды (iOS)
-    if (vv) {
-      updateFromViewport();
-      vv.addEventListener("resize", schedule);
-      vv.addEventListener("scroll", schedule);
-    }
+    vv.addEventListener("resize", schedule);
+    vv.addEventListener("scroll", schedule);
 
-    // 2) фолбек + помогает iOS, где событие приходит с задержкой
+    // Sometimes iOS updates viewport чуть позже фокуса
     const onFocusIn = (e) => {
       const t = e.target;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) {
-        // чуть задержим — iOS сначала анимирует клаву, потом меняет viewport
-        setTimeout(() => {
-          if (vv) updateFromViewport();
-          else updateFromFocus(true);
-        }, 0);
+      if (!t) return;
+      const tag = t.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") {
+        setTimeout(compute, 0);
+        setTimeout(compute, 60);
       }
     };
 
     const onFocusOut = () => {
-      // закрытие клавы может прийти с задержкой — подождём чуть-чуть
-      setTimeout(() => {
-        if (vv) updateFromViewport();
-        else updateFromFocus(false);
-      }, 80);
+      setTimeout(compute, 0);
+      setTimeout(compute, 120);
     };
 
     window.addEventListener("focusin", onFocusIn);
     window.addEventListener("focusout", onFocusOut);
 
-    // 3) жёстко запрещаем touch-scroll, пока клавиатура открыта
-    const preventTouchMove = (e) => {
-      if (!isKb) return;
-      // не даём странице "ездить" во время ввода
-      e.preventDefault();
-    };
-
-    document.addEventListener("touchmove", preventTouchMove, { passive: false });
-
     return () => {
       cancelAnimationFrame(raf);
 
-      if (vv) {
-        vv.removeEventListener("resize", schedule);
-        vv.removeEventListener("scroll", schedule);
-      }
+      vv.removeEventListener("resize", schedule);
+      vv.removeEventListener("scroll", schedule);
 
       window.removeEventListener("focusin", onFocusIn);
       window.removeEventListener("focusout", onFocusOut);
-      document.removeEventListener("touchmove", preventTouchMove);
 
       root.classList.remove("keyboardOpen");
+      root.style.removeProperty("--kb");
+
       unlockScroll();
+      delete document.body.dataset._scrollLocked;
     };
   }, []);
 
@@ -433,7 +441,7 @@ export default function App() {
                 pointerEvents: "none",
               }}
             >
-              BUILD: kbfix-vv-2
+              BUILD: kbfix-no-flicker-1
             </div>
 
             {isLocalDev() && (

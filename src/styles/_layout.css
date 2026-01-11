@@ -154,16 +154,23 @@
      iOS keyboard: stable behavior
      (App.jsx will toggle .keyboardOpen on <html>)
      ========================================= */
-  
-  /* Пока пользователь вводит — CTA скрываем, иначе iOS WebView будет её “выталкивать” */
-  .keyboardOpen .stickyCta{
-    display: none !important;
-  }
-  
-  /* Чтоб низ страницы не выглядел обрубленным */
-  .keyboardOpen .pageMain{
-    padding-bottom: 16px;
-  }
+
+/* Когда клавиатура открыта — НЕ скрываем CTA через display:none.
+   Просто “уводим” её вниз за клавиатуру, чтобы она не прыгала. */
+:root{ --kb: 0px; }
+
+.stickyCta{
+  transform: translate3d(0, var(--kb), 0);
+  will-change: transform;
+  transition: transform 140ms cubic-bezier(.2,.8,.2,1);
+  backface-visibility: hidden;
+}
+
+/* Если App.jsx по какой-то причине не пишет --kb,
+   то хотя бы не ломаемся: при keyboardOpen ничего не делаем. */
+.keyboardOpen .stickyCta{
+  /* намеренно пусто */
+}
   
   
   /* =========================================
