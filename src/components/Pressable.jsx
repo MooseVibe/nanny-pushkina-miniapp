@@ -1,17 +1,20 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Pressable({
   as: Tag = "button",
   className = "",
   onPress,
-  delayMs = 140,
+  delayMs = 120,
   disabled = false,
   type,
   ...props
 }) {
   const [pressed, setPressed] = useState(false);
-  const firedRef = useRef(false);
+
   const tRef = useRef(null);
+  const firedRef = useRef(false);
+  const pointerIdRef = useRef(null);
+  const hadPointerDownRef = useRef(false);
 
   const clearTimer = () => {
     if (tRef.current) {
@@ -20,20 +23,38 @@ export default function Pressable({
     }
   };
 
-  const fire = () => {
+  useEffect(() => {
+    return () => clearTimer();
+  }, []);
+
+  const fireOnce = () => {
     if (disabled) return;
     if (firedRef.current) return;
     firedRef.current = true;
     onPress?.();
   };
 
+  const isPointInside = (el, clientX, clientY) => {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+  };
+
   const handlePointerDown = (e) => {
     if (disabled) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
 
+    hadPointerDownRef.current = true;
     firedRef.current = false;
+
     clearTimer();
     setPressed(true);
+
+    // Capture pointer so we get pointerup even if finger leaves the element
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+      pointerIdRef.current = e.pointerId;
+    } catch (_) {}
 
     props.onPointerDown?.(e);
   };
@@ -44,32 +65,43 @@ export default function Pressable({
     setPressed(false);
     clearTimer();
 
-    // Даём прожиму “показаться”, и только потом делаем action
-    tRef.current = setTimeout(() => {
-      fire();
-    }, delayMs);
+    const el = e.currentTarget;
+    const inside = isPointInside(el, e.clientX, e.clientY);
 
+    // release capture
+    try {
+      if (pointerIdRef.current != null) {
+        el.releasePointerCapture(pointerIdRef.current);
+      }
+    } catch (_) {}
+
+    pointerIdRef.current = null;
+
+    // Only fire if we started press here AND released inside
+    if (hadPointerDownRef.current && inside) {
+      tRef.current = setTimeout(() => {
+        fireOnce();
+      }, Math.max(0, delayMs));
+    } else {
+      firedRef.current = false;
+    }
+
+    hadPointerDownRef.current = false;
     props.onPointerUp?.(e);
   };
 
   const handlePointerCancel = (e) => {
     setPressed(false);
     clearTimer();
+
     firedRef.current = false;
+    hadPointerDownRef.current = false;
+    pointerIdRef.current = null;
+
     props.onPointerCancel?.(e);
   };
 
-  const handlePointerLeave = (e) => {
-    // Если мышь ушла — считаем “передумал”
-    if (e.pointerType === "mouse") {
-      setPressed(false);
-      clearTimer();
-      firedRef.current = false;
-    }
-    props.onPointerLeave?.(e);
-  };
-
-  // Fallback: если pointer события не прилетели (или клавиатура)
+  // Click fallback: если pointer-ивенты по какой-то причине не отработали
   const handleClick = (e) => {
     if (disabled) {
       e.preventDefault();
@@ -77,39 +109,27 @@ export default function Pressable({
       return;
     }
 
-    // Если уже сработали через pointerUp — второй раз не надо
+    // Если отработали pointer-ивенты — не дублируем
     if (firedRef.current) return;
 
-    // Если это ссылка — пусть ведёт куда надо (но мы всё равно можем задержать)
-    // Для button/div просто вызываем action.
-    if (delayMs > 0) {
-      e.preventDefault();
-      clearTimer();
-      tRef.current = setTimeout(() => {
-        fire();
-      }, delayMs);
-    } else {
-      fire();
-    }
-
+    // Без второй "анимационной" задержки: клик — это уже завершённое действие
+    fireOnce();
     props.onClick?.(e);
   };
 
   const handleKeyDown = (e) => {
     if (disabled) return;
 
-    // Enter / Space должны работать как “tap”
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       firedRef.current = false;
       clearTimer();
       setPressed(true);
 
-      // Небольшая задержка, чтобы прожим был виден даже с клавиатуры
       tRef.current = setTimeout(() => {
         setPressed(false);
-        fire();
-      }, delayMs);
+        fireOnce();
+      }, Math.max(0, delayMs));
     }
 
     props.onKeyDown?.(e);
@@ -129,7 +149,6 @@ export default function Pressable({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
-      onPointerLeave={handlePointerLeave}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     />
