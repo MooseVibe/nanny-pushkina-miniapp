@@ -57,45 +57,58 @@ export default function App() {
   }, []);
 
   // =========================================
-  // iOS/Telegram keyboard fix:
-  // when keyboard opens, viewport height shrinks -> fixed/sticky jumps.
-  // We add .keyboardOpen on <html> so CSS can disable sticky CTA.
+  // iOS/Telegram keyboard fix (robust)
+  // - uses visualViewport when available (best signal in iOS WebView)
+  // - sets CSS var --kb and class kbOpen on <html>
   // =========================================
   useEffect(() => {
     const root = document.documentElement;
+    const vv = window.visualViewport;
 
-    let lastH = window.innerHeight;
+    // fallback: if no visualViewport, do nothing (Android/desktop ok)
+    if (!vv) return;
 
-    const onResize = () => {
-      const h = window.innerHeight;
+    let raf = 0;
 
-      // keyboard-open heuristic (works well in iOS WebView)
-      if (h < lastH - 120) {
-        root.classList.add("keyboardOpen");
-      } else if (h >= lastH - 40) {
-        // close / bounce-back
-        root.classList.remove("keyboardOpen");
-      }
+    const update = () => {
+      // window.innerHeight ~= layout viewport
+      // vv.height/offsetTop ~= visual viewport (shrinks when keyboard opens)
+      const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
 
-      lastH = h;
+      // threshold to avoid tiny bounces
+      const kbPx = kb > 80 ? kb : 0;
+
+      root.style.setProperty("--kb", `${kbPx}px`);
+      root.classList.toggle("kbOpen", kbPx > 0);
     };
 
-    window.addEventListener("resize", onResize);
-
-    // Also: if user taps Done and Telegram restores height without resize timing,
-    // run a small delayed check.
-    const onFocusOut = () => {
-      setTimeout(() => {
-        root.classList.remove("keyboardOpen");
-      }, 50);
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
     };
 
+    // initial
+    update();
+
+    vv.addEventListener("resize", schedule);
+    vv.addEventListener("scroll", schedule);
+
+    // iOS sometimes updates after focus
+    const onFocusIn = () => setTimeout(update, 0);
+    const onFocusOut = () => setTimeout(update, 0);
+
+    window.addEventListener("focusin", onFocusIn);
     window.addEventListener("focusout", onFocusOut);
 
     return () => {
-      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(raf);
+      vv.removeEventListener("resize", schedule);
+      vv.removeEventListener("scroll", schedule);
+      window.removeEventListener("focusin", onFocusIn);
       window.removeEventListener("focusout", onFocusOut);
-      root.classList.remove("keyboardOpen");
+
+      root.style.removeProperty("--kb");
+      root.classList.remove("kbOpen");
     };
   }, []);
 
@@ -346,6 +359,24 @@ export default function App() {
             <ScreenStack screenKey={screen} direction={navDir} durationMs={340}>
               {renderScreen()}
             </ScreenStack>
+
+            {/* BUILD бейдж: чтобы 100% видеть, что Telegram открыл новый билд */}
+            <div
+              style={{
+                position: "fixed",
+                right: 8,
+                top: 8,
+                zIndex: 999999,
+                fontSize: 12,
+                padding: "6px 8px",
+                borderRadius: 10,
+                background: "rgba(0,0,0,0.6)",
+                color: "#fff",
+                pointerEvents: "none",
+              }}
+            >
+              BUILD: kbfix-vv-1
+            </div>
 
             {isLocalDev() && (
               <div

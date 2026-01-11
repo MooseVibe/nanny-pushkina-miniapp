@@ -208,13 +208,12 @@
     margin-right: -16px;
     width: calc(100% + 32px);
   }
+  
 
-  /* =========================================
-   iOS keyboard fix for sticky CTA
-   ========================================= */
+:root { --kb: 0px; }
 
-/* Когда открыта клавиатура — отключаем sticky */
-.keyboardOpen .stickyCta {
-  position: static !important;
-  padding-bottom: 16px; /* аккуратный отступ */
+/* когда клавиатура открыта — НЕ даём CTA “выталкиваться” вверх */
+.kbOpen .stickyCta{
+  transform: translate3d(0, var(--kb), 0);
+  will-change: transform;
 }
