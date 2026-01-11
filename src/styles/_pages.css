@@ -528,7 +528,8 @@
   height: 120px;
   border-radius: 999px;
   background: rgba(0,16,36,0.03);
-  margin-bottom: 24px;
+
+  margin-bottom: 44px; /* было 24px → стало 44px (24 + 20) */
 }
 
 
@@ -568,13 +569,13 @@
 
 /* размеры ставь явно — SVG НЕ должны полагаться на intrinsic size */
 .successDoodle--tl{
-  top: -22px;
+  top: -20px;
   left: -16px;
   width: 96px;
 }
 
 .successDoodle--tr{
-  top: -22px;
+  top: -20px;
   right: -16px;
   width: 96px;
 }
