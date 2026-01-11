@@ -13,27 +13,56 @@ export default function SuccessPage({ title, subtitle, onHome }) {
   return (
     <div className="page successPage">
       {/* Doodles */}
-      <img className="successDoodle successDoodle--tl" src={doodleTL} alt="" aria-hidden="true" />
-      <img className="successDoodle successDoodle--tr" src={doodleTR} alt="" aria-hidden="true" />
-      <img className="successDoodle successDoodle--ml" src={doodleML} alt="" aria-hidden="true" />
-      <img className="successDoodle successDoodle--mr" src={doodleMR} alt="" aria-hidden="true" />
+      <img
+        className="successDoodle successDoodle--tl"
+        src={doodleTL}
+        alt=""
+        aria-hidden="true"
+      />
+      <img
+        className="successDoodle successDoodle--tr"
+        src={doodleTR}
+        alt=""
+        aria-hidden="true"
+      />
+      <img
+        className="successDoodle successDoodle--ml"
+        src={doodleML}
+        alt=""
+        aria-hidden="true"
+      />
+      <img
+        className="successDoodle successDoodle--mr"
+        src={doodleMR}
+        alt=""
+        aria-hidden="true"
+      />
 
-      {/* 2 блока + auto spacing */}
+      {/* Layout: контент + кнопка */}
       <div className="successLayout">
-        {/* 1) контент */}
+        {/* Hero: галочка + текстовый блок */}
         <div className="successContent">
-          <img className="successCheckImg" src={successCheck} alt="" aria-hidden="true" />
+          <div className="successHero">
+            <img
+              className="successCheckImg"
+              src={successCheck}
+              alt=""
+              aria-hidden="true"
+            />
 
-          <h1 className="successTitle">{h1}</h1>
-          <div className="successSubtitle">{p}</div>
+            <div className="successText">
+              <h1 className="successTitle">{h1}</h1>
+              <div className="successSubtitle">{p}</div>
+            </div>
+          </div>
         </div>
 
-        {/* 2) кнопка */}
+        {/* Footer: кнопка */}
         <div className="successFooter">
-  <button className="primaryCta" type="button" onClick={onHome}>
-    На главную
-  </button>
-</div>
+          <button className="primaryCta" type="button" onClick={onHome}>
+            На главную
+          </button>
+        </div>
       </div>
     </div>
   );

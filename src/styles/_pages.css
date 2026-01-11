@@ -513,13 +513,31 @@
 
 /* Блок “галочка + заголовок + подзаголовок” */
 .successContent{
+  position: relative;
+  z-index: 1;
+
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  /* кнопка внизу — у тебя уже есть successFooter, пусть работает */
+}
+
+.successHero{
+  /* ключ: держим по центру, но даём ручной сдвиг вниз */
   flex: 1 1 auto;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
   text-align: center;
-  padding: 0 24px;
+
+  /* это твой “ручной регулятор” позиции блока */
+  padding-top: 140px;         /* стартово */
+  justify-content: center;   /* центрируем внутри оставшегося места */
+  
+  /* gap между галочкой и текстовым блоком */
+  gap: 16px;
 }
 
 /* большая галочка */
@@ -530,6 +548,12 @@
   background: rgba(0,16,36,0.03);
 }
 
+.successText{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px; /* как ты хочешь в Figma */
+}
 
 .successPage .successTitle{
   margin: 0;
@@ -542,8 +566,6 @@
 }
 
 .successSubtitle{
-  margin-top: 8px;
-
   font-family: system-ui, -apple-system, "SF Pro Display", sans-serif;
   font-size: 14px;
   font-weight: 400; /* Regular */

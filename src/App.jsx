@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
 import HomePage from "./pages/HomePage.jsx";
@@ -7,8 +7,30 @@ import LessonDetailsPage from "./pages/LessonDetailsPage.jsx";
 import BookingPage from "./pages/BookingPage.jsx";
 import SuccessPage from "./pages/SuccessPage.jsx";
 
+// --------------------
+// DEV helpers (локально)
+// --------------------
+function isLocalDev() {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1";
+}
+
+function getDevScreenFromUrl() {
+  if (typeof window === "undefined") return null;
+  const sp = new URLSearchParams(window.location.search);
+  return sp.get("screen"); // например: success, booking, details, vyshe, home
+}
+
 export default function App() {
-  const [screen, setScreen] = useState("home");
+  // ✅ DEV: если в localhost есть ?screen=success — стартуем сразу туда
+  const initialScreen = useMemo(() => {
+    if (!isLocalDev()) return "home";
+    const s = getDevScreenFromUrl();
+    return s || "home";
+  }, []);
+
+  const [screen, setScreen] = useState(initialScreen);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [lastBooking, setLastBooking] = useState(null);
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
@@ -19,6 +41,39 @@ export default function App() {
     screen === "lesson_details";
 
   const isSubpage = screen !== "home";
+
+  // ✅ DEV: фейковая запись, чтобы SuccessPage имел данные (если тебе надо)
+  const devBookingPayload = useMemo(() => {
+    return {
+      lessonTitle: "Тестовое занятие (DEV)",
+      name: "Илья Лось",
+      group: "7–8 лет",
+      date: "ПН, 01.01",
+      time: "12:00",
+    };
+  }, []);
+
+  // ✅ DEV: хоткей (в localhost)
+  useEffect(() => {
+    if (!isLocalDev()) return;
+
+    const onKeyDown = (e) => {
+      // 9 -> success
+      if (e.key === "9") {
+        setLastBooking(devBookingPayload);
+        setScreen("success");
+      }
+      // 8 -> booking
+      if (e.key === "8") setScreen("booking");
+      // 7 -> details
+      if (e.key === "7") setScreen("details");
+      // 0 -> home
+      if (e.key === "0") setScreen("home");
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [devBookingPayload]);
 
   const goBack = () => {
     if (screen === "success") {
@@ -124,7 +179,9 @@ export default function App() {
           <div className="headerBg" />
 
           <div className="contentShell">
-            {screen === "home" && <HomePage onOpenVyshe={() => setScreen("vyshe")} />}
+            {screen === "home" && (
+              <HomePage onOpenVyshe={() => setScreen("vyshe")} />
+            )}
 
             {screen === "vyshe" && (
               <VysheListPage
@@ -138,7 +195,24 @@ export default function App() {
 
             {isDetails && (
               <LessonDetailsPage
-                lesson={selectedLesson}
+                lesson={
+                  selectedLesson ||
+                  (isLocalDev()
+                    ? {
+                        title: "Тестовое занятие (DEV)",
+                        subtitle: "Чтобы тебе не мешал пустой экран.",
+                        ageRange: "7–9 лет",
+                        price: "700 ₽",
+                        duration: "1 час",
+                        schedule: {
+                          sessions: [
+                            { day: "ПН", time: "12:00" },
+                            { day: "СР", time: "12:00" },
+                          ],
+                        },
+                      }
+                    : null)
+                }
                 onBack={goBack}
                 onBook={() => setScreen("booking")}
               />
@@ -146,10 +220,31 @@ export default function App() {
 
             {screen === "booking" && (
               <BookingPage
-                lesson={selectedLesson}
+                lesson={
+                  selectedLesson ||
+                  (isLocalDev()
+                    ? {
+                        title: "Тестовое занятие (DEV)",
+                        ageRange: "7–9 лет",
+                        schedule: {
+                          sessions: [
+                            { day: "ПН", time: "12:00" },
+                            { day: "СР", time: "12:00" },
+                          ],
+                        },
+                      }
+                    : null)
+                }
                 isSubmitting={isSubmittingBooking}
                 onSubmit={async (payload) => {
                   if (isSubmittingBooking) return;
+
+                  // ✅ DEV: в localhost можно не дергать сервер — сразу успех
+                  if (isLocalDev()) {
+                    setLastBooking(payload);
+                    setScreen("success");
+                    return;
+                  }
 
                   setIsSubmittingBooking(true);
                   try {
@@ -158,7 +253,11 @@ export default function App() {
                     setScreen("success");
                   } catch (err) {
                     console.error("BOOKING SUBMIT ERROR:", err);
-                    alert(`Не удалось отправить запись.\n${err?.message || "Попробуйте ещё раз."}`);
+                    alert(
+                      `Не удалось отправить запись.\n${
+                        err?.message || "Попробуйте ещё раз."
+                      }`
+                    );
                   } finally {
                     setIsSubmittingBooking(false);
                   }
@@ -171,7 +270,28 @@ export default function App() {
                 title="Вы записались на занятие"
                 subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
                 onHome={() => setScreen("home")}
+                lastBooking={lastBooking || (isLocalDev() ? devBookingPayload : null)}
               />
+            )}
+
+            {/* ✅ DEV: маленькая подсказка (только localhost) */}
+            {isLocalDev() && (
+              <div
+                style={{
+                  position: "fixed",
+                  left: 8,
+                  bottom: 8,
+                  zIndex: 9999,
+                  fontSize: 12,
+                  padding: "6px 8px",
+                  borderRadius: 10,
+                  background: "rgba(0,0,0,0.6)",
+                  color: "#fff",
+                  pointerEvents: "none",
+                }}
+              >
+                DEV: 9=success · 8=booking · 7=details · 0=home · ?screen=success
+              </div>
             )}
           </div>
         </div>
