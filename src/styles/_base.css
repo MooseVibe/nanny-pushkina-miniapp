@@ -1,28 +1,51 @@
+/* =========================================
+   Base / Globals
+   ========================================= */
+
+/* 1) Predictable sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 2) Full-height root for layout calculations */
 html,
 body,
 #root {
   height: 100%;
 }
 
+/* 3) Global typography defaults */
 :root {
-  /* SF Pro (iOS/macOS) + хорошие фолбеки */
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Helvetica Neue", Arial, sans-serif;
+  /* SF Pro (iOS/macOS) + sane fallbacks */
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
   text-rendering: optimizeLegibility;
 }
 
+/* 4) Page base */
 body {
   margin: 0;
-  background: #f3f3f3; /* можно оставить */
+  background: #f3f3f3;
 
-  /* на случай, если где-то вылезет горизонтальный скролл */
+  /* prevent random horizontal scroll */
   overflow-x: hidden;
+
+  /* iOS/Android tap highlight off */
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* 5) Form controls inherit the project font */
 button,
 input,
 textarea,
@@ -30,24 +53,19 @@ select {
   font-family: inherit;
 }
 
-/* ================================
-   🔒 Disable text selection (UI)
-   ================================ */
+/* =========================================
+   UX: selection rules
+   - Disable text selection in UI, but allow in inputs
+   ========================================= */
+body {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 
-   * {
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  body {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-  
-  /* ✅ Allow text selection in inputs */
-  input,
-  textarea {
-    -webkit-user-select: text;
-    user-select: text;
-  }
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}

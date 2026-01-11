@@ -225,7 +225,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   return (
     <div className="page bookingPage">
       <div className="bookingLayout">
-        <div className="bookingContent">
+       <div className="bookingContent stack20">
           <div className="bookingHead">
             <h1 className="pageTitle">Запись на {data.title}</h1>
           </div>

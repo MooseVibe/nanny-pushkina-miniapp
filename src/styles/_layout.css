@@ -1,5 +1,14 @@
-/* ===== Canvas (только для десктоп-превью) ===== */
-.app {
+/* =========================================
+   _layout.css
+   App shell, containers & layout utilities
+   ========================================= */
+
+
+/* =========================================
+   Desktop canvas / phone preview
+   ========================================= */
+
+   .app {
     min-height: 100dvh;
     background: #f3f3f3;
     display: flex;
@@ -7,10 +16,6 @@
     padding: 0;
   }
   
-  /* ===== Phone wrapper =====
-     На мобилке = весь экран.
-     На десктопе = превью “телефона”.
-  */
   .phone {
     width: 100%;
     min-height: 100dvh;
@@ -20,21 +25,30 @@
   }
   
   
-  /* ===== Root of app inside phone ===== */
+  /* =========================================
+     App root inside phone
+     ========================================= */
+  
   .appRoot {
+    /* single source of truth */
+    --shellTop: 116px;
+  
     min-height: 100dvh;
     background: #E9E6E1;
-    position: relative; /* ОБЯЗАТЕЛЬНО */
-    padding-top: 116px; /* ← ВОТ ЗДЕСЬ */
+    position: relative;
+    padding-top: var(--shellTop);
   }
   
-  /* ===== Header background (паттерн) ===== */
+  
+  /* =========================================
+     Header background
+     ========================================= */
+  
   .headerBg {
     position: absolute;
     inset: 0 0 auto 0;
     height: 180px;
   
-    /* ВАЖНО: правильный путь из папки styles */
     background-image: url("../assets/background.png");
     background-repeat: no-repeat;
     background-position: top center;
@@ -47,9 +61,12 @@
     height: 180px;
   }
   
-  /* ===== Content shell: НЕ абсолют, НЕ внутренний скролл ===== */
-  .contentShell{
-    --shellTop: 116px;
+  
+  /* =========================================
+     Content shell (white rounded card)
+     ========================================= */
+  
+  .contentShell {
     position: relative;
     z-index: 1;
   
@@ -66,139 +83,72 @@
     flex-direction: column;
   }
   
+  /* details variant changes only shell geometry */
   .contentShell--details {
-    --shellTop: 164px; /* как было у тебя */
+    --shellTop: 164px;
     padding-left: 0;
     padding-right: 0;
   }
-
-  .bookingLayout{
-    flex: 1 1 auto;  /* занимает всю доступную высоту страницы */
+  
+  
+  /* =========================================
+     Base page container
+     ========================================= */
+  
+  .page {
     min-height: 0;
     display: flex;
     flex-direction: column;
   }
   
-  /* Контент */
-  .bookingContent{
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  .contentShell > .page {
+    flex: 1 1 auto;
+    min-height: 0;
   }
   
-  /* Футер с кнопкой */
-  .bookingFooter{
-    margin-top: auto; /* вот теперь это реально “авторасстояние” */
-  }
-
-  .page{
-    min-height: 0;
+  
+  /* =========================================
+     Vertical stacks
+     ========================================= */
+  
+  .stack20,
+  .stack16,
+  .stack12 {
     display: flex;
     flex-direction: column;
   }
-
- 
-
-  .page.bookingPage{
+  
+  .stack20 { gap: 20px; }
+  .stack16 { gap: 16px; }
+  .stack12 { gap: 12px; }
+  
+  
+  /* =========================================
+     Sticky CTA page pattern
+     ========================================= */
+  
+  .pageWithStickyCta {
     height: 100%;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
   }
-
-  /* NEW: залоченная карточка = кнопка-обёртка */
-.lockedWrap {
-  position: relative;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  border-radius: 20px;
-
-  /* чтобы iOS не подсвечивал серым */
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* NEW: тут делаем "как в Фигме" — opacity на всю карточку */
-.lockedContent {
-  opacity: 0.5;            /* попробуй 0.6 или 0.7 */
-  border-radius: 20px;
-}
-
-/* NEW: замок поверх и НЕ глушится */
-.lockBadge {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 47px;
-  height: 47px;
-  transform: translate(-50%, -50%);
-  border-radius: 999px;
-
-  background: rgba(255, 255, 255, 0.10);
-
-  display: grid;
-  place-items: center;
-
-  pointer-events: none; /* чтобы клик шёл в кнопку */
-}
-
-/* если у тебя замок картинкой из public/icons/lock.svg */
-.lockIconImg {
-  width: 24px;
-  height: 24px;
-  display: block;
-  opacity: 0.8; 
-}
-
-/* опционально: убираем чёрную рамку фокуса */
-.lockedWrap:focus {
-  outline: none;
-}
-.lockedWrap:focus-visible {
-  outline: none;
-}
-
-/* =========================
-   Vertical spacing utilities
-   ========================= */
-
-/* Вертикальный стек с единым gap */
-.stack20 {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* если понадобится позже */
-.stack12 > * + * { margin-top: 12px; }
-.stack16 > * + * { margin-top: 16px; }
-
-/* Страница, где CTA должна быть прижата вниз */
-.pageWithStickyCta {
-  height: 100%;
-  min-height: 0;
-}
-
-/* Основной контент страницы (занимает всё, что не CTA) */
-.pageMain {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-/* sticky CTA */
-.stickyCta{
-  margin-top: auto;
-  padding: 0 0px 30px; 
-  background: transparent;
-}
-
-/* =========================
-   Horizontal chip rows (layout)
-   ========================= */
-   .chipRow{
+  
+  .pageMain {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  
+  .stickyCta {
+    margin-top: auto;
+    padding: 0 0 30px;
+    background: transparent;
+  }
+  
+  
+  /* =========================================
+     Horizontal chip rows
+     ========================================= */
+  
+  .chipRow {
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
@@ -207,48 +157,54 @@
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
   
-    /* чтобы бордеры не “срезались” */
     padding-bottom: 2px;
   }
   
-  .chipRow::-webkit-scrollbar{
-    display: none;
-  }
+  .chipRow::-webkit-scrollbar { display: none; }
   
-  .chipRowScroll{
+  .chipRowScroll {
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
   
-    /* чтобы ряд красиво уходил в край */
     padding-left: 16px;
     padding-right: 16px;
   }
   
-  .chipRowScroll::-webkit-scrollbar{
-    display: none;
-  }
+  .chipRowScroll::-webkit-scrollbar { display: none; }
   
-  .chipRowWrap{
+  .chipRowWrap {
     flex-wrap: wrap;
     overflow: visible;
   }
-
-  /* =========================
-   Booking layout pieces
-   ========================= */
-
-.bookingForm {
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.formBlock{
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+  
+  
+  /* =========================================
+     Form layout helpers (page-level patterns)
+     ========================================= */
+  
+  .bookingForm {
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .formBlock {
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  
+  /* =========================================
+     Layout helpers
+     ========================================= */
+  
+  .fullBleed {
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+  }
