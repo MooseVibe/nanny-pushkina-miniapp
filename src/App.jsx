@@ -57,58 +57,116 @@ export default function App() {
   }, []);
 
   // =========================================
-  // iOS/Telegram keyboard fix (robust)
-  // - uses visualViewport when available (best signal in iOS WebView)
-  // - sets CSS var --kb and class kbOpen on <html>
+  // iOS/Telegram keyboard fix (stable)
+  // - uses visualViewport (best for iOS WebView)
+  // - toggles .keyboardOpen on <html> (matches _layout.css)
+  // - locks scrolling while keyboard is open (prevents "weird scroll")
   // =========================================
   useEffect(() => {
     const root = document.documentElement;
     const vv = window.visualViewport;
 
-    // fallback: if no visualViewport, do nothing (Android/desktop ok)
-    if (!vv) return;
-
     let raf = 0;
+    let isKb = false;
 
-    const update = () => {
-      // window.innerHeight ~= layout viewport
-      // vv.height/offsetTop ~= visual viewport (shrinks when keyboard opens)
+    const lockScroll = () => {
+      // фиксируем скролл, чтобы не было "обрезалось и ещё скроллится"
+      const body = document.body;
+      body.dataset._prevOverflow = body.style.overflow || "";
+      body.dataset._prevOverscroll = body.style.overscrollBehavior || "";
+      body.style.overflow = "hidden";
+      body.style.overscrollBehavior = "none";
+    };
+
+    const unlockScroll = () => {
+      const body = document.body;
+      body.style.overflow = body.dataset._prevOverflow || "";
+      body.style.overscrollBehavior = body.dataset._prevOverscroll || "";
+      delete body.dataset._prevOverflow;
+      delete body.dataset._prevOverscroll;
+    };
+
+    const setKeyboardOpen = (open) => {
+      if (open === isKb) return;
+      isKb = open;
+
+      root.classList.toggle("keyboardOpen", open);
+
+      // лочим/разлочим скролл
+      if (open) lockScroll();
+      else unlockScroll();
+    };
+
+    const updateFromViewport = () => {
+      if (!vv) return;
+
       const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const open = kb > 90; // порог, чтобы не ловить мелкие скачки
 
-      // threshold to avoid tiny bounces
-      const kbPx = kb > 80 ? kb : 0;
-
-      root.style.setProperty("--kb", `${kbPx}px`);
-      root.classList.toggle("kbOpen", kbPx > 0);
+      setKeyboardOpen(open);
     };
 
     const schedule = () => {
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
+      raf = requestAnimationFrame(updateFromViewport);
     };
 
-    // initial
-    update();
+    // Если visualViewport нет — остаёмся в режиме "по фокусу"
+    const updateFromFocus = (open) => setKeyboardOpen(open);
 
-    vv.addEventListener("resize", schedule);
-    vv.addEventListener("scroll", schedule);
+    // 1) visualViewport — главный источник правды (iOS)
+    if (vv) {
+      updateFromViewport();
+      vv.addEventListener("resize", schedule);
+      vv.addEventListener("scroll", schedule);
+    }
 
-    // iOS sometimes updates after focus
-    const onFocusIn = () => setTimeout(update, 0);
-    const onFocusOut = () => setTimeout(update, 0);
+    // 2) фолбек + помогает iOS, где событие приходит с задержкой
+    const onFocusIn = (e) => {
+      const t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) {
+        // чуть задержим — iOS сначала анимирует клаву, потом меняет viewport
+        setTimeout(() => {
+          if (vv) updateFromViewport();
+          else updateFromFocus(true);
+        }, 0);
+      }
+    };
+
+    const onFocusOut = () => {
+      // закрытие клавы может прийти с задержкой — подождём чуть-чуть
+      setTimeout(() => {
+        if (vv) updateFromViewport();
+        else updateFromFocus(false);
+      }, 80);
+    };
 
     window.addEventListener("focusin", onFocusIn);
     window.addEventListener("focusout", onFocusOut);
 
+    // 3) жёстко запрещаем touch-scroll, пока клавиатура открыта
+    const preventTouchMove = (e) => {
+      if (!isKb) return;
+      // не даём странице "ездить" во время ввода
+      e.preventDefault();
+    };
+
+    document.addEventListener("touchmove", preventTouchMove, { passive: false });
+
     return () => {
       cancelAnimationFrame(raf);
-      vv.removeEventListener("resize", schedule);
-      vv.removeEventListener("scroll", schedule);
+
+      if (vv) {
+        vv.removeEventListener("resize", schedule);
+        vv.removeEventListener("scroll", schedule);
+      }
+
       window.removeEventListener("focusin", onFocusIn);
       window.removeEventListener("focusout", onFocusOut);
+      document.removeEventListener("touchmove", preventTouchMove);
 
-      root.style.removeProperty("--kb");
-      root.classList.remove("kbOpen");
+      root.classList.remove("keyboardOpen");
+      unlockScroll();
     };
   }, []);
 
@@ -360,7 +418,7 @@ export default function App() {
               {renderScreen()}
             </ScreenStack>
 
-            {/* BUILD бейдж: чтобы 100% видеть, что Telegram открыл новый билд */}
+            {/* BUILD бейдж: чтобы видеть новый билд в Telegram */}
             <div
               style={{
                 position: "fixed",
@@ -375,7 +433,7 @@ export default function App() {
                 pointerEvents: "none",
               }}
             >
-              BUILD: kbfix-vv-1
+              BUILD: kbfix-vv-2
             </div>
 
             {isLocalDev() && (

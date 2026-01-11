@@ -8,17 +8,19 @@
    Desktop canvas / phone preview
    ========================================= */
 
-   .app {
-    min-height: 100dvh;
+   .app{
+    min-height: 100vh;     /* fallback */
+    min-height: 100svh;    /* stable viewport on iOS (keyboard-safe) */
     background: #f3f3f3;
     display: flex;
     justify-content: center;
     padding: 0;
   }
   
-  .phone {
+  .phone{
     width: 100%;
-    min-height: 100dvh;
+    min-height: 100vh;     /* fallback */
+    min-height: 100svh;    /* stable viewport on iOS */
     background: #E9E6E1;
     position: relative;
     overflow-x: hidden;
@@ -29,11 +31,12 @@
      App root inside phone
      ========================================= */
   
-  .appRoot {
+  .appRoot{
     /* single source of truth */
     --shellTop: 116px;
   
-    min-height: 100dvh;
+    min-height: 100vh;     /* fallback */
+    min-height: 100svh;    /* stable viewport on iOS */
     background: #E9E6E1;
     position: relative;
     padding-top: var(--shellTop);
@@ -44,7 +47,7 @@
      Header background
      ========================================= */
   
-  .headerBg {
+  .headerBg{
     position: absolute;
     inset: 0 0 auto 0;
     height: 180px;
@@ -57,7 +60,7 @@
     z-index: 0;
   }
   
-  .headerBg--details {
+  .headerBg--details{
     height: 180px;
   }
   
@@ -66,7 +69,7 @@
      Content shell (white rounded card)
      ========================================= */
   
-  .contentShell {
+  .contentShell{
     position: relative;
     z-index: 1;
   
@@ -78,13 +81,16 @@
   
     overflow: visible;
   
-    min-height: calc(100dvh - var(--shellTop));
+    /* IMPORTANT: do NOT use dvh here (keyboard will shrink it -> glitches) */
+    min-height: calc(100vh - var(--shellTop));
+    min-height: calc(100svh - var(--shellTop));
+  
     display: flex;
     flex-direction: column;
   }
   
   /* details variant changes only shell geometry */
-  .contentShell--details {
+  .contentShell--details{
     --shellTop: 164px;
     padding-left: 0;
     padding-right: 0;
@@ -95,13 +101,13 @@
      Base page container
      ========================================= */
   
-  .page {
+  .page{
     min-height: 0;
     display: flex;
     flex-direction: column;
   }
   
-  .contentShell > .page {
+  .contentShell > .page{
     flex: 1 1 auto;
     min-height: 0;
   }
@@ -113,31 +119,31 @@
   
   .stack20,
   .stack16,
-  .stack12 {
+  .stack12{
     display: flex;
     flex-direction: column;
   }
   
-  .stack20 { gap: 20px; }
-  .stack16 { gap: 16px; }
-  .stack12 { gap: 12px; }
+  .stack20{ gap: 20px; }
+  .stack16{ gap: 16px; }
+  .stack12{ gap: 12px; }
   
   
   /* =========================================
      Sticky CTA page pattern
      ========================================= */
   
-  .pageWithStickyCta {
+  .pageWithStickyCta{
     height: 100%;
     min-height: 0;
   }
   
-  .pageMain {
+  .pageMain{
     flex: 1 1 auto;
     min-height: 0;
   }
   
-  .stickyCta {
+  .stickyCta{
     margin-top: auto;
     padding: 0 0 30px;
     background: transparent;
@@ -145,10 +151,26 @@
   
   
   /* =========================================
+     iOS keyboard: stable behavior
+     (App.jsx will toggle .keyboardOpen on <html>)
+     ========================================= */
+  
+  /* Пока пользователь вводит — CTA скрываем, иначе iOS WebView будет её “выталкивать” */
+  .keyboardOpen .stickyCta{
+    display: none !important;
+  }
+  
+  /* Чтоб низ страницы не выглядел обрубленным */
+  .keyboardOpen .pageMain{
+    padding-bottom: 16px;
+  }
+  
+  
+  /* =========================================
      Horizontal chip rows
      ========================================= */
   
-  .chipRow {
+  .chipRow{
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
@@ -160,9 +182,9 @@
     padding-bottom: 2px;
   }
   
-  .chipRow::-webkit-scrollbar { display: none; }
+  .chipRow::-webkit-scrollbar{ display: none; }
   
-  .chipRowScroll {
+  .chipRowScroll{
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -172,9 +194,9 @@
     padding-right: 16px;
   }
   
-  .chipRowScroll::-webkit-scrollbar { display: none; }
+  .chipRowScroll::-webkit-scrollbar{ display: none; }
   
-  .chipRowWrap {
+  .chipRowWrap{
     flex-wrap: wrap;
     overflow: visible;
   }
@@ -184,14 +206,14 @@
      Form layout helpers (page-level patterns)
      ========================================= */
   
-  .bookingForm {
+  .bookingForm{
     overflow: visible;
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
   
-  .formBlock {
+  .formBlock{
     overflow: visible;
     display: flex;
     flex-direction: column;
@@ -203,17 +225,8 @@
      Layout helpers
      ========================================= */
   
-  .fullBleed {
+  .fullBleed{
     margin-left: -16px;
     margin-right: -16px;
     width: calc(100% + 32px);
   }
-  
-
-:root { --kb: 0px; }
-
-/* когда клавиатура открыта — НЕ даём CTA “выталкиваться” вверх */
-.kbOpen .stickyCta{
-  transform: translate3d(0, var(--kb), 0);
-  will-change: transform;
-}
