@@ -1,0 +1,127 @@
+/* =========================================
+   transitions.css
+   ScreenStack: iOS-like push/pop transitions
+   ========================================= */
+
+   :root{
+    --nav-ms: 320ms;
+    --nav-ease: cubic-bezier(.2,.8,.2,1);
+  }
+  
+  /* ScreenStack занимает всю доступную высоту внутри contentShell */
+  .screenStack{
+    position: relative;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+  
+    /* ✅ В статике НЕ клипаем, чтобы Success doodles не резались */
+    overflow: visible;
+  
+    isolation: isolate;
+  }
+  
+  /* ✅ Клип включаем только на время анимации,
+     чтобы во время свайпа не светились соседние экраны */
+  .screenStack.isAnimating{
+    overflow: hidden;
+  }
+  
+  /* каждая сцена — полноэкранный слой */
+  .scene{
+    position: absolute;
+    inset: 0;
+  
+    display: flex;
+    flex-direction: column;
+  
+    min-height: 0;
+    overflow: visible;
+  
+    will-change: transform, opacity;
+    transform: translate3d(0,0,0);
+  
+    /* дефолтная видимость */
+    opacity: 1;
+  }
+  
+  /* страница внутри сцены должна растягиваться */
+  .scene > .page{
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  
+  /* активная сцена кликабельна */
+  .scene.isActive{ pointer-events: auto; }
+  
+  /* неактивная — нет */
+  .scene:not(.isActive){ pointer-events: none; }
+  
+  /* =========================================================
+     FORWARD (push): новый справа -> в центр, старый чуть влево
+     ========================================================= */
+  
+  /* стартовые позиции */
+  .screenStack.isForward .scene.isNext{
+    transform: translate3d(0, 0, 0);
+  }
+  .screenStack.isForward .scene.isPrev{
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  
+  /* фаза анимации */
+  .screenStack.isForward.isAnimating .scene.isNext{
+    /* въезд нового справа */
+    animation: navInFromRight var(--nav-ms) var(--nav-ease) both;
+  }
+  
+  /* ✅ КЛЮЧЕВОЙ ФИКС:
+     старый уезжает и быстро тухнет, чтобы не “светиться” под новым */
+  .screenStack.isForward.isAnimating .scene.isPrev.isExiting{
+    transform: translate3d(-18%, 0, 0);
+    opacity: 0;
+  
+    transition:
+      transform var(--nav-ms) var(--nav-ease),
+      opacity 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  
+  /* =========================================================
+     BACK (pop): текущий уходит вправо, предыдущий возвращается
+     ========================================================= */
+  
+  .screenStack.isBack .scene.isNext{
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  .screenStack.isBack .scene.isPrev{
+    transform: translate3d(-18%, 0, 0);
+    opacity: 1;
+  }
+  
+  /* фаза анимации */
+  .screenStack.isBack.isAnimating .scene.isNext{
+    transform: translate3d(100%, 0, 0);
+    opacity: 0;
+  
+    transition:
+      transform var(--nav-ms) var(--nav-ease),
+      opacity 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  
+  .screenStack.isBack.isAnimating .scene.isPrev.isExiting{
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--nav-ms) var(--nav-ease);
+  }
+  
+  /* keyframes для аккуратного "въезда" нового справа */
+  @keyframes navInFromRight{
+    from { transform: translate3d(100%, 0, 0); }
+    to   { transform: translate3d(0, 0, 0); }
+  }
+  
+  /* reduce motion */
+  @media (prefers-reduced-motion: reduce){
+    .scene{ transition: none !important; animation: none !important; }
+  }

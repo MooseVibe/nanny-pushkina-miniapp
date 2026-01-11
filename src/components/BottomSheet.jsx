@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const OPEN_MS = 260;  // открытие как было
 const CLOSE_MS = 400; // закрытие мягче (важно: совпадает с CSS)
@@ -7,12 +8,21 @@ export default function BottomSheet({ open, onClose, title, children }) {
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(false);
   const closeTimerRef = useRef(null);
+  const raf1 = useRef(0);
+  const raf2 = useRef(0);
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
       closeTimerRef.current = null;
     }
+  };
+
+  const cancelRafs = () => {
+    if (raf1.current) cancelAnimationFrame(raf1.current);
+    if (raf2.current) cancelAnimationFrame(raf2.current);
+    raf1.current = 0;
+    raf2.current = 0;
   };
 
   useEffect(() => {
@@ -22,8 +32,12 @@ export default function BottomSheet({ open, onClose, title, children }) {
 
       setMounted(true);
 
-      // следующий кадр — чтобы transition гарантированно стартанул в WebView
-      requestAnimationFrame(() => setVisible(true));
+      // 2 кадра — в некоторых WebView один RAF бывает недостаточен для корректного старта transition
+      cancelRafs();
+      raf1.current = requestAnimationFrame(() => {
+        raf2.current = requestAnimationFrame(() => setVisible(true));
+      });
+
       return;
     }
 
@@ -35,6 +49,8 @@ export default function BottomSheet({ open, onClose, title, children }) {
     closeTimerRef.current = setTimeout(() => {
       setMounted(false);
     }, CLOSE_MS);
+
+    return () => {};
   }, [open]);
 
   // Esc -> закрыть
@@ -61,14 +77,26 @@ export default function BottomSheet({ open, onClose, title, children }) {
     };
   }, [mounted]);
 
+  // cleanup
   useEffect(() => {
-    return () => clearCloseTimer();
+    return () => {
+      clearCloseTimer();
+      cancelRafs();
+    };
   }, []);
 
   if (!mounted) return null;
 
-  return (
-    <div className={`sheetRoot ${visible ? "sheetRoot--open" : ""}`}>
+  const node = (
+    <div
+      className={`sheetRoot ${visible ? "sheetRoot--open" : ""}`}
+      style={{
+        // чтобы CSS мог использовать разные длительности, если захочешь
+        // (не обязательно, но полезно)
+        ["--sheet-open-ms"]: `${OPEN_MS}ms`,
+        ["--sheet-close-ms"]: `${CLOSE_MS}ms`,
+      }}
+    >
       {/* Backdrop */}
       <button
         type="button"
@@ -95,4 +123,7 @@ export default function BottomSheet({ open, onClose, title, children }) {
       </div>
     </div>
   );
+
+  // Ключевой фикс: рендерим в body, чтобы не ломалось из-за transform/transition контейнеров
+  return createPortal(node, document.body);
 }
