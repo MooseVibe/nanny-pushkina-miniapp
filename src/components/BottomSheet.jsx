@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const OPEN_MS = 260;  // открытие как было
-const CLOSE_MS = 360; // закрытие мягче (важно: совпадает с CSS)
+const CLOSE_MS = 400; // закрытие мягче (важно: совпадает с CSS)
 
 export default function BottomSheet({ open, onClose, title, children }) {
   const [mounted, setMounted] = useState(open);

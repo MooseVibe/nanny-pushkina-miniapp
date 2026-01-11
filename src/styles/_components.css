@@ -282,7 +282,7 @@
 
   /* open = как было, close = мягче */
   --sheet-open-ms: 260ms;
-  --sheet-close-ms: 360ms;
+  --sheet-close-ms: 400ms;
   --sheet-ease: cubic-bezier(.2, .8, .2, 1);
 }
 
