@@ -567,6 +567,7 @@
 
 .successSubtitle{
   font-family: system-ui, -apple-system, "SF Pro Display", sans-serif;
+  max-width: 343px;
   font-size: 14px;
   font-weight: 400; /* Regular */
   line-height: 1.4;
