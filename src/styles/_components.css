@@ -112,13 +112,6 @@
     padding: 6px 10px;
     border-radius: 999px;
   }
-
-  .card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.08);
-    padding: 14px;
-  }
   
   .grid2 {
     display: grid;
@@ -176,36 +169,35 @@
     flex: 1 1 auto;    /* ← КЛЮЧ */
     min-width: 0;      /* ← КЛЮЧ */
   }
-  
-  .lessonCard__iconBox{
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: #E7E7CC;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-  }
-  
-  .lessonCard__icon{
-    width: 24px;
-    height: 24px;
-    display: block;
-    object-fit: contain;
-  }
 
   
-  .lessonCard__iconWrap {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: #E7E7CC;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 40px;
-  }
+ /* ===== LessonCard icon (support both old and new classnames) ===== */
+
+/* контейнер под иконку (плашка) */
+.lessonCard__iconBox,
+.lessonCard__iconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #E7E7CC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+}
+
+/* сама иконка */
+.lessonCard__icon,
+.lessonCard__iconImg {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+
+  /* на всякий случай — чтобы никакие “умные” стили не тонировали SVG/IMG */
+  filter: none;
+  mix-blend-mode: normal;
+}
   
   .lessonCard__text {
     min-width: 0;
@@ -230,37 +222,6 @@
     mask-image: linear-gradient(to right, #000 0%, #000 75%, transparent 100%);
   }
 
-  .lessonCard__titleWrap {
-    position: relative;
-    min-width: 0; /* важно для flex, иначе будет чудить */
-  }
-  
-  /* Фейд — рисуем градиент поверх текста справа */
-  .lessonCard__titleWrap--fade::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: 28px; /* ширина фейда — можешь 24–36 под себя */
-    pointer-events: none;
-    background: linear-gradient(to right, rgba(255,255,255,0), #fff 75%);
-  }
-  
-  .lessonCard__title--fade {
-    -webkit-mask-image: linear-gradient(
-      to right,
-      #000 0%,
-      #000 75%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to right,
-      #000 0%,
-      #000 75%,
-      transparent 100%
-    );
-  }
   
   .lessonCard__price{
     margin-top: 4px;
@@ -280,20 +241,18 @@
     padding: 6px 10px;
     border-radius: 999px;
   }
-  
-
 
   .lessonCard__mid{  /* вот твои 16px отступа */
     min-width: 0;        /* КРИТИЧНО для flex */
     flex: 1 1 auto;
   }
 
-  /* Bottom Sheet */
-  /* ===== BottomSheet ===== */
+/* ===== BottomSheet ===== */
 .sheetRoot{
   position: fixed;
   inset: 0;
   z-index: 999;
+  isolation: isolate;          /* слои внутри шторки не конфликтуют с внешними */
 }
 
 /* backdrop */
@@ -302,8 +261,12 @@
   inset: 0;
   border: 0;
   padding: 0;
+
   background: rgba(0,0,0,0);
   transition: background 260ms cubic-bezier(.2,.8,.2,1);
+
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* panel */
@@ -321,6 +284,10 @@
 
   max-height: calc(100vh - 24px);
   overflow: hidden;
+
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 110%, 0);
 }
 
 /* open state */
@@ -329,6 +296,7 @@
 }
 .sheetRoot--open .sheetPanel{
   transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
 }
 
 /* grabber */
@@ -344,9 +312,10 @@
   background: rgba(0,0,0,0.18);
 }
 
-/* title/body (не трогаю твои шрифты — только базовые размеры/отступы) */
+/* title/body */
 .sheetTitle{
   padding: 12px 16px 12px;
+  font: inherit;               /* не ломаем типографику проекта */
   font-size: 24px;
   font-weight: 500;
   line-height: 1.2;
@@ -355,9 +324,13 @@
 
 .sheetBody{
   padding: 0 16px 32px;
+  font: inherit;
   font-size: 16px;
   line-height: 1.35;
   color: #1B1A18;
+
+  overflow-y: auto;            /* важно: контент скроллится внутри шторки */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* safe-area снизу */
@@ -400,4 +373,291 @@
   
   @media (prefers-reduced-motion: reduce) {
     .pressable { transition: none !important; }
+  }
+
+  .pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .pageHeader__left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .pageHeader__titles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .pageTitle{
+    margin: 0;
+    padding: 0; /* важно: если где-то было padding-top */
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.15;
+    color: #1B1A18;
+  }
+
+  .primaryCta{
+    width: 100%;
+    height: 56px;
+  
+    border: 0;
+    border-radius: 16px;
+  
+    background: #A68263;
+    color: #fff;
+  
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .btnSpinner{
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: btnSpin 0.8s linear infinite;
+    display: inline-block;
+  }
+  
+  @keyframes btnSpin{
+    to { transform: rotate(360deg); }
+  }
+
+/* =========================
+   Chip (component)
+   ========================= */
+   .chip{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+  
+    background: rgba(0,16,36,0.03);
+    color: #1B1A18;
+  
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.2;
+    cursor: pointer;
+  
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  
+  .chipActive{
+    background: #fff;
+    border-color: #594E45;
+  }
+
+/* =========================
+   Form / Inputs
+   ========================= */
+
+   .formLabel{
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: #1B1A18;
+  }
+  
+  .textInput{
+    width: 100%;
+    height: 56px;
+    box-sizing: border-box;
+  
+    border: 0;
+    border-radius: 16px;
+    padding: 0 16px;
+  
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+  
+    background: rgba(0,16,36,0.03);
+    outline: none;
+  }
+  
+  input.textInput{
+    color: #001024;
+    caret-color: #001024;
+  }
+  
+  input.textInput::placeholder{
+    color: #9299A2;
+    opacity: 1;
+  }
+  
+  /* Ошибка (рамка) — важно: не ломает размер, потому что есть box-sizing */
+  .textInputError{
+    border: 1px solid #E54848;
+  }
+  
+  .textInputErrorText{
+    margin-top: 0px;
+    margin-left: 12px;
+  
+    font-family: "SF Pro Display", system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #E54848;
+  }
+  
+  /* Общая ошибка поля (если используешь не только под инпутом) */
+  .fieldError{
+    font-family: system-ui, -apple-system, "SF Pro Display", sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #E14B4B;
+    margin-top: 8px;
+  }
+  
+  /* =========================
+   TeacherCard (reusable)
+   ========================= */
+.teacherCard {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  text-align: left;
+
+  border: 0;
+  padding: 12px 14px;
+  margin: 0;
+
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 6px 18px rgba(0, 16, 36, 0.08);
+
+  cursor: pointer;
+}
+
+/* НЕ нужен :active — у тебя Pressable делает press эффект через transform */
+.teacherCard:focus-visible {
+  outline: 2px solid rgba(0, 16, 36, 0.25);
+  outline-offset: 2px;
+}
+
+.teacherAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 56px;
+}
+
+.teacherText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.teacherLabel {
+  font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #9299A2;
+}
+
+.teacherName {
+  font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #1B1A18;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================
+   LessonMeta (LessonDetails)
+   ========================= */
+
+   .lessonMeta{
+    width: 100%;
+    height: 69px;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+  }
+  
+  .lessonMetaItem{
+    height: 69px;
+  
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  
+    /* Центруем весь блок внутри колонки */
+    align-items: center;
+  
+    /* текст внутри блока — по левому */
+    text-align: left;
+  
+    padding: 0;
+  }
+  
+  /* вместо width: 86px — безопасный контейнер */
+  .lessonMetaLabel,
+  .lessonMetaValue{
+    width: max-content;
+    max-width: 110px;   /* можно 100–130 по вкусу */
+    min-width: 0;
+  }
+  
+  .lessonMetaLabel{
+    margin: 0;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #9299A2;
+  }
+  
+  .lessonMetaValue{
+    margin-top: 8px;
+    font-family: system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400; /* было 500 — это у тебя и давало “жирноту” */
+    line-height: 1.2;
+    color: #1B1A18;
+  
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }

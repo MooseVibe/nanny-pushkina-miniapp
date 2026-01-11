@@ -53,6 +53,11 @@ function ageTextFromLesson(lesson) {
   return `от ${min} лет`;
 }
 
+// маленькая утилита вместо setTimeout в 10 местах
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // --------------------
 // data (пока черновик)
 // --------------------
@@ -81,7 +86,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Скорочтение",
     price: "700 ₽",
@@ -94,7 +98,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Каллиграфия",
     price: "700 ₽",
@@ -107,7 +110,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Английский язык",
     price: "700 ₽",
@@ -136,7 +138,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Шахматы",
     price: "700 ₽",
@@ -149,7 +150,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Секретная лаборатория",
     price: "700 ₽",
@@ -157,7 +157,6 @@ const lessons = [
     ageMin: 7,
     schedule: { sessions: [{ day: "ПТ", time: "17:00" }] },
   },
-
   {
     title: "Акварель",
     price: "700 ₽",
@@ -165,7 +164,6 @@ const lessons = [
     ageMin: 6,
     schedule: { sessions: [{ day: "СР", time: "16:00" }] },
   },
-
   {
     title: "Графика",
     price: "700 ₽",
@@ -173,7 +171,6 @@ const lessons = [
     ageMin: 8,
     schedule: { sessions: [{ day: "ПН", time: "16:30" }] },
   },
-
   {
     title: "Скульптура",
     price: "700 ₽",
@@ -181,7 +178,6 @@ const lessons = [
     ageMin: 8,
     schedule: { sessions: [{ day: "ЧТ", time: "16:30" }] },
   },
-
   {
     title: "Мультипликация",
     price: "700 ₽",
@@ -189,7 +185,6 @@ const lessons = [
     ageMin: 7,
     schedule: { sessions: [{ day: "ВТ", time: "19:00" }] },
   },
-
   {
     title: "Очумелые ручки",
     price: "700 ₽",
@@ -202,7 +197,6 @@ const lessons = [
       ],
     },
   },
-
   {
     title: "Лепка",
     price: "700 ₽",
@@ -210,7 +204,6 @@ const lessons = [
     ageRange: "3–6 лет",
     schedule: { sessions: [{ day: "СБ", time: "11:00" }] },
   },
-
   {
     title: "Рисование",
     price: "700 ₽",
@@ -218,7 +211,6 @@ const lessons = [
     ageRange: "3–6 лет",
     schedule: { sessions: [{ day: "ВС", time: "10:00" }] },
   },
-
   {
     title: "Музыкально-игровые программы",
     price: "700 ₽",
@@ -231,10 +223,19 @@ const lessons = [
 export default function VysheListPage({ onOpenLesson }) {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
+  const openLessonWithFeedback = async (lesson, ageText) => {
+    // ВАЖНО: задержка только перед переходом, не в map и не размазана по коду
+    await delay(140);
+    onOpenLesson?.({
+      ...lesson,
+      age: ageText,
+    });
+  };
+
   return (
-    <div className="page vyshePage">
+    <div className="page vyshePage stack20">
       <div className="pageHeaderRow">
-        <div>
+        <div className="pageHeaderTitles">
           <h1 className="pageTitle">Выше</h1>
           <div className="pageSubtitle">Занятия для детей и взрослых</div>
         </div>
@@ -255,20 +256,6 @@ export default function VysheListPage({ onOpenLesson }) {
         {lessons.map((l) => {
           const ageText = ageTextFromLesson(l);
 
-          // ✅ Переход на деталку — тоже через Pressable delay
-          // ВАЖНО: LessonCard остаётся как есть (button внутри),
-          // поэтому мы просто прокидываем onClick с задержкой.
-          const openLessonDelayed = () => {
-            // Если вдруг Pressable тебе важнее — мы оставим delay здесь,
-            // потому что именно здесь происходит переход.
-            setTimeout(() => {
-              onOpenLesson({
-                ...l,
-                age: ageText,
-              });
-            }, 140);
-          };
-
           return (
             <LessonCard
               key={l.title}
@@ -276,7 +263,7 @@ export default function VysheListPage({ onOpenLesson }) {
               title={l.title}
               price={l.price}
               age={ageText}
-              onClick={openLessonDelayed}
+              onClick={() => openLessonWithFeedback(l, ageText)}
             />
           );
         })}

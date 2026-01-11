@@ -27,11 +27,12 @@ function LockedCard({ children, onClick }) {
 }
 
 export default function HomePage({ onOpenVyshe }) {
-  const lockedAlert = () => alert("Этот раздел пока в разработке. Скоро откроем 🙂");
+  const lockedAlert = () =>
+    alert("Этот раздел пока в разработке. Скоро откроем 🙂");
 
   return (
-    <div className="page">
-      <h1>Добро пожаловать к Няне Пушкина!</h1>
+    <div className="page homePage stack20">
+      <h1 className="pageTitle">Добро пожаловать к Няне Пушкина!</h1>
 
       {/* Ближайшие события скрыты */}
 

@@ -24,7 +24,7 @@
   .appRoot {
     min-height: 100dvh;
     background: #E9E6E1;
-  
+    position: relative; /* ОБЯЗАТЕЛЬНО */
     padding-top: 116px; /* ← ВОТ ЗДЕСЬ */
   }
   
@@ -56,7 +56,7 @@
     background: #fff;
     border-radius: 28px 28px 0 0;
   
-    padding: 16px;
+    padding: 20px 16px 16px;
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
   
     overflow: visible;
@@ -91,12 +91,19 @@
     margin-top: auto; /* вот теперь это реально “авторасстояние” */
   }
 
+  .page{
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+ 
+
   .page.bookingPage{
     height: 100%;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 0; /* важно: иначе gap у .page может ломать расчёт */
   }
 
   /* NEW: залоченная карточка = кнопка-обёртка */
@@ -152,4 +159,96 @@
 }
 .lockedWrap:focus-visible {
   outline: none;
+}
+
+/* =========================
+   Vertical spacing utilities
+   ========================= */
+
+/* Вертикальный стек с единым gap */
+.stack20 {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* если понадобится позже */
+.stack12 > * + * { margin-top: 12px; }
+.stack16 > * + * { margin-top: 16px; }
+
+/* Страница, где CTA должна быть прижата вниз */
+.pageWithStickyCta {
+  height: 100%;
+  min-height: 0;
+}
+
+/* Основной контент страницы (занимает всё, что не CTA) */
+.pageMain {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* sticky CTA */
+.stickyCta{
+  margin-top: auto;
+  padding: 0 0px 30px; 
+  background: transparent;
+}
+
+/* =========================
+   Horizontal chip rows (layout)
+   ========================= */
+   .chipRow{
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+  
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  
+    /* чтобы бордеры не “срезались” */
+    padding-bottom: 2px;
+  }
+  
+  .chipRow::-webkit-scrollbar{
+    display: none;
+  }
+  
+  .chipRowScroll{
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  
+    /* чтобы ряд красиво уходил в край */
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .chipRowScroll::-webkit-scrollbar{
+    display: none;
+  }
+  
+  .chipRowWrap{
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  /* =========================
+   Booking layout pieces
+   ========================= */
+
+.bookingForm {
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formBlock{
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }

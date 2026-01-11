@@ -30,10 +30,10 @@ export default function SuccessPage({ title, subtitle, onHome }) {
 
         {/* 2) кнопка */}
         <div className="successFooter">
-          <button type="button" className="primaryCta" onClick={onHome}>
-            На главную
-          </button>
-        </div>
+  <button className="primaryCta" type="button" onClick={onHome}>
+    На главную
+  </button>
+</div>
       </div>
     </div>
   );

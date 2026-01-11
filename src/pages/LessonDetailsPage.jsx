@@ -75,105 +75,108 @@ export default function LessonDetailsPage({ lesson, onBook }) {
       : data.teacher;
 
   return (
-    <div className="page lessonDetailsPage">
-      <div className="lessonHead">
-        <h1 className="lessonTitle">{data.title}</h1>
-        <div className="lessonSubtitle">{data.subtitle}</div>
-      </div>
-
-      <div className="lessonMeta">
-        <div className="lessonMetaItem">
-          <div className="lessonMetaLabel">Возраст</div>
-          <div className="lessonMetaValue">{data.age}</div>
+    <div className="page lessonDetailsPage stack20 pageWithStickyCta">
+      {/* контент, который должен скроллиться/жить сверху */}
+      <div className="pageMain stack20">
+        <div className="lessonHead">
+          <h1 className="lessonTitle">{data.title}</h1>
+          <div className="lessonSubtitle">{data.subtitle}</div>
         </div>
 
-        <div className="lessonMetaItem">
-          <div className="lessonMetaLabel">Цена</div>
-          <div className="lessonMetaValue">{data.price}</div>
-        </div>
-
-        <div className="lessonMetaItem">
-          <div className="lessonMetaLabel">Длительность</div>
-          <div className="lessonMetaValue">{data.duration}</div>
-        </div>
-      </div>
-
-      {/* ✅ Преподаватель: Pressable + onPress (Telegram-safe) */}
-      <Pressable
-        as="button"
-        className="teacherCard"
-        aria-label="Открыть информацию о преподавателе"
-        onPress={() => setIsTeacherOpen(true)}
-        delayMs={140}
-      >
-        <img
-          className="teacherAvatar"
-          src={teacherObj.avatar || teacherPlaceholder}
-          alt=""
-        />
-
-        <div className="teacherText">
-          <div className="teacherLabel">
-            {teacherObj.role || "Преподаватель"}
+        <div className="lessonMeta">
+          <div className="lessonMetaItem">
+            <div className="lessonMetaLabel">Возраст</div>
+            <div className="lessonMetaValue">{data.age}</div>
           </div>
-          <div className="teacherName">{teacherObj.name}</div>
+
+          <div className="lessonMetaItem">
+            <div className="lessonMetaLabel">Цена</div>
+            <div className="lessonMetaValue">{data.price}</div>
+          </div>
+
+          <div className="lessonMetaItem">
+            <div className="lessonMetaLabel">Длительность</div>
+            <div className="lessonMetaValue">{data.duration}</div>
+          </div>
         </div>
-      </Pressable>
 
-      <div className="scheduleBlock">
-        <div className="sectionTitleLarge">Когда проходят занятия</div>
+        {/* ✅ Преподаватель: Pressable + onPress (Telegram-safe) */}
+        <Pressable
+          as="button"
+          className="teacherCard"
+          aria-label="Открыть информацию о преподавателе"
+          onPress={() => setIsTeacherOpen(true)}
+          delayMs={140}
+        >
+          <img
+            className="teacherAvatar"
+            src={teacherObj.avatar || teacherPlaceholder}
+            alt=""
+          />
 
-        {hasGroups ? (
-          <div className="scheduleGroups">
-            {data.schedule.groups.map((g) => (
-              <div className="scheduleGroup" key={g.label}>
-                <div className="scheduleGroupLabel">{g.label}</div>
-                <div className="scheduleGrid">
-                  {g.sessions.map((s, idx) => (
-                    <div className="scheduleChip" key={`${g.label}-${idx}`}>
-                      <div className="chipDay">{s.day}</div>
-                      <div className="chipTime">{s.time}</div>
-                    </div>
-                  ))}
+          <div className="teacherText">
+            <div className="teacherLabel">
+              {teacherObj.role || "Преподаватель"}
+            </div>
+            <div className="teacherName">{teacherObj.name}</div>
+          </div>
+        </Pressable>
+
+        <div className="scheduleBlock">
+          <div className="sectionTitleLarge">Когда проходят занятия</div>
+
+          {hasGroups ? (
+            <div className="scheduleGroups">
+              {data.schedule.groups.map((g) => (
+                <div className="scheduleGroup" key={g.label}>
+                  <div className="scheduleGroupLabel">{g.label}</div>
+                  <div className="scheduleGrid">
+                    {g.sessions.map((s, idx) => (
+                      <div className="scheduleChip" key={`${g.label}-${idx}`}>
+                        <div className="scheduleDay">{s.day}</div>
+                        <div className="scheduleTime">{s.time}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="scheduleGrid">
+              {flatSessions.map((s, idx) => (
+                <div className="scheduleChip" key={`flat-${idx}`}>
+                  <div className="scheduleDay">{s.day}</div>
+                  <div className="scheduleTime">{s.time}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <BottomSheet
+          open={isTeacherOpen}
+          onClose={() => setIsTeacherOpen(false)}
+          title={teacherObj.name || "Преподаватель"}
+        >
+          <div>
+            {teacherObj.bio ? <div>{teacherObj.bio}</div> : null}
+
+            {teacherObj.education ? (
+              <div style={{ marginTop: 12 }}>
+                <b>Образование:</b> {teacherObj.education}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="scheduleGrid">
-            {flatSessions.map((s, idx) => (
-              <div className="scheduleChip" key={`flat-${idx}`}>
-                <div className="chipDay">{s.day}</div>
-                <div className="chipTime">{s.time}</div>
+            ) : null}
+
+            {teacherObj.approach ? (
+              <div style={{ marginTop: 6 }}>
+                <b>Подход:</b> {teacherObj.approach}
               </div>
-            ))}
+            ) : null}
           </div>
-        )}
+        </BottomSheet>
       </div>
 
-      <BottomSheet
-        open={isTeacherOpen}
-        onClose={() => setIsTeacherOpen(false)}
-        title={teacherObj.name || "Преподаватель"}
-      >
-        <div>
-          {teacherObj.bio ? <div>{teacherObj.bio}</div> : null}
-
-          {teacherObj.education ? (
-            <div style={{ marginTop: 12 }}>
-              <b>Образование:</b> {teacherObj.education}
-            </div>
-          ) : null}
-
-          {teacherObj.approach ? (
-            <div style={{ marginTop: 6 }}>
-              <b>Подход:</b> {teacherObj.approach}
-            </div>
-          ) : null}
-        </div>
-      </BottomSheet>
-
-      {/* ✅ CTA: тоже через Pressable, чтобы action шёл после “прожима” */}
+      {/* ✅ CTA снизу отдельно */}
       <div className="stickyCta">
         <Pressable
           as="button"
