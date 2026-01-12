@@ -1,5 +1,5 @@
 /* =========================================
-   Pages.css (остаток)
+   Pages.css
    Стили, привязанные к конкретным страницам
    ========================================= */
 
@@ -48,13 +48,6 @@
     gap: 12px;
   }
   
-  .lessonList {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    overflow: visible;
-  }
-  
   
   /* =========================================
      Lesson Details Page
@@ -69,25 +62,15 @@
   
   
   /* =========================================
-     Booking Page
+     Booking Page  ✅ ЕДИНСТВЕННАЯ ВЕРСИЯ
      ========================================= */
   
-  .bookingLayout {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-  }
-  
-  .bookingContent {
+  /* корневой контейнер страницы */
+  .page.bookingPage {
     flex: 1 1 auto;
     min-height: 0;
-  }
-  
-  .bookingFooter {
-    margin-top: auto;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-bottom: calc(46px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
   }
   
   
@@ -96,7 +79,8 @@
      ========================================= */
   
   .successPage {
-    min-height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -104,7 +88,7 @@
   
   .successLayout {
     flex: 1 1 auto;
-    min-height: 0; /* было 0% — это мусор */
+    min-height: 0;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -112,32 +96,21 @@
   }
   
   .successContent {
-    position: relative;
-    z-index: 1;
-  
-    min-height: 0; /* было 0% — это мусор */
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
   }
   
   .successHero {
     flex: 1 1 auto;
-  
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-  
-    padding-top: 140px;
     justify-content: center;
     gap: 16px;
-  }
-  
-  .successCheck {
-    width: 120px;
-    height: 120px;
-    border-radius: 999px;
-    background: rgba(0, 16, 36, 0.03);
+    padding-top: 140px;
+    text-align: center;
   }
   
   .successText {
@@ -164,13 +137,16 @@
   }
   
   .successFooter {
-    flex: 0 0 auto;
     margin-top: auto;
     padding: 0 0 30px;
     background: transparent;
   }
   
-  /* Doodles */
+  
+  /* =========================================
+     Success Doodles
+     ========================================= */
+  
   .successDoodle {
     position: absolute;
     z-index: 0;
@@ -200,36 +176,3 @@
     right: -76px;
     width: 88px;
   }
-
-  /* =========================================
-   Booking Page
-   ========================================= */
-
-.bookingLayout {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-/* контент вверху */
-.bookingContent {
-  flex: 1 1 auto;
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-}
-
-/* кнопка вниз */
-.bookingPage .stickyCta {
-  margin-top: auto;
-  padding-bottom: calc(30px + env(safe-area-inset-bottom));
-}
-
-.page.bookingPage{
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}

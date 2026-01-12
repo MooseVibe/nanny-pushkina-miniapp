@@ -1,262 +1,216 @@
 /* =========================================
    _layout.css
    App shell, containers & layout utilities
+   ЕДИНСТВЕННАЯ логика CTA: .globalCta (portal -> #cta-root)
    ========================================= */
 
+/* Глобальные переменные под CTA overlay */
+:root{
+  /* высота оверлея под кнопку (чуть с запасом) */
+  --ctaOverlayH: 84px;
+  --ctaSidePad: 16px;
+  --ctaBottomPad: 16px;
+
+  /* высота "шапки" (контент-шелл стартует ниже) */
+  --shellTop: 116px;
+}
 
 /* =========================================
    Desktop canvas / phone preview
    ========================================= */
 
-   .app{
-    min-height: 100vh;     /* fallback */
-    min-height: 100svh;    /* stable viewport on iOS (keyboard-safe) */
-    background: #f3f3f3;
-    display: flex;
-    justify-content: center;
-    padding: 0;
-  }
-  
-  .phone{
-    width: 100%;
-    min-height: 100vh;     /* fallback */
-    min-height: 100svh;    /* stable viewport on iOS */
-    background: #E9E6E1;
-    position: relative;
-    overflow-x: hidden;
-  }
-  
-  
-  /* =========================================
-     App root inside phone
-     ========================================= */
-  
-  .appRoot{
-    /* single source of truth */
-    --shellTop: 116px;
-  
-    min-height: 100vh;     /* fallback */
-    min-height: 100svh;    /* stable viewport on iOS */
-    background: #E9E6E1;
-    position: relative;
-    padding-top: var(--shellTop);
-  }
-  
-  
-  /* =========================================
-     Header background
-     ========================================= */
-  
-  .headerBg{
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 180px;
-  
-    background-image: url("../assets/background.png");
-    background-repeat: no-repeat;
-    background-position: top center;
-    background-size: cover;
-  
-    z-index: 0;
-  }
-  
-  .headerBg--details{
-    height: 180px;
-  }
-  
-  
-  /* =========================================
-     Content shell (white rounded card)
-     ========================================= */
-  
-  .contentShell{
-    position: relative;
-    z-index: 1;
-  
-    background: #fff;
-    border-radius: 28px 28px 0 0;
-  
-    padding: 20px 16px 16px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom));
-  
-    overflow: visible;
-  
-    /* IMPORTANT: do NOT use dvh here (keyboard will shrink it -> glitches) */
-    min-height: calc(100vh - var(--shellTop));
-    min-height: calc(100svh - var(--shellTop));
-  
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* details variant changes only shell geometry */
-  .contentShell--details{
-    --shellTop: 164px;
-    padding-left: 0;
-    padding-right: 0;
-  }
-  
-  
-  /* =========================================
-     Base page container
-     ========================================= */
-  
-  .page{
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .contentShell > .page{
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-  
-  
-  /* =========================================
-     Vertical stacks
-     ========================================= */
-  
-  .stack20,
-  .stack16,
-  .stack12{
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .stack20{ gap: 20px; }
-  .stack16{ gap: 16px; }
-  .stack12{ gap: 12px; }
-  
-  
-  /* =========================================
-     Sticky CTA page pattern
-     ========================================= */
-  
-  .pageWithStickyCta{
-    height: 100%;
-    min-height: 0;
-  }
-  
-  .pageMain{
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-  
-  .stickyCta{
-    margin-top: auto;
-    padding: 0 0 30px;
-    background: transparent;
-  }
-  
-  
-  /* =========================================
-     iOS keyboard: stable behavior
-     (App.jsx will toggle .keyboardOpen on <html>)
-     ========================================= */
-
-
-.stickyCta{
-  transform: translate3d(0, var(--kb), 0);
-  will-change: transform;
-  transition: transform 140ms cubic-bezier(.2,.8,.2,1);
-  backface-visibility: hidden;
+.app{
+  min-height: 100vh;     /* fallback */
+  min-height: 100svh;    /* stable viewport */
+  background: #f3f3f3;
+  display: flex;
+  justify-content: center;
+  padding: 0;
 }
-  
-  
-  /* =========================================
-     Horizontal chip rows
-     ========================================= */
-  
-  .chipRow{
-    display: flex;
-    gap: 8px;
-    flex-wrap: nowrap;
-  
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  
-    padding-bottom: 2px;
-  }
-  
-  .chipRow::-webkit-scrollbar{ display: none; }
-  
-  .chipRowScroll{
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  
-  .chipRowScroll::-webkit-scrollbar{ display: none; }
-  
-  .chipRowWrap{
-    flex-wrap: wrap;
-    overflow: visible;
-  }
-  
-  
-  /* =========================================
-     Form layout helpers (page-level patterns)
-     ========================================= */
-  
-  .bookingForm{
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .formBlock{
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  
-  /* =========================================
-     Layout helpers
-     ========================================= */
-  
-  .fullBleed{
-    margin-left: -16px;
-    margin-right: -16px;
-    width: calc(100% + 32px);
-  }
 
-  /* =========================================
-   Keyboard "overlay" mode:
-   nothing moves, no scroll while typing
-   App.jsx sets --appH ONCE and toggles html.keyboardOpen
+.phone{
+  width: 100%;
+  min-height: 100vh;     /* fallback */
+  min-height: 100svh;    /* stable viewport */
+  background: #E9E6E1;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* =========================================
+   App root inside phone
    ========================================= */
 
-:root { --appH: 100vh; }
+.appRoot{
+  min-height: 100vh;     /* fallback */
+  min-height: 100svh;    /* stable viewport */
+  background: #E9E6E1;
+  position: relative;
 
-/* фиксируем высоту оболочек (не реагируем на клавиатуру) */
-.app,
-.phone,
-.appRoot {
-  min-height: var(--appH);
+  /* шапка сверху */
+  padding-top: var(--shellTop);
 }
+
+/* =========================================
+   Header background
+   ========================================= */
+
+.headerBg{
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 180px;
+
+  background-image: url("../assets/background.png");
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: cover;
+
+  z-index: 0;
+}
+
+/* =========================================
+   Content shell (white rounded card)
+   ========================================= */
 
 .contentShell{
-  min-height: calc(var(--appH) - var(--shellTop));
+  position: relative;
+  z-index: 1;
+
+  background: #fff;
+  border-radius: 28px 28px 0 0;
+
+  padding: 20px 16px 16px;
+
+  /* ВАЖНО:
+     всегда даём запас снизу под фикс-CTA,
+     чтобы контент не прятался под кнопку */
+  padding-bottom: calc(16px + env(safe-area-inset-bottom) + var(--ctaOverlayH));
+
+  overflow: visible;
+
+  /* stable viewport */
+  min-height: calc(100vh - var(--shellTop));
+  min-height: calc(100svh - var(--shellTop));
+
+  display: flex;
+  flex-direction: column;
 }
 
-/* во время ввода: никакого скролла/резины */
-html.keyboardOpen,
-html.keyboardOpen body{
-  overflow: hidden !important;
-  overscroll-behavior: none;
+/* details variant changes only shell geometry */
+.contentShell--details{
+  --shellTop: 164px;
+  padding-left: 0;
+  padding-right: 0;
 }
 
-/* страховка: чтобы внутри белой карточки тоже не было скролла */
-html.keyboardOpen .contentShell{
-  overflow: hidden !important;
-  touch-action: none;
+/* =========================================
+   Base page container
+   ========================================= */
+
+.page{
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* если страница рендерится напрямую в contentShell */
+.contentShell > .page{
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* =========================================
+   Vertical stacks
+   ========================================= */
+
+.stack20,
+.stack16,
+.stack12{
+  display: flex;
+  flex-direction: column;
+}
+
+.stack20{ gap: 20px; }
+.stack16{ gap: 16px; }
+.stack12{ gap: 12px; }
+
+/* =========================================
+   Global CTA overlay (ЕДИНСТВЕННЫЙ механизм)
+   ========================================= */
+
+.globalCta{
+  position: fixed;
+  left: var(--ctaSidePad);
+  right: var(--ctaSidePad);
+  bottom: calc(var(--ctaBottomPad) + env(safe-area-inset-bottom));
+  z-index: 9999;
+  pointer-events: auto;
+
+  /* микро-стабилизация от миганий */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* =========================================
+   Horizontal chip rows
+   ========================================= */
+
+.chipRow{
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  padding-bottom: 2px;
+}
+
+.chipRow::-webkit-scrollbar{ display: none; }
+
+.chipRowScroll{
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.chipRowScroll::-webkit-scrollbar{ display: none; }
+
+.chipRowWrap{
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
+/* =========================================
+   Form layout helpers (page-level patterns)
+   ========================================= */
+
+.bookingForm{
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formBlock{
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* =========================================
+   Layout helpers
+   ========================================= */
+
+.fullBleed{
+  margin-left: -16px;
+  margin-right: -16px;
+  width: calc(100% + 32px);
 }

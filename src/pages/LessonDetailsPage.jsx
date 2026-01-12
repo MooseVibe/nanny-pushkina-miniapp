@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
 import BottomSheet from "../components/BottomSheet";
 import Pressable from "../components/Pressable";
@@ -8,6 +9,13 @@ function calcAgeFallback(lesson) {
   if (typeof lesson?.ageMin === "number") return `от ${lesson.ageMin} лет`;
   if (lesson?.ageRange) return String(lesson.ageRange).replace(/-/g, "–");
   return "от 6 лет";
+}
+
+function CtaRootPortal({ children }) {
+  if (typeof document === "undefined") return null;
+  const root = document.getElementById("cta-root");
+  if (!root) return null;
+  return createPortal(children, root);
 }
 
 export default function LessonDetailsPage({ lesson, onBook }) {
@@ -75,8 +83,8 @@ export default function LessonDetailsPage({ lesson, onBook }) {
       : data.teacher;
 
   return (
-    <div className="page lessonDetailsPage stack20 pageWithStickyCta">
-      {/* контент, который должен скроллиться/жить сверху */}
+    <div className="page lessonDetailsPage stack20 pageHasFixedCta">
+      {/* контент */}
       <div className="pageMain stack20">
         <div className="lessonHead">
           <h1 className="lessonTitle">{data.title}</h1>
@@ -100,7 +108,6 @@ export default function LessonDetailsPage({ lesson, onBook }) {
           </div>
         </div>
 
-        {/* ✅ Преподаватель: Pressable + onPress (Telegram-safe) */}
         <Pressable
           as="button"
           className="teacherCard"
@@ -113,7 +120,6 @@ export default function LessonDetailsPage({ lesson, onBook }) {
             src={teacherObj.avatar || teacherPlaceholder}
             alt=""
           />
-
           <div className="teacherText">
             <div className="teacherLabel">
               {teacherObj.role || "Преподаватель"}
@@ -176,17 +182,19 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </BottomSheet>
       </div>
 
-      {/* ✅ CTA снизу отдельно */}
-      <div className="stickyCta">
-        <Pressable
-          as="button"
-          className="primaryCta"
-          onPress={() => onBook?.(lesson)}
-          delayMs={140}
-        >
-          Записаться
-        </Pressable>
-      </div>
+      {/* ✅ CTA ТОЛЬКО через #cta-root (вне синего контейнера) */}
+      <CtaRootPortal>
+        <div className="globalCta">
+          <Pressable
+            as="button"
+            className="primaryCta"
+            onPress={() => onBook?.(lesson)}
+            delayMs={140}
+          >
+            Записаться
+          </Pressable>
+        </div>
+      </CtaRootPortal>
     </div>
   );
 }

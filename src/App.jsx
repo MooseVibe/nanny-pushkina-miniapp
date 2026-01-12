@@ -56,6 +56,15 @@ export default function App() {
     };
   }, []);
 
+  const goBack = () => {
+    setNavDir("back");
+
+    if (screen === "success") return setScreen("booking");
+    if (screen === "booking") return setScreen("details");
+    if (isDetails) return setScreen("vyshe");
+    if (screen === "vyshe") return setScreen("home");
+  };
+
   // =========================================
   // 1) Freeze app height ONCE (keyboard must NOT resize layout)
   // =========================================
@@ -63,29 +72,22 @@ export default function App() {
     const root = document.documentElement;
 
     const setAppH = () => {
-      // берем текущую высоту и ЗАМОРАЖИВАЕМ
       const h = Math.max(1, Math.round(window.innerHeight));
       root.style.setProperty("--appH", `${h}px`);
     };
 
     setAppH();
 
-    // ВАЖНО: не реагируем на resize от клавиатуры.
-    // Но: при смене ориентации можно обновить.
     const onOrientation = () => setTimeout(setAppH, 200);
     window.addEventListener("orientationchange", onOrientation);
 
     return () => {
       window.removeEventListener("orientationchange", onOrientation);
-      // --appH можно оставить, но уберём аккуратно
-      // root.style.removeProperty("--appH");
     };
   }, []);
 
   // =========================================
-  // 2) Keyboard overlay mode:
-  // - when focusing input/textarea -> html.keyboardOpen
-  // - disable scroll while typing
+  // 2) Keyboard overlay mode
   // =========================================
   useEffect(() => {
     const root = document.documentElement;
@@ -110,12 +112,10 @@ export default function App() {
 
     const onFocusOut = (e) => {
       if (isTextField(e.target)) {
-        // iOS иногда отдаёт blur раньше анимации — небольшой таймаут
         setTimeout(() => setKb(false), 80);
       }
     };
 
-    // жёстко блокируем “ездящий” touch-scroll во время ввода
     const onTouchMove = (e) => {
       if (!kb) return;
       e.preventDefault();
@@ -159,15 +159,6 @@ export default function App() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [devBookingPayload]);
-
-  const goBack = () => {
-    setNavDir("back");
-
-    if (screen === "success") return setScreen("booking");
-    if (screen === "booking") return setScreen("details");
-    if (isDetails) return setScreen("vyshe");
-    if (screen === "vyshe") return setScreen("home");
-  };
 
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
@@ -381,23 +372,8 @@ export default function App() {
               {renderScreen()}
             </ScreenStack>
 
-            {/* BUILD бейдж */}
-            <div
-              style={{
-                position: "fixed",
-                right: 8,
-                top: 8,
-                zIndex: 999999,
-                fontSize: 12,
-                padding: "6px 8px",
-                borderRadius: 10,
-                background: "rgba(0,0,0,0.6)",
-                color: "#fff",
-                pointerEvents: "none",
-              }}
-            >
-              BUILD: kb-overlay-1
-            </div>
+            {/* ВНЕ .scene: сюда порталом будут рендериться CTA-кнопки */}
+            <div id="cta-root" />
 
             {isLocalDev() && (
               <div

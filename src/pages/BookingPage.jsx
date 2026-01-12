@@ -1,5 +1,6 @@
 import Pressable from "../components/Pressable";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const WEEKDAY_ORDER = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 const JS_DAY_TO_RU = {
@@ -113,6 +114,10 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     };
   }, [lesson]);
 
+  // портал-таргет (вне .scene)
+  const ctaRoot =
+    typeof document !== "undefined" ? document.getElementById("cta-root") : null;
+
   // --- form state ---
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(
@@ -125,7 +130,9 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
   const nameClean = name.trim();
   const nameOk = nameClean.length >= 2;
-  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(nameClean);
+  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(
+    nameClean
+  );
 
   const showNameError =
     submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
@@ -142,13 +149,17 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   }, [data.groups]);
 
   const selectedGroup = useMemo(() => {
-    return data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0];
+    return (
+      data.groups.find((g) => g.label === selectedGroupLabel) || data.groups[0]
+    );
   }, [data.groups, selectedGroupLabel]);
 
   // даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
-    const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(Boolean);
+    const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(
+      Boolean
+    );
 
     uniqueDays.sort((a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b));
 
@@ -179,9 +190,13 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   // время зависит от выбранного дня
   const timeOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
-    const filtered = selectedDay ? sessions.filter((s) => s.day === selectedDay) : sessions;
+    const filtered = selectedDay
+      ? sessions.filter((s) => s.day === selectedDay)
+      : sessions;
 
-    const uniqueTimes = Array.from(new Set(filtered.map((s) => s.time))).filter(Boolean);
+    const uniqueTimes = Array.from(new Set(filtered.map((s) => s.time))).filter(
+      Boolean
+    );
     uniqueTimes.sort();
     return uniqueTimes.length ? uniqueTimes : ["12:00"];
   }, [selectedGroup, selectedDay]);
@@ -204,8 +219,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     !!selectedTime;
 
   const handleSubmit = () => {
-    // ВАЖНО: прожим всегда можно показать,
-    // а вот действие — только если можно.
     setSubmitAttempted(true);
 
     if (isSubmitting) return;
@@ -224,149 +237,164 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
   return (
     <div className="page bookingPage">
-      <div className="bookingLayout">
-       <div className="bookingContent stack20">
-          <div className="bookingHead">
-            <h1 className="pageTitle">Запись на {data.title}</h1>
-          </div>
-
-          <div className="bookingForm">
-            {/* Имя */}
-            <div className="formBlock">
-              <div className="formLabel">Кого записываем</div>
-
-              <input
-                ref={nameInputRef}
-                className={`textInput${showNameError ? " textInputError" : ""}`}
-                type="text"
-                value={name}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  const cleaned = sanitizeName(raw);
-
-                  if (raw !== cleaned) setNameHadInvalidChars(true);
-
-                  setName(cleaned);
-
-                  if (submitAttempted) setSubmitAttempted(false);
-
-                  if (nameHadInvalidChars && raw === cleaned) {
-                    setNameHadInvalidChars(false);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    nameInputRef.current?.blur();
-                  }
-                }}
-                onBlur={() => setName((prev) => capitalizeWords(prev))}
-                placeholder="Имя и фамилия"
-                inputMode="text"
-                autoComplete="name"
-                autoCapitalize="words"
-                autoCorrect="off"
-                enterKeyHint="done"
-              />
-
-              {showNameError && <div className="textInputErrorText">{nameErrorText}</div>}
-            </div>
-
-            {/* Возраст */}
-            <div className="formBlock">
-              <div className="formLabel">Возраст</div>
-
-              <div className="fullBleed">
-                <div className="chipRow chipRowScroll">
-                  {data.groups.map((g) => {
-                    const active = g.label === selectedGroupLabel;
-                    return (
-                      <button
-                        key={g.label}
-                        type="button"
-                        className={`chip ${active ? "chipActive" : ""}`}
-                        onClick={() => setSelectedGroupLabel(g.label)}
-                        disabled={isSubmitting || isSingleGroup}
-                      >
-                        {g.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Дата */}
-            <div className="formBlock">
-              <div className="formLabel">Дата посещения</div>
-
-              <div className="fullBleed">
-                <div className="chipRow chipRowScroll">
-                  {dateOptions.map((d) => {
-                    const active = d.key === selectedDateKey;
-                    const dateOnly = d.label.replace(`${d.day}, `, "");
-
-                    return (
-                      <button
-                        key={d.key}
-                        type="button"
-                        className={`chip chipDate ${active ? "chipActive" : ""}`}
-                        onClick={() => setSelectedDateKey(d.key)}
-                        disabled={isSubmitting}
-                      >
-                        <div className="chipDateInner">
-                          <div className="chipDateCaption">{d.day}</div>
-                          <div className="chipDateValue">{dateOnly}</div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Время */}
-            <div className="formBlock">
-              <div className="formLabel">Время</div>
-
-              <div className="fullBleed">
-                <div className="chipRow chipRowScroll">
-                  {timeOptions.map((t) => {
-                    const active = t === selectedTime;
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        className={`chip ${active ? "chipActive" : ""}`}
-                        onClick={() => setSelectedTime(t)}
-                        disabled={isSubmitting || isSingleTime}
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Контенту даём нижний отступ под фикс-кнопку (чтобы не перекрывала форму) */}
+      <div
+        className="bookingContent stack20"
+        style={{
+          paddingBottom: "calc(56px + 24px + env(safe-area-inset-bottom) + 16px)",
+        }}
+      >
+        <div className="bookingHead">
+          <h1 className="pageTitle">Запись на {data.title}</h1>
         </div>
 
-        {/* CTA */}
-        <div className="stickyCta">
-          <Pressable
-            as="button"
-            className={`primaryCta${canSubmit && !isSubmitting ? "" : " primaryCta--disabled"}`}
-            onPress={handleSubmit}
-            // задержка — чтобы прожим был виден до сабмита/ошибки/спиннера
-            delayMs={140}
-            // когда реально сабмитим — блокируем
-            disabled={isSubmitting}
-            aria-disabled={isSubmitting ? "true" : "false"}
-          >
-            {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
-          </Pressable>
+        <div className="bookingForm">
+          {/* Имя */}
+          <div className="formBlock">
+            <div className="formLabel">Кого записываем</div>
+
+            <input
+              ref={nameInputRef}
+              className={`textInput${showNameError ? " textInputError" : ""}`}
+              type="text"
+              value={name}
+              onChange={(e) => {
+                const raw = e.target.value;
+                const cleaned = sanitizeName(raw);
+
+                if (raw !== cleaned) setNameHadInvalidChars(true);
+
+                setName(cleaned);
+
+                if (submitAttempted) setSubmitAttempted(false);
+
+                if (nameHadInvalidChars && raw === cleaned) {
+                  setNameHadInvalidChars(false);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  nameInputRef.current?.blur();
+                }
+              }}
+              onBlur={() => setName((prev) => capitalizeWords(prev))}
+              placeholder="Имя и фамилия"
+              inputMode="text"
+              autoComplete="name"
+              autoCapitalize="words"
+              autoCorrect="off"
+              enterKeyHint="done"
+            />
+
+            {showNameError ? (
+              <div className="textInputErrorText">{nameErrorText}</div>
+            ) : null}
+          </div>
+
+          {/* Возраст */}
+          <div className="formBlock">
+            <div className="formLabel">Возраст</div>
+
+            <div className="fullBleed">
+              <div className="chipRow chipRowScroll">
+                {data.groups.map((g) => {
+                  const active = g.label === selectedGroupLabel;
+                  return (
+                    <button
+                      key={g.label}
+                      type="button"
+                      className={`chip ${active ? "chipActive" : ""}`}
+                      onClick={() => setSelectedGroupLabel(g.label)}
+                      disabled={isSubmitting || isSingleGroup}
+                    >
+                      {g.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Дата */}
+          <div className="formBlock">
+            <div className="formLabel">Дата посещения</div>
+
+            <div className="fullBleed">
+              <div className="chipRow chipRowScroll">
+                {dateOptions.map((d) => {
+                  const active = d.key === selectedDateKey;
+                  const dateOnly = d.label.replace(`${d.day}, `, "");
+
+                  return (
+                    <button
+                      key={d.key}
+                      type="button"
+                      className={`chip chipDate ${active ? "chipActive" : ""}`}
+                      onClick={() => setSelectedDateKey(d.key)}
+                      disabled={isSubmitting}
+                    >
+                      <div className="chipDateInner">
+                        <div className="chipDateCaption">{d.day}</div>
+                        <div className="chipDateValue">{dateOnly}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Время */}
+          <div className="formBlock">
+            <div className="formLabel">Время</div>
+
+            <div className="fullBleed">
+              <div className="chipRow chipRowScroll">
+                {timeOptions.map((t) => {
+                  const active = t === selectedTime;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`chip ${active ? "chipActive" : ""}`}
+                      onClick={() => setSelectedTime(t)}
+                      disabled={isSubmitting || isSingleTime}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* CTA ВНЕ .scene через портал */}
+      {ctaRoot
+        ? createPortal(
+            <div className="globalCta">
+              <Pressable
+                as="button"
+                className={`primaryCta${
+                  canSubmit && !isSubmitting ? "" : " primaryCta--disabled"
+                }`}
+                onPress={handleSubmit}
+                delayMs={140}
+                disabled={isSubmitting}
+                aria-disabled={isSubmitting ? "true" : "false"}
+              >
+                {isSubmitting ? (
+                  <span className="btnSpinner" aria-hidden="true" />
+                ) : (
+                  "Записаться"
+                )}
+              </Pressable>
+            </div>,
+            ctaRoot
+          )
+        : null}
     </div>
   );
 }
