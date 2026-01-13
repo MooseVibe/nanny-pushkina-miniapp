@@ -81,11 +81,6 @@
 
   padding: 20px 16px 16px;
 
-  /* ВАЖНО:
-     всегда даём запас снизу под фикс-CTA,
-     чтобы контент не прятался под кнопку */
-  padding-bottom: calc(16px + env(safe-area-inset-bottom) + var(--ctaOverlayH));
-
   overflow: visible;
 
   /* stable viewport */
@@ -213,4 +208,31 @@
   margin-left: -16px;
   margin-right: -16px;
   width: calc(100% + 32px);
+}
+
+/* =========================================
+   Universal page layout: content + CTA
+   ========================================= */
+
+/* Страница с кнопкой внизу (НЕ fixed) */
+.pageWithCta {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Контентная часть страницы */
+.pageMain{
+  flex: 1 1 auto;
+  min-height: 0;
+
+  /* ВАЖНО: не делаем pageMain скролл-контейнером,
+     иначе он будет клипать fullBleed и чип-скроллы */
+  overflow: visible;
+}
+
+/* Обёртка кнопки снизу */
+.pageCta {
+  flex: 0 0 auto;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
 }

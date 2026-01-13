@@ -1,6 +1,5 @@
-import Pressable from "../components/Pressable";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import PrimaryButton from "../components/PrimaryButton";
 
 const WEEKDAY_ORDER = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 const JS_DAY_TO_RU = {
@@ -44,7 +43,6 @@ function nextDatesForWeekday(ruDay, count = 4) {
   return res;
 }
 
-// Разрешаем: RU/EN буквы + пробел + дефис
 function sanitizeName(value) {
   return value
     .replace(/[^A-Za-zА-Яа-яЁё\s-]/g, "")
@@ -52,7 +50,6 @@ function sanitizeName(value) {
     .replace(/^\s+/g, "");
 }
 
-// "илья петров" -> "Илья Петров", "анна-мария иванова" -> "Анна-Мария Иванова"
 function capitalizeWords(value) {
   const v = value.trim().replace(/\s+/g, " ");
   if (!v) return "";
@@ -73,16 +70,13 @@ function capitalizeWords(value) {
     .join(" ");
 }
 
-// Делает группы для записи из lesson.schedule
 function buildGroupsFromLesson(lesson) {
   const sch = lesson?.schedule;
 
-  // 1) если есть groups — берём как есть
   if (Array.isArray(sch?.groups) && sch.groups.length) {
     return sch.groups;
   }
 
-  // 2) если есть sessions — делаем одну группу
   if (Array.isArray(sch?.sessions) && sch.sessions.length) {
     const label =
       (typeof lesson?.age === "string" && lesson.age.trim()) ||
@@ -92,7 +86,6 @@ function buildGroupsFromLesson(lesson) {
     return [{ label, sessions: sch.sessions }];
   }
 
-  // 3) фоллбек
   return [
     {
       label: (typeof lesson?.age === "string" && lesson.age.trim()) || "Группа",
@@ -114,17 +107,11 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     };
   }, [lesson]);
 
-  // портал-таргет (вне .scene)
-  const ctaRoot =
-    typeof document !== "undefined" ? document.getElementById("cta-root") : null;
-
-  // --- form state ---
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(
     data.groups[0]?.label || ""
   );
 
-  // --- error state (имя) ---
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
 
@@ -143,7 +130,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     ? "Только буквы, пробел и дефис"
     : "";
 
-  // если поменялось занятие/группы — ставим первую группу
   useEffect(() => {
     setSelectedGroupLabel(data.groups[0]?.label || "");
   }, [data.groups]);
@@ -154,14 +140,15 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     );
   }, [data.groups, selectedGroupLabel]);
 
-  // даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(
       Boolean
     );
 
-    uniqueDays.sort((a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b));
+    uniqueDays.sort(
+      (a, b) => WEEKDAY_ORDER.indexOf(a) - WEEKDAY_ORDER.indexOf(b)
+    );
 
     const dates = uniqueDays.flatMap((day) =>
       nextDatesForWeekday(day, 4).map((d) => ({
@@ -187,7 +174,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     return selectedDateKey.split("-")[0];
   }, [selectedDateKey]);
 
-  // время зависит от выбранного дня
   const timeOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const filtered = selectedDay
@@ -236,20 +222,14 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   };
 
   return (
-    <div className="page bookingPage">
-      {/* Контенту даём нижний отступ под фикс-кнопку (чтобы не перекрывала форму) */}
-      <div
-        className="bookingContent stack20"
-        style={{
-          paddingBottom: "calc(56px + 24px + env(safe-area-inset-bottom) + 16px)",
-        }}
-      >
+    <div className="page bookingPage pageWithCta">
+      {/* Контент */}
+      <div className="pageMain bookingContent stack20">
         <div className="bookingHead">
           <h1 className="pageTitle">Запись на {data.title}</h1>
         </div>
 
         <div className="bookingForm">
-          {/* Имя */}
           <div className="formBlock">
             <div className="formLabel">Кого записываем</div>
 
@@ -292,7 +272,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             ) : null}
           </div>
 
-          {/* Возраст */}
           <div className="formBlock">
             <div className="formLabel">Возраст</div>
 
@@ -316,7 +295,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             </div>
           </div>
 
-          {/* Дата */}
           <div className="formBlock">
             <div className="formLabel">Дата посещения</div>
 
@@ -345,7 +323,6 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             </div>
           </div>
 
-          {/* Время */}
           <div className="formBlock">
             <div className="formLabel">Время</div>
 
@@ -371,30 +348,12 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
         </div>
       </div>
 
-      {/* CTA ВНЕ .scene через портал */}
-      {ctaRoot
-        ? createPortal(
-            <div className="globalCta">
-              <Pressable
-                as="button"
-                className={`primaryCta${
-                  canSubmit && !isSubmitting ? "" : " primaryCta--disabled"
-                }`}
-                onPress={handleSubmit}
-                delayMs={140}
-                disabled={isSubmitting}
-                aria-disabled={isSubmitting ? "true" : "false"}
-              >
-                {isSubmitting ? (
-                  <span className="btnSpinner" aria-hidden="true" />
-                ) : (
-                  "Записаться"
-                )}
-              </Pressable>
-            </div>,
-            ctaRoot
-          )
-        : null}
+      {/* Кнопка снизу (НЕ fixed), с safe-area */}
+      <div className="pageCta">
+        <PrimaryButton onPress={handleSubmit} disabled={!canSubmit || isSubmitting}>
+          {isSubmitting ? "…" : "Записаться"}
+        </PrimaryButton>
+      </div>
     </div>
   );
 }

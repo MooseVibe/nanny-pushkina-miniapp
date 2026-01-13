@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-import ScreenStack from "./components/ScreenStack";
-import "./styles/transitions.css";
-
 import HomePage from "./pages/HomePage.jsx";
 import VysheListPage from "./pages/VysheListPage.jsx";
 import LessonDetailsPage from "./pages/LessonDetailsPage.jsx";
@@ -33,7 +30,6 @@ export default function App() {
   }, []);
 
   const [screen, setScreen] = useState(initialScreen);
-  const [navDir, setNavDir] = useState("forward"); // "forward" | "back"
 
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [lastBooking, setLastBooking] = useState(null);
@@ -57,8 +53,6 @@ export default function App() {
   }, []);
 
   const goBack = () => {
-    setNavDir("back");
-
     if (screen === "success") return setScreen("booking");
     if (screen === "booking") return setScreen("details");
     if (isDetails) return setScreen("vyshe");
@@ -66,7 +60,7 @@ export default function App() {
   };
 
   // =========================================
-  // 1) Freeze app height ONCE (keyboard must NOT resize layout)
+  // 1) Freeze app height ONCE
   // =========================================
   useEffect(() => {
     const root = document.documentElement;
@@ -91,7 +85,6 @@ export default function App() {
   // =========================================
   useEffect(() => {
     const root = document.documentElement;
-
     let kb = false;
 
     const setKb = (open) => {
@@ -133,41 +126,32 @@ export default function App() {
     };
   }, []);
 
+  // =========================================
+  // DEV hotkeys
+  // =========================================
   useEffect(() => {
     if (!isLocalDev()) return;
 
     const onKeyDown = (e) => {
       if (e.key === "9") {
         setLastBooking(devBookingPayload);
-        setNavDir("forward");
         setScreen("success");
       }
-      if (e.key === "8") {
-        setNavDir("forward");
-        setScreen("booking");
-      }
-      if (e.key === "7") {
-        setNavDir("forward");
-        setScreen("details");
-      }
-      if (e.key === "0") {
-        setNavDir("back");
-        setScreen("home");
-      }
+      if (e.key === "8") setScreen("booking");
+      if (e.key === "7") setScreen("details");
+      if (e.key === "0") setScreen("home");
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [devBookingPayload]);
 
+  // =========================================
+  // Telegram integration
+  // =========================================
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
-
     const onBack = () => goBack();
-    const preventGesture = (e) => e.preventDefault();
-    const preventPinch = (e) => {
-      if (e.touches && e.touches.length > 1) e.preventDefault();
-    };
 
     if (tg) {
       tg.ready();
@@ -180,32 +164,14 @@ export default function App() {
       try {
         tg.expand();
         tg.disableVerticalSwipes();
-      } catch (e) {}
+      } catch {}
     }
-
-    try {
-      document.addEventListener("gesturestart", preventGesture, { passive: false });
-      document.addEventListener("gesturechange", preventGesture, { passive: false });
-      document.addEventListener("gestureend", preventGesture, { passive: false });
-
-      document.addEventListener("touchstart", preventPinch, { passive: false });
-      document.addEventListener("touchmove", preventPinch, { passive: false });
-    } catch (e) {}
 
     return () => {
       if (tg) tg.BackButton.offClick(onBack);
-
-      try {
-        document.removeEventListener("gesturestart", preventGesture);
-        document.removeEventListener("gesturechange", preventGesture);
-        document.removeEventListener("gestureend", preventGesture);
-
-        document.removeEventListener("touchstart", preventPinch);
-        document.removeEventListener("touchmove", preventPinch);
-      } catch (e) {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSubpage, isDetails, screen]);
+  }, [screen, isSubpage]);
 
   const submitBookingToServer = async (payload) => {
     const tg = window.Telegram?.WebApp;
@@ -221,19 +187,10 @@ export default function App() {
       body: JSON.stringify({ payload, initData }),
     });
 
-    let data = null;
-    try {
-      data = await res.json();
-    } catch (e) {}
+    const data = await res.json().catch(() => null);
 
-    if (!res.ok) {
-      const msg =
-        (data && (data.error || data.message)) || `Ошибка сервера (${res.status})`;
-      throw new Error(msg);
-    }
-
-    if (data && data.ok === false) {
-      throw new Error(data.error || "Ошибка сервера");
+    if (!res.ok || data?.ok === false) {
+      throw new Error(data?.error || "Ошибка сервера");
     }
 
     return data;
@@ -241,23 +198,15 @@ export default function App() {
 
   const renderScreen = () => {
     if (screen === "home") {
-      return (
-        <HomePage
-          onOpenVyshe={() => {
-            setNavDir("forward");
-            setScreen("vyshe");
-          }}
-        />
-      );
+      return <HomePage onOpenVyshe={() => setScreen("vyshe")} />;
     }
 
     if (screen === "vyshe") {
       return (
         <VysheListPage
-          onHelp={() => alert("Здесь потом будет штора: что такое «Выше»")}
+          onHelp={() => alert("Здесь потом будет штора")}
           onOpenLesson={(lesson) => {
             setSelectedLesson(lesson);
-            setNavDir("forward");
             setScreen("details");
           }}
         />
@@ -272,10 +221,7 @@ export default function App() {
             (isLocalDev()
               ? {
                   title: "Тестовое занятие (DEV)",
-                  subtitle: "Чтобы тебе не мешал пустой экран.",
                   ageRange: "7–9 лет",
-                  price: "700 ₽",
-                  duration: "1 час",
                   schedule: {
                     sessions: [
                       { day: "ПН", time: "12:00" },
@@ -285,11 +231,7 @@ export default function App() {
                 }
               : null)
           }
-          onBack={goBack}
-          onBook={() => {
-            setNavDir("forward");
-            setScreen("booking");
-          }}
+          onBook={() => setScreen("booking")}
         />
       );
     }
@@ -297,28 +239,13 @@ export default function App() {
     if (screen === "booking") {
       return (
         <BookingPage
-          lesson={
-            selectedLesson ||
-            (isLocalDev()
-              ? {
-                  title: "Тестовое занятие (DEV)",
-                  ageRange: "7–9 лет",
-                  schedule: {
-                    sessions: [
-                      { day: "ПН", time: "12:00" },
-                      { day: "СР", time: "12:00" },
-                    ],
-                  },
-                }
-              : null)
-          }
+          lesson={selectedLesson}
           isSubmitting={isSubmittingBooking}
           onSubmit={async (payload) => {
             if (isSubmittingBooking) return;
 
             if (isLocalDev()) {
               setLastBooking(payload);
-              setNavDir("forward");
               setScreen("success");
               return;
             }
@@ -327,15 +254,9 @@ export default function App() {
             try {
               await submitBookingToServer(payload);
               setLastBooking(payload);
-              setNavDir("forward");
               setScreen("success");
             } catch (err) {
-              console.error("BOOKING SUBMIT ERROR:", err);
-              alert(
-                `Не удалось отправить запись.\n${
-                  err?.message || "Попробуйте ещё раз."
-                }`
-              );
+              alert(err.message || "Ошибка");
             } finally {
               setIsSubmittingBooking(false);
             }
@@ -347,13 +268,8 @@ export default function App() {
     if (screen === "success") {
       return (
         <SuccessPage
-          title="Вы записались на занятие"
-          subtitle="Детали записи придут вам в бота. Также там можно отменить запись."
-          onHome={() => {
-            setNavDir("back");
-            setScreen("home");
-          }}
-          lastBooking={lastBooking || (isLocalDev() ? devBookingPayload : null)}
+          onHome={() => setScreen("home")}
+          lastBooking={lastBooking || devBookingPayload}
         />
       );
     }
@@ -368,31 +284,7 @@ export default function App() {
           <div className="headerBg" />
 
           <div className="contentShell">
-            <ScreenStack screenKey={screen} direction={navDir} durationMs={340}>
-              {renderScreen()}
-            </ScreenStack>
-
-            {/* ВНЕ .scene: сюда порталом будут рендериться CTA-кнопки */}
-            <div id="cta-root" />
-
-            {isLocalDev() && (
-              <div
-                style={{
-                  position: "fixed",
-                  left: 8,
-                  bottom: 8,
-                  zIndex: 9999,
-                  fontSize: 12,
-                  padding: "6px 8px",
-                  borderRadius: 10,
-                  background: "rgba(0,0,0,0.6)",
-                  color: "#fff",
-                  pointerEvents: "none",
-                }}
-              >
-                DEV: 9=success · 8=booking · 7=details · 0=home · ?screen=success
-              </div>
-            )}
+            {renderScreen()}
           </div>
         </div>
       </div>

@@ -271,151 +271,151 @@
   
   
   /* =========================================
-   BottomSheet
-   ========================================= */
-
-.sheetRoot{
-  position: fixed;
-  inset: 0;
-  z-index: 999;
-  isolation: isolate;
-
-  /* open = как было, close = мягче */
-  --sheet-open-ms: 260ms;
-  --sheet-close-ms: 400ms;
-  --sheet-ease: cubic-bezier(.2, .8, .2, 1);
-}
-
-/* backdrop */
-.sheetBackdrop{
-  position: absolute;
-  inset: 0;
-  border: 0;
-  padding: 0;
-
-  background: rgba(0, 0, 0, 0);
-
-  /* по умолчанию (закрытие) — медленнее */
-  transition: background var(--sheet-close-ms) var(--sheet-ease);
-
-  cursor: default;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* panel */
-.sheetPanel{
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  background: #fff;
-  border-radius: 24px 24px 0 0;
-
-  transform: translate3d(0, 110%, 0);
-  -webkit-transform: translate3d(0, 110%, 0);
-
-  /* по умолчанию (закрытие) — медленнее */
-  transition: transform var(--sheet-close-ms) var(--sheet-ease);
-
-  max-height: calc(100vh - 24px);
-  overflow: hidden;
-
-  will-change: transform;
-  backface-visibility: hidden;
-}
-
-/* open state */
-.sheetRoot--open .sheetBackdrop{
-  background: rgba(0, 0, 0, 0.35);
-  transition-duration: var(--sheet-open-ms);
-}
-
-.sheetRoot--open .sheetPanel{
-  transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
-  transition-duration: var(--sheet-open-ms);
-}
-
-/* grabber */
-.sheetGrabArea{
-  display: flex;
-  justify-content: center;
-  padding: 10px 0 6px;
-}
-
-.sheetGrabber{
-  width: 44px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.18);
-}
-
-/* title/body */
-.sheetTitle{
-  padding: 12px 16px 12px;
-  font: inherit;
-  font-size: 24px;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #1B1A18;
-}
-
-.sheetBody{
-  padding: 0 16px 32px;
-  font: inherit;
-  font-size: 16px;
-  line-height: 1.35;
-  color: #1B1A18;
-
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* safe-area снизу */
-.sheetBottomSafe{
-  height: 18px;
-}
-
-/* reduce motion */
-@media (prefers-reduced-motion: reduce){
-  .sheetBackdrop,
-  .sheetPanel{
-    transition: none !important;
+     BottomSheet
+     ========================================= */
+  
+  .sheetRoot{
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    isolation: isolate;
+  
+    /* open = как было, close = мягче */
+    --sheet-open-ms: 260ms;
+    --sheet-close-ms: 400ms;
+    --sheet-ease: cubic-bezier(.2, .8, .2, 1);
   }
-}
+  
+  /* backdrop */
+  .sheetBackdrop{
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+  
+    background: rgba(0, 0, 0, 0);
+  
+    /* по умолчанию (закрытие) — медленнее */
+    transition: background var(--sheet-close-ms) var(--sheet-ease);
+  
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* panel */
+  .sheetPanel{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+  
+    transform: translate3d(0, 110%, 0);
+    -webkit-transform: translate3d(0, 110%, 0);
+  
+    /* по умолчанию (закрытие) — медленнее */
+    transition: transform var(--sheet-close-ms) var(--sheet-ease);
+  
+    max-height: calc(100vh - 24px);
+    overflow: hidden;
+  
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  
+  /* open state */
+  .sheetRoot--open .sheetBackdrop{
+    background: rgba(0, 0, 0, 0.35);
+    transition-duration: var(--sheet-open-ms);
+  }
+  
+  .sheetRoot--open .sheetPanel{
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    transition-duration: var(--sheet-open-ms);
+  }
+  
+  /* grabber */
+  .sheetGrabArea{
+    display: flex;
+    justify-content: center;
+    padding: 10px 0 6px;
+  }
+  
+  .sheetGrabber{
+    width: 44px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+  }
+  
+  /* title/body */
+  .sheetTitle{
+    padding: 12px 16px 12px;
+    font: inherit;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: #1B1A18;
+  }
+  
+  .sheetBody{
+    padding: 0 16px 32px;
+    font: inherit;
+    font-size: 16px;
+    line-height: 1.35;
+    color: #1B1A18;
+  
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* safe-area снизу */
+  .sheetBottomSafe{
+    height: 18px;
+  }
+  
+  /* reduce motion */
+  @media (prefers-reduced-motion: reduce){
+    .sheetBackdrop,
+    .sheetPanel{
+      transition: none !important;
+    }
+  }
   
   
   /* =========================================
-   Pressable (tap feedback)
-   ========================================= */
-
-.pressable{
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  user-select: none;
-
-  transform: translateZ(0) scale(1);
-  transform-origin: center;
-  backface-visibility: hidden;
-  will-change: transform;
-
-  /* release */
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-}
-
-.pressable.isPressed{
-  transform: translateZ(0) scale(0.98);
-
-  /* press */
-  transition-duration: 120ms;
-  transition-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
-}
-
-@media (prefers-reduced-motion: reduce){
-  .pressable{ transition: none !important; }
-}
+     Pressable (tap feedback)
+     ========================================= */
+  
+  .pressable{
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+  
+    transform: translateZ(0) scale(1);
+    transform-origin: center;
+    backface-visibility: hidden;
+    will-change: transform;
+  
+    /* release */
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+  }
+  
+  .pressable.isPressed{
+    transform: translateZ(0) scale(0.98);
+  
+    /* press */
+    transition-duration: 120ms;
+    transition-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  
+  @media (prefers-reduced-motion: reduce){
+    .pressable{ transition: none !important; }
+  }
   
   
   /* =========================================
@@ -454,10 +454,13 @@
   
   
   /* =========================================
-     CTA button + spinner
+     Primary Button (NEW canonical)
+     - Keep .primaryCta for backward compatibility
      ========================================= */
   
-  .primaryCta {
+  .primaryCta,
+  .primaryBtn,
+  .primaryButton {
     width: 100%;
     height: 56px;
   
@@ -467,14 +470,43 @@
     background: #A68263;
     color: #fff;
   
+    /* SF Pro Display Regular 16px */
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "SF Pro Text",
+      "Helvetica Neue", Arial, system-ui, sans-serif;
     font-size: 16px;
     font-weight: 400;
+    line-height: 1.2;
   
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+  
+    text-decoration: none;
+    white-space: nowrap;
+  
+    -webkit-tap-highlight-color: transparent;
   }
   
+  /* Disabled: works for <button disabled> and aria-disabled */
+  .primaryCta:disabled,
+  .primaryBtn:disabled,
+  .primaryButton:disabled,
+  .primaryCta[aria-disabled="true"],
+  .primaryBtn[aria-disabled="true"],
+  .primaryButton[aria-disabled="true"]{
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  
+  /* If someone used a class flag раньше — пусть тоже работает */
+  .primaryCta--disabled,
+  .primaryBtn--disabled,
+  .primaryButton--disabled{
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  
+  /* Spinner (если используешь в isSubmitting) */
   .btnSpinner {
     width: 18px;
     height: 18px;
@@ -862,58 +894,58 @@
     line-height: 1.2;
     color: #1B1A18;
   }
-
-    /* NEW: залоченная карточка = кнопка-обёртка */
-.lockedWrap {
-  position: relative;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  border-radius: 20px;
-
-  /* чтобы iOS не подсвечивал серым */
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* NEW: тут делаем "как в Фигме" — opacity на всю карточку */
-.lockedContent {
-  opacity: 0.5;            /* попробуй 0.6 или 0.7 */
-  border-radius: 20px;
-}
-
-/* NEW: замок поверх и НЕ глушится */
-.lockBadge {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 47px;
-  height: 47px;
-  transform: translate(-50%, -50%);
-  border-radius: 999px;
-
-  background: rgba(255, 255, 255, 0.10);
-
-  display: grid;
-  place-items: center;
-
-  pointer-events: none; /* чтобы клик шёл в кнопку */
-}
-
-/* если у тебя замок картинкой из public/icons/lock.svg */
-.lockIconImg {
-  width: 24px;
-  height: 24px;
-  display: block;
-  opacity: 0.8; 
-}
-
-/* опционально: убираем чёрную рамку фокуса */
-.lockedWrap:focus {
-  outline: none;
-}
-.lockedWrap:focus-visible {
-  outline: none;
-}
+  
+  /* NEW: залоченная карточка = кнопка-обёртка */
+  .lockedWrap {
+    position: relative;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    border-radius: 20px;
+  
+    /* чтобы iOS не подсвечивал серым */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* NEW: тут делаем "как в Фигме" — opacity на всю карточку */
+  .lockedContent {
+    opacity: 0.5;            /* попробуй 0.6 или 0.7 */
+    border-radius: 20px;
+  }
+  
+  /* NEW: замок поверх и НЕ глушится */
+  .lockBadge {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 47px;
+    height: 47px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+  
+    background: rgba(255, 255, 255, 0.10);
+  
+    display: grid;
+    place-items: center;
+  
+    pointer-events: none; /* чтобы клик шёл в кнопку */
+  }
+  
+  /* если у тебя замок картинкой из public/icons/lock.svg */
+  .lockIconImg {
+    width: 24px;
+    height: 24px;
+    display: block;
+    opacity: 0.8; 
+  }
+  
+  /* опционально: убираем чёрную рамку фокуса */
+  .lockedWrap:focus {
+    outline: none;
+  }
+  .lockedWrap:focus-visible {
+    outline: none;
+  }

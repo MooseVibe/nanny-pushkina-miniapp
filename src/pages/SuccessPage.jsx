@@ -1,18 +1,10 @@
-import { createPortal } from "react-dom";
-import Pressable from "../components/Pressable";
+import PrimaryButton from "../components/PrimaryButton";
 
 import successCheck from "../assets/illustrations/success/success-check.svg";
 import doodleTL from "../assets/illustrations/success/success-doodle-top-left.svg";
 import doodleTR from "../assets/illustrations/success/success-doodle-top-right.svg";
 import doodleML from "../assets/illustrations/success/success-doodle-middle-left.svg";
 import doodleMR from "../assets/illustrations/success/success-doodle-middle-right.svg";
-
-function CtaRootPortal({ children }) {
-  if (typeof document === "undefined") return null;
-  const root = document.getElementById("cta-root");
-  if (!root) return null;
-  return createPortal(children, root);
-}
 
 export default function SuccessPage({ title, subtitle, onHome }) {
   const h1 = title || "Вы записались на занятие";
@@ -21,7 +13,7 @@ export default function SuccessPage({ title, subtitle, onHome }) {
     "Детали записи придут вам в бота. Также там можно отменить запись.";
 
   return (
-    <div className="page successPage pageHasFixedCta">
+    <div className="page successPage">
       {/* Doodles */}
       <img
         className="successDoodle successDoodle--tl"
@@ -64,23 +56,13 @@ export default function SuccessPage({ title, subtitle, onHome }) {
             </div>
           </div>
         </div>
-
-        {/* ❌ successFooter УДАЛЁН. Кнопки внутри страницы больше нет. */}
       </div>
 
-      {/* ✅ CTA ТОЛЬКО через #cta-root (вне синего контейнера) */}
-      <CtaRootPortal>
-        <div className="globalCta">
-          <Pressable
-            as="button"
-            className="primaryCta"
-            onPress={onHome}
-            delayMs={140}
-          >
-            На главную
-          </Pressable>
-        </div>
-      </CtaRootPortal>
+      <div className="pageCta">
+  <PrimaryButton onPress={onHome}>
+    На главную
+  </PrimaryButton>
+</div>
     </div>
   );
 }

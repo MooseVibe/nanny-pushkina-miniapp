@@ -1,21 +1,14 @@
 import { useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
 import BottomSheet from "../components/BottomSheet";
 import Pressable from "../components/Pressable";
+import PrimaryButton from "../components/PrimaryButton";
 
 function calcAgeFallback(lesson) {
   if (lesson?.age) return lesson.age;
   if (typeof lesson?.ageMin === "number") return `от ${lesson.ageMin} лет`;
   if (lesson?.ageRange) return String(lesson.ageRange).replace(/-/g, "–");
   return "от 6 лет";
-}
-
-function CtaRootPortal({ children }) {
-  if (typeof document === "undefined") return null;
-  const root = document.getElementById("cta-root");
-  if (!root) return null;
-  return createPortal(children, root);
 }
 
 export default function LessonDetailsPage({ lesson, onBook }) {
@@ -83,7 +76,7 @@ export default function LessonDetailsPage({ lesson, onBook }) {
       : data.teacher;
 
   return (
-    <div className="page lessonDetailsPage stack20 pageHasFixedCta">
+    <div className="page lessonDetailsPage stack20">
       {/* контент */}
       <div className="pageMain stack20">
         <div className="lessonHead">
@@ -182,19 +175,11 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         </BottomSheet>
       </div>
 
-      {/* ✅ CTA ТОЛЬКО через #cta-root (вне синего контейнера) */}
-      <CtaRootPortal>
-        <div className="globalCta">
-          <Pressable
-            as="button"
-            className="primaryCta"
-            onPress={() => onBook?.(lesson)}
-            delayMs={140}
-          >
-            Записаться
-          </Pressable>
-        </div>
-      </CtaRootPortal>
+      <div className="pageCta">
+  <PrimaryButton onPress={() => onBook?.(lesson)}>
+    Записаться
+  </PrimaryButton>
+</div>
     </div>
   );
 }
