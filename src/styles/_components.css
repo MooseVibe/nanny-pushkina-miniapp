@@ -588,23 +588,6 @@
     opacity: 1;
   }
   
-  .textInputError { border: 1px solid #E54848; }
-  
-  .textInputErrorText {
-    margin-top: 0;
-    margin-left: 12px;
-    font-size: 12px;
-    font-weight: 400;
-    color: #E54848;
-  }
-  
-  .fieldError {
-    font-size: 12px;
-    font-weight: 400;
-    color: #E14B4B;
-    margin-top: 8px;
-  }
-  
   
   /* =========================================
      TeacherCard

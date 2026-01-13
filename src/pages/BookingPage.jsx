@@ -43,6 +43,7 @@ function nextDatesForWeekday(ruDay, count = 4) {
   return res;
 }
 
+// Разрешаем: RU/EN буквы + пробел + дефис
 function sanitizeName(value) {
   return value
     .replace(/[^A-Za-zА-Яа-яЁё\s-]/g, "")
@@ -50,6 +51,7 @@ function sanitizeName(value) {
     .replace(/^\s+/g, "");
 }
 
+// "илья петров" -> "Илья Петров", "анна-мария иванова" -> "Анна-Мария Иванова"
 function capitalizeWords(value) {
   const v = value.trim().replace(/\s+/g, " ");
   if (!v) return "";
@@ -70,13 +72,16 @@ function capitalizeWords(value) {
     .join(" ");
 }
 
+// Делает группы для записи из lesson.schedule
 function buildGroupsFromLesson(lesson) {
   const sch = lesson?.schedule;
 
+  // 1) если есть groups — берём как есть
   if (Array.isArray(sch?.groups) && sch.groups.length) {
     return sch.groups;
   }
 
+  // 2) если есть sessions — делаем одну группу
   if (Array.isArray(sch?.sessions) && sch.sessions.length) {
     const label =
       (typeof lesson?.age === "string" && lesson.age.trim()) ||
@@ -86,6 +91,7 @@ function buildGroupsFromLesson(lesson) {
     return [{ label, sessions: sch.sessions }];
   }
 
+  // 3) фоллбек
   return [
     {
       label: (typeof lesson?.age === "string" && lesson.age.trim()) || "Группа",
@@ -107,29 +113,16 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     };
   }, [lesson]);
 
+  // --- form state ---
   const [name, setName] = useState("");
   const [selectedGroupLabel, setSelectedGroupLabel] = useState(
     data.groups[0]?.label || ""
   );
 
-  const [submitAttempted, setSubmitAttempted] = useState(false);
-  const [nameHadInvalidChars, setNameHadInvalidChars] = useState(false);
-
   const nameClean = name.trim();
   const nameOk = nameClean.length >= 2;
-  const nameFormatOk = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(
-    nameClean
-  );
 
-  const showNameError =
-    submitAttempted && (!nameOk || !nameFormatOk || nameHadInvalidChars);
-
-  const nameErrorText = !nameOk
-    ? "Введите имя и фамилию"
-    : !nameFormatOk || nameHadInvalidChars
-    ? "Только буквы, пробел и дефис"
-    : "";
-
+  // если поменялось занятие/группы — ставим первую группу
   useEffect(() => {
     setSelectedGroupLabel(data.groups[0]?.label || "");
   }, [data.groups]);
@@ -140,6 +133,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     );
   }, [data.groups, selectedGroupLabel]);
 
+  // даты зависят от выбранной группы
   const dateOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const uniqueDays = Array.from(new Set(sessions.map((s) => s.day))).filter(
@@ -174,6 +168,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
     return selectedDateKey.split("-")[0];
   }, [selectedDateKey]);
 
+  // время зависит от выбранного дня
   const timeOptions = useMemo(() => {
     const sessions = selectedGroup?.sessions || [];
     const filtered = selectedDay
@@ -197,16 +192,9 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
   const isSingleTime = timeOptions.length <= 1;
 
   const canSubmit =
-    nameOk &&
-    nameFormatOk &&
-    !nameHadInvalidChars &&
-    !!selectedGroupLabel &&
-    !!selectedDateKey &&
-    !!selectedTime;
+    nameOk && !!selectedGroupLabel && !!selectedDateKey && !!selectedTime;
 
   const handleSubmit = () => {
-    setSubmitAttempted(true);
-
     if (isSubmitting) return;
     if (!canSubmit) return;
 
@@ -230,27 +218,19 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
         </div>
 
         <div className="bookingForm">
+          {/* Имя */}
           <div className="formBlock">
             <div className="formLabel">Кого записываем</div>
 
             <input
               ref={nameInputRef}
-              className={`textInput${showNameError ? " textInputError" : ""}`}
+              className="textInput"
               type="text"
               value={name}
               onChange={(e) => {
                 const raw = e.target.value;
                 const cleaned = sanitizeName(raw);
-
-                if (raw !== cleaned) setNameHadInvalidChars(true);
-
                 setName(cleaned);
-
-                if (submitAttempted) setSubmitAttempted(false);
-
-                if (nameHadInvalidChars && raw === cleaned) {
-                  setNameHadInvalidChars(false);
-                }
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -266,12 +246,9 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
               autoCorrect="off"
               enterKeyHint="done"
             />
-
-            {showNameError ? (
-              <div className="textInputErrorText">{nameErrorText}</div>
-            ) : null}
           </div>
 
+          {/* Возраст */}
           <div className="formBlock">
             <div className="formLabel">Возраст</div>
 
@@ -295,6 +272,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             </div>
           </div>
 
+          {/* Дата */}
           <div className="formBlock">
             <div className="formLabel">Дата посещения</div>
 
@@ -323,6 +301,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
             </div>
           </div>
 
+          {/* Время */}
           <div className="formBlock">
             <div className="formLabel">Время</div>
 
@@ -350,8 +329,11 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
 
       {/* Кнопка снизу (НЕ fixed), с safe-area */}
       <div className="pageCta">
-        <PrimaryButton onPress={handleSubmit} disabled={!canSubmit || isSubmitting}>
-         {isSubmitting ? <span className="btnSpinner" aria-hidden /> : "Записаться"}
+        <PrimaryButton
+          onPress={handleSubmit}
+          disabled={!canSubmit || isSubmitting}
+        >
+          {isSubmitting ? <span className="btnSpinner" aria-hidden="true" /> : "Записаться"}
         </PrimaryButton>
       </div>
     </div>
