@@ -351,7 +351,7 @@ export default function BookingPage({ lesson, onSubmit, isSubmitting = false }) 
       {/* Кнопка снизу (НЕ fixed), с safe-area */}
       <div className="pageCta">
         <PrimaryButton onPress={handleSubmit} disabled={!canSubmit || isSubmitting}>
-          {isSubmitting ? "…" : "Записаться"}
+         {isSubmitting ? <span className="btnSpinner" aria-hidden /> : "Записаться"}
         </PrimaryButton>
       </div>
     </div>
