@@ -146,32 +146,33 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [devBookingPayload]);
 
-  // =========================================
-  // Telegram integration
-  // =========================================
-  useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    const onBack = () => goBack();
+ // Telegram integration
+useEffect(() => {
+  const tg = window.Telegram?.WebApp;
+  const onBack = () => goBack();
 
-    if (tg) {
-      tg.ready();
+  if (tg) {
+    tg.ready();
 
-      if (isSubpage) tg.BackButton.show();
-      else tg.BackButton.hide();
+    const isSuccess = screen === "success";
 
-      tg.BackButton.onClick(onBack);
+    // ✅ на success скрываем BackButton (чтобы был "Close")
+    if (isSubpage && !isSuccess) tg.BackButton.show();
+    else tg.BackButton.hide();
 
-      try {
-        tg.expand();
-        tg.disableVerticalSwipes();
-      } catch {}
-    }
+    tg.BackButton.onClick(onBack);
 
-    return () => {
-      if (tg) tg.BackButton.offClick(onBack);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, isSubpage]);
+    try {
+      tg.expand();
+      tg.disableVerticalSwipes();
+    } catch {}
+  }
+
+  return () => {
+    if (tg) tg.BackButton.offClick(onBack);
+  };
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [screen, isSubpage]);
 
   const submitBookingToServer = async (payload) => {
     const tg = window.Telegram?.WebApp;
