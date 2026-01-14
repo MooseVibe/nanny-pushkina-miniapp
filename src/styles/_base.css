@@ -16,6 +16,11 @@ body,
   height: 100%;
 }
 
+html,
+body {
+  overscroll-behavior: none; /* Android/Chrome: гасит pull/bounce */
+}
+
 /* 3) Global typography defaults */
 :root {
   /* SF Pro (iOS/macOS) + sane fallbacks */
@@ -31,18 +36,6 @@ body,
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-
-/* 4) Page base */
-body {
-  margin: 0;
-  background: #f3f3f3;
-
-  /* prevent random horizontal scroll */
-  overflow-x: hidden;
-
-  /* iOS/Android tap highlight off */
-  -webkit-tap-highlight-color: transparent;
 }
 
 /* 5) Form controls inherit the project font */
@@ -68,4 +61,21 @@ input,
 textarea {
   -webkit-user-select: text;
   user-select: text;
+}
+
+body {
+  margin: 0;
+  background: #f3f3f3;
+
+  /* keep normal vertical scrolling */
+  overflow-y: auto;
+
+  /* prevent random horizontal scroll */
+  overflow-x: hidden;
+
+  /* iOS inertial scroll */
+  -webkit-overflow-scrolling: touch;
+
+  /* iOS/Android tap highlight off */
+  -webkit-tap-highlight-color: transparent;
 }
