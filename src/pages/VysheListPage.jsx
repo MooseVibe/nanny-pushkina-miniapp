@@ -1,12 +1,10 @@
 import { useState } from "react";
 
-import hintIcon from "../assets/icons/hint.svg";
-
 import LessonCard from "../components/LessonCard";
 import BottomSheet from "../components/BottomSheet";
-import Pressable from "../components/Pressable";
+import HintButton from "../components/HintButton";
 
-// ✅ ИКОНКИ ЗАНЯТИЙ (твои реальные файлы)
+// ✅ ИКОНКИ ЗАНЯТИЙ
 import schoolPrepIcon from "../assets/icons/school-prep.svg";
 import speedReadingIcon from "../assets/icons/speed-reading.svg";
 import calligraphyIcon from "../assets/icons/calligraphy.svg";
@@ -16,15 +14,12 @@ import scienceLabIcon from "../assets/icons/science-lab.svg";
 import watercolorIcon from "../assets/icons/watercolor.svg";
 import graphicsIcon from "../assets/icons/graphics.svg";
 import sculptureIcon from "../assets/icons/sculpture.svg";
-import actorIcon from "../assets/icons/actor.svg"; // мультипликация
-import handsIcon from "../assets/icons/hands.svg"; // очумелые ручки
-import clayIcon from "../assets/icons/clay.svg"; // лепка
-import drawingIcon from "../assets/icons/drawing.svg"; // рисование
-import musicGamesIcon from "../assets/icons/music-games.svg"; // муз-игровые
+import actorIcon from "../assets/icons/actor.svg";
+import handsIcon from "../assets/icons/hands.svg";
+import drawingIcon from "../assets/icons/drawing.svg";
+import musicGamesIcon from "../assets/icons/music-games.svg";
 
-// --------------------
 // helpers
-// --------------------
 function normalizeDashes(s) {
   return String(s || "").replace(/-/g, "–");
 }
@@ -48,25 +43,41 @@ function getMinAgeFromLesson(lesson) {
 
 function ageTextFromLesson(lesson) {
   if (lesson?.ageRange) return normalizeDashes(lesson.ageRange);
-
   const min = getMinAgeFromLesson(lesson);
   return `от ${min} лет`;
 }
 
-// маленькая утилита вместо setTimeout в 10 местах
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// --------------------
-// data (пока черновик)
-// --------------------
+// data
 const lessons = [
   {
     title: "Подготовка к школе",
-    price: "700 ₽",
+    subtitle: "Первый шаг к знаниям — с улыбкой и уверенностью!",
+    about: {
+      title: "Подробнее о занятии",
+      text:
+        "Наша уникальная программа обеспечивает комфортный и эффективный переход к школьной жизни\n\n" +
+        "Комплексное развитие:\n" +
+        "— Чтение: от знакомства с буквами до уверенного чтения (40+ слов/мин)\n" +
+        "— Письмо: освоение базовых навыков и развитие мелкой моторики\n" +
+        "— Математика: основы счёта, логические задачи\n" +
+        "— Развитие речи и логического мышления, обогащение словарного запаса, умение анализировать\n" +
+        "— Окружающий мир: формирование базовых представлений\n\n" +
+        "Наша цель — воспитать в ребёнке уверенность в себе, любовь к учёбе и желание познавать новое"
+    },
+    price: "1 000 ₽",
     icon: schoolPrepIcon,
     ageMin: 5,
+    teacher: {
+      name: "Рудич Василина Андреевна",
+      role: "Преподаватель",
+      bio: "Настоящая волшебница, которая умеет превращать подготовку к школе в увлекательное приключение. После её занятий дети выходят с сияющими улыбками, горящими глазами и полны вдохновения для выполнения домашних заданий",
+      education: "",
+      approach: "",
+    },
     schedule: {
       groups: [
         {
@@ -91,35 +102,57 @@ const lessons = [
     },
   },
 
-  // ✅ Чистописание и скорочтение (раньше было "Скорочтение")
   {
-    title: "Чистописание и скорочтение",
-    price: "700 ₽",
+    title: "Чистописание, скорочтение и развитие памяти",
+    subtitle: "Развиваем память, ускоряем чтение и формируем красивый почерк",
+    price: "1 000 ₽",
     icon: speedReadingIcon,
-    ageMin: 6, // было 8; поставил мягче, т.к. есть "1 класс"
+    ageMin: 6,
+  
+    about: {
+      title: "О курсе",
+      text:
+        "Курс направлен на комплексное развитие ключевых учебных навыков\n\n" +
+        "На занятиях мы:\n" +
+        "— Развиваем память: улучшаем способность запоминать и воспроизводить информацию, увеличиваем объём кратковременной и долговременной памяти\n" +
+        "— Ускоряем чтение и восприятие информации: повышаем концентрацию и понимание прочитанного\n" +
+        "— Совершенствуем почерк: учимся писать красиво и разборчиво, развиваем мелкую моторику и координацию движений\n" +
+        "— Формируем усидчивость и навык доведения задачи до конца\n\n" +
+        "Занятия проходят в спокойной и поддерживающей атмосфере, без давления и стресса"
+    },
+  
+    teacher: {
+      name: "Рудич Василина Андреевна",
+      role: "Преподаватель",
+      bio: "Настоящая волшебница, которая умеет превращать обучение в увлекательный и понятный процесс. Дети выходят с занятий уверенными в себе, мотивированными и с искренним интересом к учёбе",
+      education: "",
+      approach: "",
+      // avatar не указываем — подхватится плейсхолдер
+    },
+  
     schedule: {
       groups: [
         {
-          label: "2+ класс",
+          label: "1 класс (в процессе набора)",
           sessions: [
-            { day: "ВС", time: "10:00" },
-            { day: "ЧТ", time: "15:30" },
-          ],
+            { day: "ЧТ", time: "16:00" },
+            { day: "ВС", time: "10:00" }
+          ]
         },
         {
-          label: "1 класс",
+          label: "2 класс и старше",
           sessions: [
-            { day: "ЧТ", time: "16:30" },
-            { day: "ВТ", time: "15:00" },
-          ],
-        },
-      ],
-    },
+            { day: "ЧТ", time: "16:00" },
+            { day: "ВС", time: "10:00" }
+          ]
+        }
+      ]
+    }
   },
 
   {
     title: "Каллиграфия",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: calligraphyIcon,
     ageMin: 7,
     schedule: {
@@ -130,18 +163,14 @@ const lessons = [
     },
   },
 
-  // ✅ Английский язык — полностью заменил группы
   {
     title: "Английский язык",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: englishIcon,
     ageMin: 3,
     schedule: {
       groups: [
-        {
-          label: "Для малышей",
-          sessions: [{ day: "ВС", time: "10:00" }],
-        },
+        { label: "Для малышей", sessions: [{ day: "ВС", time: "10:00" }] },
         {
           label: "1–2 класс",
           sessions: [
@@ -176,29 +205,39 @@ const lessons = [
 
   {
     title: "Шахматы",
-    price: "700 ₽",
+    subtitle: "Развиваем логику, внимание и стратегическое мышление.",
+    price: "1 000 ₽",
     icon: chessIcon,
-    ageMin: 7,
+    ageMin: 5,
+    teacher: {
+      name: "Кулькаев Самат Вячеславович",
+      role: "Преподаватель",
+      bio:
+        "Чемпион МО и призёр международных турниров\n\n" +
+        "Он умеет пробудить у детей интерес к шахматам, сделать каждое занятие занимательным и нескучным. Его ученики уже через полгода участвуют в турнирах разного уровня и занимают призовые места" 
+        ,
+      education: "",
+      approach: "",
+    },
     schedule: {
       sessions: [
-        { day: "СБ", time: "12:00" },
-        { day: "СБ", time: "13:00" },
+        { day: "ПН", time: "18:00" },
+        { day: "СР", time: "18:00" },
       ],
     },
   },
 
   {
     title: "Секретная лаборатория",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: scienceLabIcon,
     ageMin: 7,
     schedule: { sessions: [{ day: "ПТ", time: "17:00" }] },
   },
 
-  // ✅ Акварель — заменил на твой список
   {
     title: "Акварель",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: watercolorIcon,
     ageMin: 6,
     schedule: {
@@ -210,36 +249,57 @@ const lessons = [
     },
   },
 
-  // ✅ Графика — заменил
   {
     title: "Графика",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: graphicsIcon,
     ageMin: 8,
     schedule: { sessions: [{ day: "ПН", time: "19:00" }] },
   },
 
-  // ✅ Скульптура — теперь 3 группы
   {
-    title: "Скульптура",
-    price: "700 ₽",
+    title: "Скульптура и лепка",
+    subtitle: "Учимся познавать мир и создавать красоту в объёме",
+    about: {
+      title: "Подробнее о занятии",
+      text:
+        "На занятиях работаем с разными материалами: глина, полимерная глина (полимерка), гипс, папье-маше\n\n" +
+        "Развиваем мелкую моторику, воображение и пространственное мышление — через практику, формы и объём",
+    },
+    price: "1 000 ₽",
     icon: sculptureIcon,
-    ageMin: 7,
+    ageMin: 3,
+    teacher: {
+      name: "Нестеров Юрий Иванович",
+      role: "Преподаватель",
+      bio:
+        "Педагог, который находит подход к каждому ребёнку и создаёт на занятиях особую творческую атмосферу.\n\n" +
+        "Через искусство и живой диалог он не только развивает таланты детей, но и приобщает к вечным ценностям.",
+      education: "",
+      approach: "",
+    },
     schedule: {
       groups: [
         {
-          label: "7–8 лет",
-          sessions: [{ day: "ЧТ", time: "17:00" }],
+          label: "Лепка для малышей (3–6 лет)",
+          sessions: [
+            { day: "СБ", time: "11:00" },
+            { day: "ВС", time: "12:00" },
+          ],
         },
         {
-          label: "9–10 лет",
+          label: "Скульптура (7–8 лет)",
+          sessions: [{ day: "ЧТ", time: "18:00" }],
+        },
+        {
+          label: "Скульптура (9–10 лет)",
           sessions: [
             { day: "СР", time: "18:00" },
             { day: "ПТ", time: "18:00" },
           ],
         },
         {
-          label: "12+ лет",
+          label: "Скульптура (11+ лет)",
           sessions: [
             { day: "СР", time: "19:00" },
             { day: "ПТ", time: "19:00" },
@@ -249,10 +309,9 @@ const lessons = [
     },
   },
 
-  // ✅ Мультипликация — заменил
   {
     title: "Мультипликация",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: actorIcon,
     ageMin: 7,
     schedule: {
@@ -263,10 +322,9 @@ const lessons = [
     },
   },
 
-  // ✅ Очумелые ручки — заменил
   {
     title: "Очумелые ручки",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: handsIcon,
     ageMin: 6,
     schedule: {
@@ -277,24 +335,9 @@ const lessons = [
     },
   },
 
-  // ✅ Лепка — заменил
-  {
-    title: "Лепка",
-    price: "700 ₽",
-    icon: clayIcon,
-    ageRange: "3–6 лет",
-    schedule: {
-      sessions: [
-        { day: "СР", time: "17:00" },
-        { day: "СБ", time: "12:00" },
-      ],
-    },
-  },
-
-  // ✅ Рисование — заменил
   {
     title: "Рисование",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: drawingIcon,
     ageRange: "3–6 лет",
     schedule: {
@@ -305,11 +348,9 @@ const lessons = [
     },
   },
 
-  // ✅ Музыкальные занятия — у тебя в коде было другое название.
-  // Я МЕНЯЮ ТОЛЬКО расписание, название оставляю как было, чтобы ничего не развалить.
   {
     title: "Музыкально-игровые программы",
-    price: "700 ₽",
+    price: "1 000 ₽",
     icon: musicGamesIcon,
     ageRange: "3–6 лет",
     schedule: { sessions: [{ day: "ВС", time: "13:00" }] },
@@ -320,38 +361,27 @@ export default function VysheListPage({ onOpenLesson }) {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   const openLessonWithFeedback = async (lesson, ageText) => {
-    // ВАЖНО: задержка только перед переходом, не в map и не размазана по коду
     await delay(140);
-    onOpenLesson?.({
-      ...lesson,
-      age: ageText,
-    });
+    onOpenLesson?.({ ...lesson, age: ageText });
   };
 
   return (
     <div className="page vyshePage stack20">
       <div className="pageHeaderRow">
-        <div className="pageHeaderTitles">
+        <div className="pageHeaderTitle">
           <h1 className="pageTitle">Выше</h1>
           <div className="pageSubtitle">Занятия для детей и взрослых</div>
         </div>
 
-        {/* ✅ Хинт: press + delay */}
-        <Pressable
-          as="button"
-          className="hintBtn"
-          aria-label="Что такое «Выше»"
-          delayMs={140}
+        <HintButton
+          ariaLabel="Что такое «Выше»"
           onPress={() => setIsAboutOpen(true)}
-        >
-          <img className="hintIcon" src={hintIcon} alt="" />
-        </Pressable>
+        />
       </div>
 
       <div className="vysheList">
         {lessons.map((l) => {
           const ageText = ageTextFromLesson(l);
-
           return (
             <LessonCard
               key={l.title}

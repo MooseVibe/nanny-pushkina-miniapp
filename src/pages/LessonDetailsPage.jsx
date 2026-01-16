@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
 import BottomSheet from "../components/BottomSheet";
+import HintButton from "../components/HintButton";
 import Pressable from "../components/Pressable";
 import PrimaryButton from "../components/PrimaryButton";
 
@@ -11,8 +12,25 @@ function calcAgeFallback(lesson) {
   return "от 6 лет";
 }
 
+function normalizeAbout(about) {
+  if (!about) return null;
+
+  if (typeof about === "string") {
+    const trimmed = about.trim();
+    return trimmed ? { title: "О занятии", text: trimmed } : null;
+  }
+
+  const title =
+    typeof about?.title === "string" ? about.title.trim() : "О занятии";
+  const text = typeof about?.text === "string" ? about.text.trim() : "";
+  if (!text) return null;
+
+  return { title, text };
+}
+
 export default function LessonDetailsPage({ lesson, onBook }) {
   const [isTeacherOpen, setIsTeacherOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   const data = useMemo(() => {
     return {
@@ -20,6 +38,8 @@ export default function LessonDetailsPage({ lesson, onBook }) {
       subtitle:
         lesson?.subtitle ||
         "Занятия, направленные на развитие навыков и интересов.",
+      about: normalizeAbout(lesson?.about),
+
       age: calcAgeFallback(lesson),
       price: lesson?.price || "700 ₽",
       duration: lesson?.duration || "1 час",
@@ -77,11 +97,20 @@ export default function LessonDetailsPage({ lesson, onBook }) {
 
   return (
     <div className="page lessonDetailsPage stack20">
-      {/* контент */}
       <div className="pageMain stack20">
-        <div className="lessonHead">
-          <h1 className="lessonTitle">{data.title}</h1>
-          <div className="lessonSubtitle">{data.subtitle}</div>
+        {/* Хедер как на "Выше": слева тексты, справа hint */}
+        <div className="pageHeaderRow">
+          <div className="pageHeaderTitle">
+            <h1 className="pageTitle">{data.title}</h1>
+            <div className="pageSubtitle">{data.subtitle}</div>
+          </div>
+
+          {data.about ? (
+            <HintButton
+              ariaLabel={`Подробнее о занятии «${data.title}»`}
+              onPress={() => setIsAboutOpen(true)}
+            />
+          ) : null}
         </div>
 
         <div className="lessonMeta">
@@ -152,6 +181,7 @@ export default function LessonDetailsPage({ lesson, onBook }) {
           )}
         </div>
 
+        {/* Шторка преподавателя */}
         <BottomSheet
           open={isTeacherOpen}
           onClose={() => setIsTeacherOpen(false)}
@@ -173,13 +203,20 @@ export default function LessonDetailsPage({ lesson, onBook }) {
             ) : null}
           </div>
         </BottomSheet>
+
+        {/* Шторка "О занятии" */}
+        <BottomSheet
+          open={isAboutOpen}
+          onClose={() => setIsAboutOpen(false)}
+          title={data.about?.title || "О занятии"}
+        >
+          <div style={{ whiteSpace: "pre-line" }}>{data.about?.text || ""}</div>
+        </BottomSheet>
       </div>
 
       <div className="pageCta">
-  <PrimaryButton onPress={() => onBook?.(lesson)}>
-    Записаться
-  </PrimaryButton>
-</div>
+        <PrimaryButton onPress={() => onBook?.(lesson)}>Записаться</PrimaryButton>
+      </div>
     </div>
   );
 }

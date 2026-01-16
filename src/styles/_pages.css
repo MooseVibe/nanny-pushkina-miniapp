@@ -16,31 +16,37 @@
   
   
   /* =========================================
-     Vyshe List Page
-     ========================================= */
-  
-  .vyshePage .pageHeaderRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .vyshePage .pageTitle {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 500;
-    line-height: 1.2;
-    color: #1B1A18;
-  }
-  
-  .vyshePage .pageSubtitle {
-    margin-top: 4px;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.3;
-    color: #808080;
-  }
+   Page Header Row (reusable)
+   ========================================= */
+
+.pageHeaderRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+
+.pageHeaderTitle{
+  min-width:0;               /* важно для переноса текста */
+  display:flex;
+  flex-direction:column;
+}
+
+.pageTitle{
+  margin:0;
+  font-size:28px;
+  font-weight:500;
+  line-height:1.2;
+  color:#1B1A18;
+}
+
+.pageSubtitle{
+  margin-top:4px;
+  font-size:14px;
+  font-weight:400;
+  line-height:1.3;
+  color:#808080;
+}
   
   .vysheList {
     display: flex;

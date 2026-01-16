@@ -406,7 +406,7 @@
   }
   
   .pressable.isPressed{
-    transform: translateZ(0) scale(0.98);
+    transform: translateZ(0) scale(0.97);
   
     /* press */
     transition-duration: 120ms;
