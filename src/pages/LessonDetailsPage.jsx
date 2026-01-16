@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
 import BottomSheet from "../components/BottomSheet";
 import HintButton from "../components/HintButton";
@@ -28,9 +28,44 @@ function normalizeAbout(about) {
   return { title, text };
 }
 
+function findScrollParent(el) {
+  let node = el;
+  while (node && node !== document.body) {
+    const style = window.getComputedStyle(node);
+    const overflowY = style.overflowY;
+    const canScroll =
+      (overflowY === "auto" || overflowY === "scroll") &&
+      node.scrollHeight > node.clientHeight;
+
+    if (canScroll) return node;
+    node = node.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
 export default function LessonDetailsPage({ lesson, onBook }) {
   const [isTeacherOpen, setIsTeacherOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+
+  const rootRef = useRef(null);
+
+  // ✅ Всегда открываем/показываем страницу с верха
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const scroller = findScrollParent(root);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        try {
+          scroller.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        } catch (_) {
+          scroller.scrollTop = 0;
+        }
+      });
+    });
+  }, [lesson?.title]);
 
   const data = useMemo(() => {
     return {
@@ -96,7 +131,7 @@ export default function LessonDetailsPage({ lesson, onBook }) {
       : data.teacher;
 
   return (
-    <div className="page lessonDetailsPage stack20">
+    <div ref={rootRef} className="page lessonDetailsPage stack20">
       <div className="pageMain stack20">
         {/* Хедер как на "Выше": слева тексты, справа hint */}
         <div className="pageHeaderRow">

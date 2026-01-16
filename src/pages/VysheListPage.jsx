@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import LessonCard from "../components/LessonCard";
 import BottomSheet from "../components/BottomSheet";
@@ -18,6 +18,8 @@ import actorIcon from "../assets/icons/actor.svg";
 import handsIcon from "../assets/icons/hands.svg";
 import drawingIcon from "../assets/icons/drawing.svg";
 import musicGamesIcon from "../assets/icons/music-games.svg";
+
+const SCROLL_KEY = "vysheListScrollTop_v1";
 
 // helpers
 function normalizeDashes(s) {
@@ -49,6 +51,21 @@ function ageTextFromLesson(lesson) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function findScrollParent(el) {
+  let node = el;
+  while (node && node !== document.body) {
+    const style = window.getComputedStyle(node);
+    const overflowY = style.overflowY;
+    const canScroll =
+      (overflowY === "auto" || overflowY === "scroll") &&
+      node.scrollHeight > node.clientHeight;
+
+    if (canScroll) return node;
+    node = node.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
 }
 
 // data
@@ -108,7 +125,7 @@ const lessons = [
     price: "1 000 ₽",
     icon: speedReadingIcon,
     ageMin: 6,
-  
+
     about: {
       title: "О курсе",
       text:
@@ -120,16 +137,15 @@ const lessons = [
         "— Формируем усидчивость и навык доведения задачи до конца\n\n" +
         "Занятия проходят в спокойной и поддерживающей атмосфере, без давления и стресса"
     },
-  
+
     teacher: {
       name: "Рудич Василина Андреевна",
       role: "Преподаватель",
       bio: "Настоящая волшебница, которая умеет превращать обучение в увлекательный и понятный процесс. Дети выходят с занятий уверенными в себе, мотивированными и с искренним интересом к учёбе",
       education: "",
       approach: "",
-      // avatar не указываем — подхватится плейсхолдер
     },
-  
+
     schedule: {
       groups: [
         {
@@ -214,8 +230,7 @@ const lessons = [
       role: "Преподаватель",
       bio:
         "Чемпион МО и призёр международных турниров\n\n" +
-        "Он умеет пробудить у детей интерес к шахматам, сделать каждое занятие занимательным и нескучным. Его ученики уже через полгода участвуют в турнирах разного уровня и занимают призовые места" 
-        ,
+        "Он умеет пробудить у детей интерес к шахматам, сделать каждое занятие занимательным и нескучным. Его ученики уже через полгода участвуют в турнирах разного уровня и занимают призовые места",
       education: "",
       approach: "",
     },
@@ -360,13 +375,51 @@ const lessons = [
 export default function VysheListPage({ onOpenLesson }) {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
+  const rootRef = useRef(null);
+  const scrollerRef = useRef(null);
+
+  // ✅ restore scroll on mount
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const scroller = findScrollParent(root);
+    scrollerRef.current = scroller;
+
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    const top = saved ? Number(saved) : 0;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        try {
+          scroller.scrollTo({ top, left: 0, behavior: "auto" });
+        } catch (_) {
+          scroller.scrollTop = top;
+        }
+      });
+    });
+  }, []);
+
+  // ✅ save scroll on unmount
+  useEffect(() => {
+    return () => {
+      const scroller = scrollerRef.current;
+      if (!scroller) return;
+      sessionStorage.setItem(SCROLL_KEY, String(scroller.scrollTop || 0));
+    };
+  }, []);
+
   const openLessonWithFeedback = async (lesson, ageText) => {
+    // ✅ save before navigate
+    const scroller = scrollerRef.current;
+    if (scroller) sessionStorage.setItem(SCROLL_KEY, String(scroller.scrollTop || 0));
+
     await delay(140);
     onOpenLesson?.({ ...lesson, age: ageText });
   };
 
   return (
-    <div className="page vyshePage stack20">
+    <div ref={rootRef} className="page vyshePage stack20">
       <div className="pageHeaderRow">
         <div className="pageHeaderTitle">
           <h1 className="pageTitle">Выше</h1>
