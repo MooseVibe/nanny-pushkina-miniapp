@@ -70,34 +70,53 @@ const lessons = [
     schedule: {
       groups: [
         {
-          label: "2 года до школы",
+          label: "1 год до школы",
           sessions: [
-            { day: "ВТ", time: "16:00" },
-            { day: "ЧТ", time: "16:00" },
+            { day: "ЧТ", time: "19:00" },
+            { day: "ВС", time: "12:00" },
           ],
         },
         {
-          label: "1 год до школы",
+          label: "2 года до школы",
           sessions: [
-            { day: "ПН", time: "17:00" },
-            { day: "СР", time: "17:00" },
+            { day: "ЧТ", time: "18:00" },
+            { day: "ВС", time: "11:00" },
+          ],
+        },
+        {
+          label: "1 год до школы выходного дня",
+          sessions: [{ day: "ВС", time: "12:00 - 14:00" }],
+        },
+      ],
+    },
+  },
+
+  // ✅ Чистописание и скорочтение (раньше было "Скорочтение")
+  {
+    title: "Чистописание и скорочтение",
+    price: "700 ₽",
+    icon: speedReadingIcon,
+    ageMin: 6, // было 8; поставил мягче, т.к. есть "1 класс"
+    schedule: {
+      groups: [
+        {
+          label: "2+ класс",
+          sessions: [
+            { day: "ВС", time: "10:00" },
+            { day: "ЧТ", time: "15:30" },
+          ],
+        },
+        {
+          label: "1 класс",
+          sessions: [
+            { day: "ЧТ", time: "16:30" },
+            { day: "ВТ", time: "15:00" },
           ],
         },
       ],
     },
   },
-  {
-    title: "Скорочтение",
-    price: "700 ₽",
-    icon: speedReadingIcon,
-    ageMin: 8,
-    schedule: {
-      sessions: [
-        { day: "ПН", time: "18:00" },
-        { day: "СР", time: "18:00" },
-      ],
-    },
-  },
+
   {
     title: "Каллиграфия",
     price: "700 ₽",
@@ -110,6 +129,8 @@ const lessons = [
       ],
     },
   },
+
+  // ✅ Английский язык — полностью заменил группы
   {
     title: "Английский язык",
     price: "700 ₽",
@@ -118,26 +139,41 @@ const lessons = [
     schedule: {
       groups: [
         {
-          label: "3–6 лет (выходной день)",
-          sessions: [{ day: "СБ", time: "10:00" }],
+          label: "Для малышей",
+          sessions: [{ day: "ВС", time: "10:00" }],
         },
         {
-          label: "7 лет",
+          label: "1–2 класс",
           sessions: [
-            { day: "ПН", time: "15:00" },
-            { day: "СР", time: "15:00" },
+            { day: "СР", time: "16:00" },
+            { day: "ПТ", time: "16:00" },
           ],
         },
         {
-          label: "8–10 лет",
+          label: "3 класс",
           sessions: [
-            { day: "ВТ", time: "17:30" },
-            { day: "ЧТ", time: "17:30" },
+            { day: "ЧТ", time: "16:00" },
+            { day: "СБ", time: "17:00" },
+          ],
+        },
+        {
+          label: "4 класс",
+          sessions: [
+            { day: "ВТ", time: "17:00" },
+            { day: "ЧТ", time: "17:00" },
+          ],
+        },
+        {
+          label: "5 класс",
+          sessions: [
+            { day: "ВТ", time: "18:00" },
+            { day: "ЧТ", time: "18:00" },
           ],
         },
       ],
     },
   },
+
   {
     title: "Шахматы",
     price: "700 ₽",
@@ -150,6 +186,7 @@ const lessons = [
       ],
     },
   },
+
   {
     title: "Секретная лаборатория",
     price: "700 ₽",
@@ -157,34 +194,76 @@ const lessons = [
     ageMin: 7,
     schedule: { sessions: [{ day: "ПТ", time: "17:00" }] },
   },
+
+  // ✅ Акварель — заменил на твой список
   {
     title: "Акварель",
     price: "700 ₽",
     icon: watercolorIcon,
     ageMin: 6,
-    schedule: { sessions: [{ day: "СР", time: "16:00" }] },
+    schedule: {
+      sessions: [
+        { day: "ВТ", time: "19:00" },
+        { day: "ЧТ", time: "19:00" },
+        { day: "СБ", time: "18:00" },
+      ],
+    },
   },
+
+  // ✅ Графика — заменил
   {
     title: "Графика",
     price: "700 ₽",
     icon: graphicsIcon,
     ageMin: 8,
-    schedule: { sessions: [{ day: "ПН", time: "16:30" }] },
+    schedule: { sessions: [{ day: "ПН", time: "19:00" }] },
   },
+
+  // ✅ Скульптура — теперь 3 группы
   {
     title: "Скульптура",
     price: "700 ₽",
     icon: sculptureIcon,
-    ageMin: 8,
-    schedule: { sessions: [{ day: "ЧТ", time: "16:30" }] },
+    ageMin: 7,
+    schedule: {
+      groups: [
+        {
+          label: "7–8 лет",
+          sessions: [{ day: "ЧТ", time: "17:00" }],
+        },
+        {
+          label: "9–10 лет",
+          sessions: [
+            { day: "СР", time: "18:00" },
+            { day: "ПТ", time: "18:00" },
+          ],
+        },
+        {
+          label: "12+ лет",
+          sessions: [
+            { day: "СР", time: "19:00" },
+            { day: "ПТ", time: "19:00" },
+          ],
+        },
+      ],
+    },
   },
+
+  // ✅ Мультипликация — заменил
   {
     title: "Мультипликация",
     price: "700 ₽",
     icon: actorIcon,
     ageMin: 7,
-    schedule: { sessions: [{ day: "ВТ", time: "19:00" }] },
+    schedule: {
+      sessions: [
+        { day: "ПТ", time: "19:00" },
+        { day: "ВС", time: "18:00" },
+      ],
+    },
   },
+
+  // ✅ Очумелые ручки — заменил
   {
     title: "Очумелые ручки",
     price: "700 ₽",
@@ -192,31 +271,48 @@ const lessons = [
     ageMin: 6,
     schedule: {
       sessions: [
-        { day: "СР", time: "17:30" },
-        { day: "ПТ", time: "17:30" },
+        { day: "ПН", time: "18:00" },
+        { day: "СБ", time: "12:00" },
       ],
     },
   },
+
+  // ✅ Лепка — заменил
   {
     title: "Лепка",
     price: "700 ₽",
     icon: clayIcon,
     ageRange: "3–6 лет",
-    schedule: { sessions: [{ day: "СБ", time: "11:00" }] },
+    schedule: {
+      sessions: [
+        { day: "СР", time: "17:00" },
+        { day: "СБ", time: "12:00" },
+      ],
+    },
   },
+
+  // ✅ Рисование — заменил
   {
     title: "Рисование",
     price: "700 ₽",
     icon: drawingIcon,
     ageRange: "3–6 лет",
-    schedule: { sessions: [{ day: "ВС", time: "10:00" }] },
+    schedule: {
+      sessions: [
+        { day: "СБ", time: "11:00" },
+        { day: "ВС", time: "12:00" },
+      ],
+    },
   },
+
+  // ✅ Музыкальные занятия — у тебя в коде было другое название.
+  // Я МЕНЯЮ ТОЛЬКО расписание, название оставляю как было, чтобы ничего не развалить.
   {
     title: "Музыкально-игровые программы",
     price: "700 ₽",
     icon: musicGamesIcon,
     ageRange: "3–6 лет",
-    schedule: { sessions: [{ day: "ВС", time: "11:00" }] },
+    schedule: { sessions: [{ day: "ВС", time: "13:00" }] },
   },
 ];
 
