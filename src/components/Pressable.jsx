@@ -14,7 +14,13 @@ export default function Pressable({
   const tRef = useRef(null);
   const firedRef = useRef(false);
   const pointerIdRef = useRef(null);
+
   const hadPointerDownRef = useRef(false);
+
+  // ✅ NEW: tracking for "scroll vs tap"
+  const startRef = useRef({ x: 0, y: 0 });
+  const movedRef = useRef(false);
+  const MOVE_PX = 10; // порог: если палец уехал — это скролл, не press
 
   const clearTimer = () => {
     if (tRef.current) {
@@ -37,7 +43,12 @@ export default function Pressable({
   const isPointInside = (el, clientX, clientY) => {
     if (!el) return false;
     const r = el.getBoundingClientRect();
-    return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+    return (
+      clientX >= r.left &&
+      clientX <= r.right &&
+      clientY >= r.top &&
+      clientY <= r.bottom
+    );
   };
 
   const handlePointerDown = (e) => {
@@ -46,6 +57,10 @@ export default function Pressable({
 
     hadPointerDownRef.current = true;
     firedRef.current = false;
+
+    // ✅ NEW
+    movedRef.current = false;
+    startRef.current = { x: e.clientX, y: e.clientY };
 
     clearTimer();
     setPressed(true);
@@ -59,6 +74,24 @@ export default function Pressable({
     props.onPointerDown?.(e);
   };
 
+  // ✅ NEW: если палец поехал — считаем это скроллом и убираем pressed
+  const handlePointerMove = (e) => {
+    if (disabled) return;
+    if (pointerIdRef.current != null && e.pointerId !== pointerIdRef.current) return;
+    if (!hadPointerDownRef.current) return;
+
+    const dx = Math.abs(e.clientX - startRef.current.x);
+    const dy = Math.abs(e.clientY - startRef.current.y);
+
+    if (!movedRef.current && (dx > MOVE_PX || dy > MOVE_PX)) {
+      movedRef.current = true;
+      setPressed(false); // ✅ не показываем "нажатие" при скролле
+      clearTimer();      // ✅ и на всякий — прибиваем возможный таймер
+    }
+
+    props.onPointerMove?.(e);
+  };
+
   const handlePointerUp = (e) => {
     if (disabled) return;
 
@@ -66,7 +99,6 @@ export default function Pressable({
     clearTimer();
 
     const el = e.currentTarget;
-    const inside = isPointInside(el, e.clientX, e.clientY);
 
     // release capture
     try {
@@ -76,6 +108,17 @@ export default function Pressable({
     } catch (_) {}
 
     pointerIdRef.current = null;
+
+    // ✅ если это был скролл/drag — не считаем это кликом вообще
+    if (movedRef.current) {
+      firedRef.current = false;
+      hadPointerDownRef.current = false;
+      movedRef.current = false;
+      props.onPointerUp?.(e);
+      return;
+    }
+
+    const inside = isPointInside(el, e.clientX, e.clientY);
 
     // Only fire if we started press here AND released inside
     if (hadPointerDownRef.current && inside) {
@@ -87,6 +130,7 @@ export default function Pressable({
     }
 
     hadPointerDownRef.current = false;
+    movedRef.current = false;
     props.onPointerUp?.(e);
   };
 
@@ -98,6 +142,9 @@ export default function Pressable({
     hadPointerDownRef.current = false;
     pointerIdRef.current = null;
 
+    // ✅ NEW
+    movedRef.current = false;
+
     props.onPointerCancel?.(e);
   };
 
@@ -106,6 +153,12 @@ export default function Pressable({
     if (disabled) {
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+
+    // ✅ если был скролл — не вызываем onPress по клику тоже
+    if (movedRef.current) {
+      movedRef.current = false;
       return;
     }
 
@@ -147,6 +200,7 @@ export default function Pressable({
       aria-disabled={Tag !== "button" && disabled ? "true" : undefined}
       tabIndex={disabled && Tag !== "button" ? -1 : props.tabIndex}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}   // ✅ NEW
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onClick={handleClick}
