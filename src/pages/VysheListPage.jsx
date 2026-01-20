@@ -167,24 +167,11 @@ const lessons = [
   },
 
   {
-    title: "Каллиграфия",
-    price: "1 000 ₽",
-    icon: calligraphyIcon,
-    ageMin: 7,
-    schedule: {
-      sessions: [
-        { day: "ВТ", time: "18:30" },
-        { day: "ЧТ", time: "18:30" },
-      ],
-    },
-  },
-
-  {
     title: "Английский язык",
     subtitle: "Изучаем английский язык с раннего возраста — легко и с интересом",
     price: "1 000 ₽",
     icon: englishIcon,
-    ageMin: 3,
+    ageMin: 7,
   
     teacher: {
       name: "Касабуцкая Катарина Сергеевна",
@@ -198,38 +185,30 @@ const lessons = [
   
     schedule: {
       groups: [
-        { label: "Для малышей", sessions: [{ day: "ВС", time: "10:00" }] },
         {
-          label: "1–2 класс",
+          label: "7–8 лет",
           sessions: [
             { day: "СР", time: "16:00" },
             { day: "ПТ", time: "16:00" },
           ],
         },
         {
-          label: "3 класс",
+          label: "9–10 лет",
           sessions: [
-            { day: "ЧТ", time: "16:00" },
-            { day: "СБ", time: "17:00" },
+            { day: "СР", time: "18:00" },
+            { day: "ПТ", time: "18:00" },
           ],
         },
         {
-          label: "4 класс",
+          label: "11–12 лет",
           sessions: [
-            { day: "ВТ", time: "17:00" },
-            { day: "ЧТ", time: "17:00" },
-          ],
-        },
-        {
-          label: "5 класс",
-          sessions: [
-            { day: "ВТ", time: "18:00" },
-            { day: "ЧТ", time: "18:00" },
+            { day: "ВТ", time: "19:30" },
+            { day: "ЧТ", time: "19:30" },
           ],
         },
       ],
     },
-  },
+  },,
 
   {
     title: "Шахматы",
