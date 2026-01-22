@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import teacherPlaceholder from "../assets/avatars/teacher-placeholder.png";
+import { TEACHER_AVATARS } from "../assets/teachers/teacherAvatars";
+
 import BottomSheet from "../components/BottomSheet";
 import HintButton from "../components/HintButton";
 import Pressable from "../components/Pressable";
@@ -43,6 +45,13 @@ function findScrollParent(el) {
   return document.scrollingElement || document.documentElement;
 }
 
+function getTeacherAvatar(teacher) {
+  const id = teacher?.id;
+  if (id && TEACHER_AVATARS?.[id]) return TEACHER_AVATARS[id];
+  if (teacher?.avatar) return teacher.avatar;
+  return teacherPlaceholder;
+}
+
 export default function LessonDetailsPage({ lesson, onBook }) {
   const [isTeacherOpen, setIsTeacherOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -80,13 +89,13 @@ export default function LessonDetailsPage({ lesson, onBook }) {
       duration: lesson?.duration || "1 час",
 
       teacher: lesson?.teacher || {
+        id: "", // <-- будет пусто у заглушки
         name: "Такой-то Такойтович",
         role: "Преподаватель",
         bio:
           "Скоро здесь появится подробная информация о преподавателе: опыт, подход и достижения.",
         education: "",
         approach: "",
-        avatar: teacherPlaceholder,
       },
 
       schedule: lesson?.schedule || {
@@ -117,18 +126,24 @@ export default function LessonDetailsPage({ lesson, onBook }) {
     ? data.schedule.sessions
     : [];
 
-  const teacherObj =
+    const teacherObj =
     typeof data.teacher === "string"
       ? {
+          id: lesson?.teacherId || "", // ← ВАЖНО: берём из lesson.teacherId
           name: data.teacher,
           role: "Преподаватель",
           bio:
             "Скоро здесь появится подробная информация о преподавателе: опыт, подход и достижения.",
           education: "",
           approach: "",
-          avatar: teacherPlaceholder,
         }
-      : data.teacher;
+      : {
+          ...data.teacher,
+          // ← ВАЖНО: если id внутри teacher не задан, подставляем lesson.teacherId
+          id: data.teacher?.id || lesson?.teacherId || "",
+        };
+
+  const teacherAvatarSrc = getTeacherAvatar(teacherObj);
 
   return (
     <div ref={rootRef} className="page lessonDetailsPage stack20">
@@ -174,8 +189,9 @@ export default function LessonDetailsPage({ lesson, onBook }) {
         >
           <img
             className="teacherAvatar"
-            src={teacherObj.avatar || teacherPlaceholder}
+            src={teacherAvatarSrc}
             alt=""
+            style={{ objectFit: "cover" }}
           />
           <div className="teacherText">
             <div className="teacherLabel">
