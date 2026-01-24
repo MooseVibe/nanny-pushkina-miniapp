@@ -714,57 +714,59 @@
   
   
   /* =========================================
-     Icon buttons: hint/help
-     ========================================= */
-  
-  .hintBtn,
-  .helpBtn {
-    padding: 0;
-    margin: 0;
-  
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-  
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  
-    -webkit-appearance: none;
-    appearance: none;
-  
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    user-select: none;
-  
-    cursor: pointer;
-  
-    transition: transform 140ms cubic-bezier(.2, .8, .2, 1);
-    transform-origin: center;
-    will-change: transform;
-  }
-  
-  /* press state comes from Pressable */
-  .hintBtn.isPressed,
-  .helpBtn.isPressed {
-    transform: scale(0.92);
-  }
-  
-  .hintIcon {
-    width: 22px;
-    height: 22px;
-    display: block;
-  }
-  
-  .helpBtn__icon {
-    width: 20px;
-    height: 20px;
-    display: block;
-  }
+   Icon buttons: hint/help
+   ========================================= */
+
+.hintBtn,
+.helpBtn {
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  -webkit-appearance: none;
+  appearance: none;
+
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+
+  cursor: pointer;
+
+  transition: transform 140ms cubic-bezier(.2, .8, .2, 1);
+  transform-origin: center;
+  will-change: transform;
+
+  flex-shrink: 0;            /* FIX: иконка НИКОГДА не ужимает текст */
+}
+
+/* press state comes from Pressable */
+.hintBtn.isPressed,
+.helpBtn.isPressed {
+  transform: scale(0.92);
+}
+
+.hintIcon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.helpBtn__icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
   
   
   /* =========================================
