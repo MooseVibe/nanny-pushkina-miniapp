@@ -30,8 +30,26 @@ function buildOpenAppLink(botUsername, startParam = "") {
   return `https://t.me/${clean}?startapp=${encodeURIComponent(startParam)}`;
 }
 
-function buildWelcomeMarkup(openAppUrl) {
-  return { inline_keyboard: [[{ text: "Открыть приложение", url: openAppUrl }]] };
+function buildAdminUrl(adminUsernameOrUrl) {
+  const v = String(adminUsernameOrUrl || "").trim();
+  if (!v) return "";
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+  const clean = v.replace(/^@/, "");
+  return `https://t.me/${clean}`;
+}
+
+function buildWelcomeMarkup(openAppUrl, adminUsernameOrUrl) {
+  const adminUrl = buildAdminUrl(adminUsernameOrUrl);
+
+  const inline_keyboard = [
+    [{ text: "Открыть приложение", url: openAppUrl }],
+  ];
+
+  if (adminUrl) {
+    inline_keyboard.push([{ text: "Написать администратору", url: adminUrl }]);
+  }
+
+  return { inline_keyboard };
 }
 
 function serialText(row) {
@@ -220,6 +238,9 @@ export default async function handler(req, res) {
   const BOT_USERNAME = process.env.BOT_USERNAME;
   const STARTAPP_PARAM = process.env.STARTAPP_PARAM || "";
 
+  // ✅ admin contact (username or full url)
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "@nyanyaadmin";
+
   const update = req.body || {};
   if (!BOT_TOKEN) return res.status(200).send("ok");
 
@@ -253,7 +274,7 @@ export default async function handler(req, res) {
           `Это бот Няни Пушкина.\n` +
           `Здесь ты можешь записаться на занятия «Выше».\n\n` +
           `Жми кнопку ниже 👇`,
-        reply_markup: buildWelcomeMarkup(openAppUrl),
+        reply_markup: buildWelcomeMarkup(openAppUrl, ADMIN_USERNAME),
       });
 
       return res.status(200).send("ok");
