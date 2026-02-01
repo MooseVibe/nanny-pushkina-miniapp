@@ -469,6 +469,7 @@ const lessons = [
     schedule: {
       sessions: [
         { day: "ПН", time: "18:00" },
+        { day: "ЧТ", time: "17:00" },
         { day: "СБ", time: "12:00" },
       ],
     },
