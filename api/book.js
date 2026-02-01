@@ -30,15 +30,8 @@ function validateInitData(initData, botToken) {
     .map((k) => `${k}=${data[k]}`)
     .join("\n");
 
-  const secretKey = crypto
-    .createHmac("sha256", "WebAppData")
-    .update(botToken)
-    .digest();
-
-  const hmac = crypto
-    .createHmac("sha256", secretKey)
-    .update(checkString)
-    .digest("hex");
+  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
+  const hmac = crypto.createHmac("sha256", secretKey).update(checkString).digest("hex");
 
   return { ok: hmac === hash, reason: hmac === hash ? "" : "Bad signature", data };
 }
@@ -51,16 +44,22 @@ function parseAdminChatIds(raw) {
 }
 
 async function tgSendMessage(token, chatId, text, replyMarkup) {
+  const body = {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+  };
+
+  // ✅ НЕ отправляем reply_markup, если его нет
+  if (replyMarkup && typeof replyMarkup === "object") {
+    body.reply_markup = replyMarkup;
+  }
+
   const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      reply_markup: replyMarkup,
-      disable_web_page_preview: true,
-    }),
+    body: JSON.stringify(body),
   });
 
   const json = await res.json();
@@ -76,15 +75,23 @@ export default async function handler(req, res) {
 
     const BOT_TOKEN = process.env.BOT_TOKEN;
 
-    const adminRaw =
-  process.env.ADMIN_CHAT_IDS || process.env.ADMIN_CHAT_IDS || ""; // поддержим оба варианта на всякий
-    const ADMIN_CHAT_IDS = parseAdminChatIds(adminRaw);
+    // ✅ один источник правды: ADMIN_CHAT_IDS
+    const ADMIN_CHAT_IDS = parseAdminChatIds(process.env.ADMIN_CHAT_IDS);
 
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!BOT_TOKEN || !ADMIN_CHAT_IDS.length || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      return res.status(500).json({ ok: false, error: "Missing env vars" });
+      return res.status(500).json({
+        ok: false,
+        error: "Missing env vars",
+        debug: {
+          hasBOT_TOKEN: Boolean(BOT_TOKEN),
+          adminCount: ADMIN_CHAT_IDS.length,
+          hasSUPABASE_URL: Boolean(SUPABASE_URL),
+          hasSERVICE_KEY: Boolean(SUPABASE_SERVICE_ROLE_KEY),
+        },
+      });
     }
 
     const { payload, initData } = req.body || {};
@@ -101,7 +108,7 @@ export default async function handler(req, res) {
 
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 1) создаём запись в базе и сразу получаем id + serial_number
+    // 1) insert в базу
     const insert = {
       user_id: userId,
       lesson_title: payload.lessonTitle,
@@ -126,7 +133,7 @@ export default async function handler(req, res) {
     if (!bookingId) throw new Error("No bookingId");
     const serialText = serialNumber ? `#${serialNumber}` : "";
 
-    // 2) сообщение пользователю (БЕЗ порядкового номера) + кнопка отмены
+    // 2) сообщение пользователю + кнопка отмены
     const userText =
       `✅ <b>Запись создана</b>\n\n` +
       `Занятие: <b>${insert.lesson_title}</b>\n` +
@@ -145,9 +152,7 @@ export default async function handler(req, res) {
     const username = user?.username ? String(user.username).replace(/^@/, "") : "";
     const firstName = user?.first_name || "Пользователь";
 
-    const whoBooked = username
-      ? `@${username}`
-      : `<a href="tg://user?id=${userId}">${firstName}</a>`;
+    const whoBooked = username ? `@${username}` : `<a href="tg://user?id=${userId}">${firstName}</a>`;
 
     const adminText =
       `🆕 <b>Новая запись</b> ${serialText}\n\n` +
@@ -157,15 +162,21 @@ export default async function handler(req, res) {
       `Дата/время: <b>${insert.visit_date} • ${insert.visit_time}</b>\n` +
       `Кто записал: ${whoBooked}`;
 
-    // 4) шлём всем админам и сохраняем message_id каждого
+    // 4) шлём всем админам. Ошибка одному админу НЕ должна ронять юзера.
     const admin_message_ids = {};
+    const adminSendErrors = [];
 
     for (const adminChatId of ADMIN_CHAT_IDS) {
-      const msg = await tgSendMessage(BOT_TOKEN, adminChatId, adminText, null);
-      admin_message_ids[String(adminChatId)] = msg?.message_id;
+      try {
+        const msg = await tgSendMessage(BOT_TOKEN, adminChatId, adminText);
+        admin_message_ids[String(adminChatId)] = msg?.message_id;
+      } catch (e) {
+        adminSendErrors.push({ adminChatId, error: String(e?.message || e) });
+        console.error("Admin notify failed:", adminChatId, e?.message || e);
+      }
     }
 
-    // 5) сохраняем admin_message_ids в базе (для reply при отмене)
+    // 5) сохраняем message_id-шники (что удалось)
     const { error: updErr } = await sb
       .from("bookings")
       .update({ admin_message_ids })
@@ -173,12 +184,14 @@ export default async function handler(req, res) {
 
     if (updErr) throw updErr;
 
+    // ✅ возвращаем ok даже если одному админу не дошло — чтобы не ломать UX
     return res.status(200).json({
       ok: true,
       bookingId,
       serialNumber,
       userId,
       adminMessageIds: admin_message_ids,
+      adminSendErrors, // полезно для дебага (если не пустой — Юрию не дошло)
     });
   } catch (e) {
     console.error(e);
