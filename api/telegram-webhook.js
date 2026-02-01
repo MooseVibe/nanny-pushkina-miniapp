@@ -23,6 +23,17 @@ async function safeAnswerCallback(token, callbackQueryId, text) {
   }
 }
 
+function parseAdminChatIds(raw) {
+  return String(raw || "")
+    .split(",")
+    .map((s) => Number(String(s).trim()))
+    .filter((n) => Number.isFinite(n) && n !== 0);
+}
+
+function isAdminChat(chatId, adminChatIds) {
+  return adminChatIds.includes(Number(chatId));
+}
+
 function buildOpenAppLink(botUsername, startParam = "") {
   const clean = String(botUsername || "").replace(/^@/, "").trim();
   if (!clean) return "";
@@ -41,9 +52,7 @@ function buildAdminUrl(adminUsernameOrUrl) {
 function buildWelcomeMarkup(openAppUrl, adminUsernameOrUrl) {
   const adminUrl = buildAdminUrl(adminUsernameOrUrl);
 
-  const inline_keyboard = [
-    [{ text: "Открыть приложение", url: openAppUrl }],
-  ];
+  const inline_keyboard = [[{ text: "Открыть приложение", url: openAppUrl }]];
 
   if (adminUrl) {
     inline_keyboard.push([{ text: "Написать администратору", url: adminUrl }]);
@@ -68,7 +77,6 @@ function adminActiveText(row, whoBookedText = "") {
 }
 
 function adminCancelledText(row, whoCancelledText = "") {
-  // ВАЖНО: тут ТОЛЬКО "Кто отменил", без "Кто записал"
   return (
     `❌ <b>Отменено</b> ${serialText(row)}\n\n` +
     `Кого: <b>${row.name}</b>\n` +
@@ -81,7 +89,6 @@ function adminCancelledText(row, whoCancelledText = "") {
 
 // --------- time helpers (MSK, UTC+3) ----------
 function mskNow() {
-  // Москва без DST, просто UTC+3
   return new Date(Date.now() + 3 * 60 * 60 * 1000);
 }
 
@@ -103,14 +110,8 @@ function ddmm(d) {
   return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}`;
 }
 
-// visit_date у тебя строка типа "ПН, 08.01" — ищем по "08.01"
 function buildVisitDateOrQuery(days) {
-  // Supabase .or формат: "visit_date.ilike.%08.01%,visit_date.ilike.%09.01%"
   return days.map((d) => `visit_date.ilike.%${ddmm(d)}%`).join(",");
-}
-
-function isAdminChat(chatId, adminChatIdEnv) {
-  return Number(chatId) === Number(adminChatIdEnv);
 }
 
 function formatStatusMark(status) {
@@ -135,7 +136,6 @@ function buildDailySummaryText(title, dateLabel, rows) {
 
   if (!rows.length) return head + `Пусто.`;
 
-  // сортировка по времени (строка "16:00")
   const sorted = [...rows].sort((a, b) => String(a.visit_time).localeCompare(String(b.visit_time)));
 
   const lines = sorted.map((r) => {
@@ -163,7 +163,6 @@ function buildWeekSummaryText(title, fromLabel, toLabel, rows) {
 
   if (!rows.length) return head + `Пусто.`;
 
-  // сгруппируем по visit_date (строка "ПН, 08.01")
   const map = new Map();
   for (const r of rows) {
     const key = String(r.visit_date || "—");
@@ -171,7 +170,6 @@ function buildWeekSummaryText(title, fromLabel, toLabel, rows) {
     map.get(key).push(r);
   }
 
-  // сортируем дни по dd.mm внутри строки (если нет — как есть)
   const keys = Array.from(map.keys()).sort((a, b) => {
     const ma = a.match(/(\d{2}\.\d{2})/);
     const mb = b.match(/(\d{2}\.\d{2})/);
@@ -196,21 +194,16 @@ function buildMonthAnalyticsText(rows) {
   const cancelled = rows.filter((r) => r.status === "cancelled").length;
   const active = total - cancelled;
 
-  // популярность по занятиям (всего создано за 30 дней)
   const byLesson = new Map();
   const cancelledByLesson = new Map();
 
   for (const r of rows) {
     const key = String(r.lesson_title || "—");
     byLesson.set(key, (byLesson.get(key) || 0) + 1);
-    if (r.status === "cancelled") {
-      cancelledByLesson.set(key, (cancelledByLesson.get(key) || 0) + 1);
-    }
+    if (r.status === "cancelled") cancelledByLesson.set(key, (cancelledByLesson.get(key) || 0) + 1);
   }
 
-  const top = Array.from(byLesson.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
+  const top = Array.from(byLesson.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
   const lines = top.map(([lessonTitle, cnt], idx) => {
     const canc = cancelledByLesson.get(lessonTitle) || 0;
@@ -231,14 +224,12 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(200).send("ok");
 
   const BOT_TOKEN = process.env.BOT_TOKEN;
-  const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+  const ADMIN_CHAT_IDS = parseAdminChatIds(process.env.ADMIN_CHAT_IDS);
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   const BOT_USERNAME = process.env.BOT_USERNAME;
   const STARTAPP_PARAM = process.env.STARTAPP_PARAM || "";
-
-  // ✅ admin contact (username or full url)
   const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "@nyanyaadmin";
 
   const update = req.body || {};
@@ -272,8 +263,7 @@ export default async function handler(req, res) {
         text:
           `Привет! 👋\n\n` +
           `Это приложение «Няни Пушкина».\n` +
-          `Здесь ты можешь ознакомиться со всеми услугами и программами, а также записаться на занятия.\n\n` +
-          `Нажми кнопку ниже, чтобы открыть приложение 👇`,
+          `Здесь ты можешь ознакомиться со всеми услугами и программами, а также записаться на занятия.`,
         reply_markup: buildWelcomeMarkup(openAppUrl, ADMIN_USERNAME),
       });
 
@@ -281,22 +271,16 @@ export default async function handler(req, res) {
     }
 
     // --- admin commands ---
-    const isAdmin = ADMIN_CHAT_ID && isAdminChat(chatId, ADMIN_CHAT_ID);
+    const isAdmin = ADMIN_CHAT_IDS.length && isAdminChat(chatId, ADMIN_CHAT_IDS);
 
     if (text === "/today" || text === "/tomorrow" || text === "/week" || text === "/month") {
       if (!isAdmin) {
-        await tgApi(BOT_TOKEN, "sendMessage", {
-          chat_id: chatId,
-          text: `Команда недоступна.`,
-        });
+        await tgApi(BOT_TOKEN, "sendMessage", { chat_id: chatId, text: `Команда недоступна.` });
         return res.status(200).send("ok");
       }
 
       if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-        await tgApi(BOT_TOKEN, "sendMessage", {
-          chat_id: chatId,
-          text: `Ошибка: не настроены переменные Supabase.`,
-        });
+        await tgApi(BOT_TOKEN, "sendMessage", { chat_id: chatId, text: `Ошибка: не настроены переменные Supabase.` });
         return res.status(200).send("ok");
       }
 
@@ -362,9 +346,6 @@ export default async function handler(req, res) {
         }
 
         if (text === "/month") {
-          // Сводка за последние 30 дней по факту создания записи.
-          // Требует, чтобы в таблице bookings была колонка created_at (timestamp).
-          // В Supabase часто она есть, но если нет — добавишь.
           const from = new Date(mskNow().getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
           const { data, error } = await sb
@@ -373,7 +354,6 @@ export default async function handler(req, res) {
             .gte("created_at", from);
 
           if (error) {
-            // понятная подсказка, если created_at нет
             const msgText =
               `Не могу собрать /month: похоже, в таблице <b>bookings</b> нет колонки <b>created_at</b>.\n\n` +
               `Сделай её (timestamp, default now()) — и команда заработает.`;
@@ -387,15 +367,11 @@ export default async function handler(req, res) {
         }
       } catch (e) {
         console.error("admin command error:", e?.message || e);
-        await tgApi(BOT_TOKEN, "sendMessage", {
-          chat_id: chatId,
-          text: `Ошибка выполнения команды. Проверь логи.`,
-        });
+        await tgApi(BOT_TOKEN, "sendMessage", { chat_id: chatId, text: `Ошибка выполнения команды. Проверь логи.` });
         return res.status(200).send("ok");
       }
     }
 
-    // если это обычное сообщение — просто ок
     return res.status(200).send("ok");
   }
 
@@ -409,7 +385,7 @@ export default async function handler(req, res) {
   const fromId = cq.from?.id;
   const data = cq.data || "";
 
-  if (!ADMIN_CHAT_ID || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  if (!ADMIN_CHAT_IDS.length || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Сервис временно недоступен.");
     return res.status(200).send("ok");
   }
@@ -443,7 +419,6 @@ export default async function handler(req, res) {
       return res.status(200).send("ok");
     }
 
-    // отменять может только тот, кто записал
     if (Number(row.user_id) !== Number(fromId)) {
       await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Это не ваша запись");
       return res.status(200).send("ok");
@@ -454,7 +429,6 @@ export default async function handler(req, res) {
       return res.status(200).send("ok");
     }
 
-    // 1) обновляем статус
     const { error: updErr } = await sb
       .from("bookings")
       .update({ status: "cancelled" })
@@ -464,7 +438,7 @@ export default async function handler(req, res) {
 
     await safeAnswerCallback(BOT_TOKEN, callbackQueryId, "Запись отменена ✅");
 
-    // 2) пользователю — короткое подтверждение (без "кто отменил", это и так он)
+    // пользователю
     await tgApi(BOT_TOKEN, "sendMessage", {
       chat_id: fromId,
       text:
@@ -474,30 +448,29 @@ export default async function handler(req, res) {
       parse_mode: "HTML",
     });
 
-    // 3) для админа — редактируем старое сообщение
+    // кто отменил (для админов)
     const username = cq.from?.username ? String(cq.from.username).replace(/^@/, "") : "";
     const firstName = cq.from?.first_name || "Пользователь";
     const whoCancelled = username
       ? `@${username}`
       : `<a href="tg://user?id=${fromId}">${escapeHtml(firstName)}</a>`;
 
-    const adminChatId = row.admin_chat_id ? Number(row.admin_chat_id) : Number(ADMIN_CHAT_ID);
-    const adminMessageId = row.admin_message_id;
+    // reply на исходную "новую запись", если есть
+    const adminMsgMap = row.admin_message_ids && typeof row.admin_message_ids === "object"
+      ? row.admin_message_ids
+      : {};
 
-    if (adminChatId && adminMessageId) {
-      await tgApi(BOT_TOKEN, "editMessageText", {
-        chat_id: adminChatId,
-        message_id: adminMessageId,
-        text: adminCancelledText(row, whoCancelled),
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      });
-    } else {
+    for (const adminChatId of ADMIN_CHAT_IDS) {
+      const originalMsgId = adminMsgMap?.[String(adminChatId)];
+
       await tgApi(BOT_TOKEN, "sendMessage", {
-        chat_id: ADMIN_CHAT_ID,
+        chat_id: adminChatId,
         text: adminCancelledText(row, whoCancelled),
         parse_mode: "HTML",
         disable_web_page_preview: true,
+        ...(originalMsgId
+          ? { reply_to_message_id: originalMsgId, allow_sending_without_reply: true }
+          : {}),
       });
     }
 

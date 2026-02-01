@@ -30,11 +30,24 @@ function validateInitData(initData, botToken) {
     .map((k) => `${k}=${data[k]}`)
     .join("\n");
 
-  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
+  const secretKey = crypto
+    .createHmac("sha256", "WebAppData")
+    .update(botToken)
+    .digest();
 
-  const hmac = crypto.createHmac("sha256", secretKey).update(checkString).digest("hex");
+  const hmac = crypto
+    .createHmac("sha256", secretKey)
+    .update(checkString)
+    .digest("hex");
 
   return { ok: hmac === hash, reason: hmac === hash ? "" : "Bad signature", data };
+}
+
+function parseAdminChatIds(raw) {
+  return String(raw || "")
+    .split(",")
+    .map((s) => Number(String(s).trim()))
+    .filter((n) => Number.isFinite(n) && n !== 0);
 }
 
 async function tgSendMessage(token, chatId, text, replyMarkup) {
@@ -52,7 +65,7 @@ async function tgSendMessage(token, chatId, text, replyMarkup) {
 
   const json = await res.json();
   if (!json.ok) throw new Error(`TG sendMessage failed: ${json.description}`);
-  return json.result; // тут есть message_id
+  return json.result; // { message_id, ... }
 }
 
 export default async function handler(req, res) {
@@ -62,11 +75,15 @@ export default async function handler(req, res) {
     }
 
     const BOT_TOKEN = process.env.BOT_TOKEN;
-    const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID;
+
+    const adminRaw =
+  process.env.ADMIN_CHAT_IDS || process.env.ADMIN_CHAT_IDS || ""; // поддержим оба варианта на всякий
+    const ADMIN_CHAT_IDS = parseAdminChatIds(adminRaw);
+
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!BOT_TOKEN || !ADMIN_CHAT_ID || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!BOT_TOKEN || !ADMIN_CHAT_IDS.length || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       return res.status(500).json({ ok: false, error: "Missing env vars" });
     }
 
@@ -124,7 +141,7 @@ export default async function handler(req, res) {
 
     await tgSendMessage(BOT_TOKEN, userId, userText, cancelMarkup);
 
-    // 3) сообщение админу (С порядковым номером)
+    // 3) кто записал (для админов)
     const username = user?.username ? String(user.username).replace(/^@/, "") : "";
     const firstName = user?.first_name || "Пользователь";
 
@@ -140,15 +157,18 @@ export default async function handler(req, res) {
       `Дата/время: <b>${insert.visit_date} • ${insert.visit_time}</b>\n` +
       `Кто записал: ${whoBooked}`;
 
-    const adminMsg = await tgSendMessage(BOT_TOKEN, ADMIN_CHAT_ID, adminText);
+    // 4) шлём всем админам и сохраняем message_id каждого
+    const admin_message_ids = {};
 
-    // 4) сохраняем admin_chat_id + admin_message_id в базе (для editMessageText при отмене)
+    for (const adminChatId of ADMIN_CHAT_IDS) {
+      const msg = await tgSendMessage(BOT_TOKEN, adminChatId, adminText, null);
+      admin_message_ids[String(adminChatId)] = msg?.message_id;
+    }
+
+    // 5) сохраняем admin_message_ids в базе (для reply при отмене)
     const { error: updErr } = await sb
       .from("bookings")
-      .update({
-        admin_chat_id: Number(ADMIN_CHAT_ID),
-        admin_message_id: adminMsg?.message_id,
-      })
+      .update({ admin_message_ids })
       .eq("id", bookingId);
 
     if (updErr) throw updErr;
@@ -158,7 +178,7 @@ export default async function handler(req, res) {
       bookingId,
       serialNumber,
       userId,
-      adminMessageId: adminMsg?.message_id,
+      adminMessageIds: admin_message_ids,
     });
   } catch (e) {
     console.error(e);
